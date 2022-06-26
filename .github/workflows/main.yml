@@ -15,4 +15,4 @@ jobs:
           scw_access_key:  ${{ secrets.ACCESS_KEY }}
           scw_secret_key: ${{ secrets.SECRET_KEY }}
           scw_containers_namespace_id: ${{ secrets.CONTAINERS_NAMESPACE_ID }}
-          scw_registry: rg.fr-par.scw.cloud/funcscwnetflowldnox33w
+          scw_registry: rg.fr-par.scw.cloud/funcscwnetflowldnox33w/netflow:latest
