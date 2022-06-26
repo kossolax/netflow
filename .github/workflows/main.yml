@@ -6,7 +6,7 @@ jobs:
     env:
       REGISTRY: rg.fr-par.scw.cloud/funcscwnetflowldnox33w
       NAME: netflow
-      BRANCH: test
+      BRANCH: latest
     name: Deploy on Scaleway Containers
     steps:
       - name: Checkout
