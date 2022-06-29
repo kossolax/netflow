@@ -27,7 +27,7 @@ jobs:
         env:
           IMAGE: ${{ env.REGISTRY }}/${{ env.NAME }}:${{ env.BRANCH }}
         with:
-          file: {context}/Dockerfile.front
+          file: Dockerfile.front
           push: true
           tags: ${{ env.IMAGE }}
       
