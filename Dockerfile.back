@@ -1,0 +1,21 @@
+FROM python:3-alpine
+
+WORKDIR /tmp
+RUN     echo "@testing http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories && \
+        apk update && \
+        apk add make g++ zlib zlib-dev crypto++@testing crypto++-dev@testing re2 re2-dev && \
+        apk add git && \
+        git clone https://github.com/mircodezorzi/pka2xml
+
+WORKDIR /tmp/pka2xml
+RUN     make    pka2xml-dynamic && \
+        cp pka2xml /usr/local/bin/ && \
+        rm -Rf /tmp/pka2xml
+
+
+WORKDIR /usr/src/app
+COPY    backend/requirements.txt .
+RUN     pip install -qr requirements.txt
+
+COPY    backend/* .
+CMD     ["python3", "./server.py"]
