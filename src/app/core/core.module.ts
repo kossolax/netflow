@@ -1,6 +1,9 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
+
 import { HeaderComponent } from './components/header/header.component';
+
+import { MenuModule } from '@syncfusion/ej2-angular-navigations';
 
 
 @NgModule({
@@ -8,10 +11,12 @@ import { HeaderComponent } from './components/header/header.component';
     HeaderComponent
   ],
   imports: [
-    CommonModule
+    CommonModule,
+    MenuModule
   ],
   exports: [
-    HeaderComponent
+    HeaderComponent,
+    MenuModule
   ]
 })
 export class CoreModule { }

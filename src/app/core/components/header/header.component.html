@@ -1,1 +1,8 @@
-<p>header works!</p>
+<div id="defaultSample" class="control-section">
+  <div class="menu-control">
+      <ejs-menu [items]='menuItems' (select)='select($event)' showItemOnClick="true">
+      </ejs-menu>
+  </div>
+
+  <input id="inputValue" type="file" style="display:none" (change)="onFileUpload($event)" accept=".pkt, .pka" />
+</div>

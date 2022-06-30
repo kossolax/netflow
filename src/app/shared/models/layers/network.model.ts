@@ -61,7 +61,7 @@ export abstract class NetworkInterface extends Interface implements DatalinkList
 
     this.getListener.map( i => {
       if( i != this && "receivePacket" in i)
-        (i as NetworkListener)?.receivePacket(message, this);
+        (i as NetworkListener).receivePacket(message, this);
     });
 
     //throw new Error("IP forwarding is not implemented on NetworkInterface");

@@ -37,4 +37,3 @@ export class NetworkMessage extends DatalinkMessage {
     this.net_dst = net_dst;
   }
 }
-

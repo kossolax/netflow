@@ -47,6 +47,7 @@ export class Host extends Node<HardwareInterface> implements DatalinkListener {
     this.interfaces.map( i => i.sendTrame(msg) );
   }
 
+  // TODO: Make this private.
   receiveTrame(message: DatalinkMessage, from: Interface): void {
     this.interfaces.map( i => {
       if( i != from )

@@ -87,7 +87,7 @@ export abstract class HardwareInterface extends Interface implements PhysicalLis
 
     this.getListener.map( i => {
       if( i != this && "receiveBits" in i)
-        (i as PhysicalListener)?.receiveBits(message, this);
+        (i as PhysicalListener).receiveBits(message, this);
     });
 
     this.receiveTrame(message as DatalinkMessage);
@@ -99,7 +99,7 @@ export abstract class HardwareInterface extends Interface implements PhysicalLis
 
     this.getListener.map( i => {
       if( i != this && "receiveTrame" in i)
-        (i as DatalinkListener)?.receiveTrame(message, this);
+        (i as DatalinkListener).receiveTrame(message, this);
     });
   }
   sendTrame(message: DatalinkMessage): void {

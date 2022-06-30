@@ -41,7 +41,6 @@ describe('ARP Protocol test', () => {
     let listenerOfC = new SimpleListener();
     A.getInterface(0).getInterface(0).addListener(listenerOfA);
     C.getInterface(0).getInterface(0).addListener(listenerOfC);
-    A.send(message, dst);
 
     const request = listenerOfC.receiveTrame$.pipe(
       filter( i => i.payload instanceof ArpMessage ),
@@ -76,7 +75,9 @@ describe('ARP Protocol test', () => {
           done();
         }
       })
-    ).subscribe()
+    ).subscribe();
+
+    A.send(message, dst);
   });
 
 });

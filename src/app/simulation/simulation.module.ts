@@ -4,6 +4,8 @@ import { CommonModule } from '@angular/common';
 import { SimulationRoutingModule } from './simulation-routing.module';
 import { LogicalComponent } from './components/logical/logical.component';
 import { PhysicalComponent } from './components/physical/physical.component';
+import { CoreModule } from '../core/core.module';
+
 import { DiagramModule } from '@syncfusion/ej2-angular-diagrams';
 
 
@@ -14,11 +16,9 @@ import { DiagramModule } from '@syncfusion/ej2-angular-diagrams';
   ],
   imports: [
     CommonModule,
-    SimulationRoutingModule,
-    DiagramModule
-  ],
-  exports: [
-    DiagramModule
+    CoreModule,
+    DiagramModule,
+    SimulationRoutingModule
   ]
 })
 export class SimulationModule { }
