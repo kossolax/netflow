@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { HeaderComponent } from './components/header/header.component';
 
 import { MenuModule } from '@syncfusion/ej2-angular-navigations';
+import { SharedModule } from '../shared/shared.module';
 
 
 @NgModule({
@@ -12,7 +13,8 @@ import { MenuModule } from '@syncfusion/ej2-angular-navigations';
   ],
   imports: [
     CommonModule,
-    MenuModule
+    MenuModule,
+    SharedModule
   ],
   exports: [
     HeaderComponent,

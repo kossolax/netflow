@@ -21,10 +21,8 @@
     "@syncfusion/ej2-angular-diagrams": "^20.1.61",
     "@syncfusion/ej2-angular-navigations": "^20.1.61",
     "@syncfusion/ej2-navigations": "^20.1.61",
-    "pako": "^2.0.4",
     "rxjs": "~7.5.0",
     "tslib": "^2.3.0",
-    "twofish": "^1.0.1",
     "zone.js": "~0.11.4"
   },
   "devDependencies": {

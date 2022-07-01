@@ -1,8 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { MenuEventArgs, MenuItemModel } from '@syncfusion/ej2-angular-navigations';
-import * as pako from 'pako';
-//@ts-ignore
-import * as twofish from 'twofish';
+import { DecoderService } from 'src/app/shared/services/decoder.service';
 
 @Component({
   selector: 'app-header',
@@ -37,7 +35,7 @@ export class HeaderComponent implements OnInit {
     }
   ];
 
-  constructor() { }
+  constructor(private decode: DecoderService) { }
 
   ngOnInit(): void {
   }
@@ -48,49 +46,16 @@ export class HeaderComponent implements OnInit {
     }
   }
 
-  private twofishdecode(data: Uint8Array): Uint8Array {
-    const key = new Uint8Array([137, 137, 137, 137, 137, 137, 137, 137, 137, 137, 137, 137, 137, 137, 137, 137]);
-    const IV = new Uint8Array([16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16]);
-
-    const session = twofish.twofish(IV);
-    return session.decrypt(key, data);
-  }
   public onFileUpload(event: Event) : void {
     const files = (event.target as HTMLInputElement).files as FileList;
     if( files.length == 0 )
       return;
 
     const file = files.item(0) as File;
-
-    const reader = new FileReader();
-
-    reader.onloadend = (e) => {
-      let input = new Uint8Array(reader.result as ArrayBuffer);
-      let processed = new Uint8Array(input.length);
-      let length = input.length;
-
-      // deobfuscation
-      for(let i = 0; i<length; i++)
-        processed[i] = input[length + ~i] ^ (length - i * length)
-
-
-      // decryption
-      let output = this.twofishdecode(processed);
-
-      console.log(   output[0]==0xD2,    output[1]==0xCC,    output[2]==0x64);
-
-      // deobfuscation
-      for(let i = 0; i<output.length; i++)
-        output[i] = output[i] ^ (output.length - i);
-
-      // decompression
-      let len = output[0] << 24 | output[1] << 16 | output[2] << 8 | output[3];
-
-      let result = pako.inflate(output.slice(4), {to: 'string' });
-      console.log(result);
-    }
-
-    reader.readAsArrayBuffer(file);
+    console.log(file);
+    this.decode.decode(file).subscribe( (data: JSON) => {
+      console.log(data);
+    });
   }
 
 }
