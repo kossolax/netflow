@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { MenuEventArgs, MenuItemModel } from '@syncfusion/ej2-angular-navigations';
-import { DecoderService } from 'src/app/shared/services/decoder.service';
+import { Network } from 'src/app/shared/models/network.model';
+import { NetworkService } from 'src/app/shared/services/network.service';
 
 @Component({
   selector: 'app-header',
@@ -35,7 +36,7 @@ export class HeaderComponent implements OnInit {
     }
   ];
 
-  constructor(private decode: DecoderService) { }
+  constructor(private network: NetworkService) { }
 
   ngOnInit(): void {
   }
@@ -52,9 +53,8 @@ export class HeaderComponent implements OnInit {
       return;
 
     const file = files.item(0) as File;
-    console.log(file);
-    this.decode.decode(file).subscribe( (data: JSON) => {
-      console.log(data);
+    this.network.decode(file).subscribe( data => {
+      this.network.setNetwork(data);
     });
   }
 

@@ -6,10 +6,15 @@ import { DatalinkMessage, Message, NetworkMessage } from "./message.model";
 import { DatalinkListener, NetworkListener } from "./protocols/protocols.model";
 
 export abstract class GenericNode {
+  public guid: string = Math.random().toString(36).substring(2, 9);
   public name: string = "Node";
+  public x: number = 0;
+  public y: number = 0;
+
   toString(): string {
     return this.name;
   }
+
 }
 export abstract class Node<T> extends GenericNode {
   protected interfaces: T[] = [];
@@ -24,6 +29,7 @@ export abstract class Node<T> extends GenericNode {
 }
 
 export class Host extends Node<HardwareInterface> implements DatalinkListener {
+  public override name = "Switch";
   public receiveTrame$: Subject<DatalinkMessage> = new Subject<DatalinkMessage>();
 
   addInterface(): HardwareInterface {
@@ -59,6 +65,8 @@ export class Host extends Node<HardwareInterface> implements DatalinkListener {
 
 }
 export class IPHost extends Node<NetworkInterface> implements NetworkListener {
+  public override name = "Router";
+
   public receivePacket$: Subject<NetworkMessage> = new Subject<NetworkMessage>();
 
   addInterface(): NetworkInterface {

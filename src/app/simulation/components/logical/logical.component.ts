@@ -1,15 +1,51 @@
-import { Component, OnInit } from '@angular/core';
+import { AfterViewInit, Component, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { DiagramComponent } from '@syncfusion/ej2-angular-diagrams';
+
+import { Observable } from 'rxjs';
+import { Network } from 'src/app/shared/models/network.model';
+import { NetworkService } from 'src/app/shared/services/network.service';
 
 @Component({
   selector: 'app-logical',
   templateUrl: './logical.component.html',
-  styleUrls: ['./logical.component.scss']
+  styleUrls: ['./logical.component.scss'],
+  encapsulation: ViewEncapsulation.None
 })
-export class LogicalComponent implements OnInit {
+export class LogicalComponent implements OnInit, AfterViewInit  {
+  network$!: Observable<Network|null>;
 
-  constructor() { }
+  @ViewChild("diagram") diagram!: DiagramComponent;
+
+  constructor(private network: NetworkService) {
+  }
 
   ngOnInit(): void {
+  }
+
+  ngAfterViewInit(): void {
+
+    this.network$ = this.network.network$;
+    this.network$.subscribe( data => {
+      console.log("LogicalComponent:", data);
+
+      this.diagram.clear();
+
+
+      if( data != null ) {
+        for(let key in data.nodes) {
+          const node = data.nodes[key];
+          console.log(node.guid);
+
+          this.diagram.add({
+            id: node.guid,
+            offsetX: node.x,
+            offsetY: node.y,
+            width: 32,
+            height: 32
+          });
+        }
+      }
+    });
   }
 
 }
