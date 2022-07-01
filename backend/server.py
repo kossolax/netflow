@@ -1,5 +1,6 @@
 from flask import Flask, request
 from flask_cors import CORS
+from flask_compress import Compress
 
 import io
 import os
@@ -27,6 +28,9 @@ illegal_xml_chars_re = re.compile(xml_illegal_character_regex)
 
 app = Flask(__name__)
 cors = CORS(app, origins=["http://localhost:4200", "https://cloud.netflow.dev"])
+app.config["COMPRESS_REGISTER"] = False
+compress = Compress()
+compress.init_app(app)
 
 @app.route("/")
 def root():
@@ -35,6 +39,7 @@ def root():
   })
 
 @app.route("/decode", methods=['GET', 'POST'])
+@compress.compressed()
 def decode():
   if request.method == 'POST':
     if 'file' in request.files:
