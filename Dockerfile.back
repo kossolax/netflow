@@ -12,10 +12,9 @@ RUN     make    pka2xml-dynamic && \
         cp pka2xml /usr/local/bin/ && \
         rm -Rf /tmp/pka2xml
 
-
 WORKDIR /usr/src/app
-COPY    backend/requirements.txt .
+COPY    ./backend/requirements.txt .
 RUN     pip install -qr requirements.txt
 
-COPY    backend/* .
+COPY    ./backend/* .
 CMD     ["python3", "./server.py"]
