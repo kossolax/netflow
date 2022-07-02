@@ -1,8 +1,9 @@
 import { AfterViewInit, Component, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
-import { DiagramComponent } from '@syncfusion/ej2-angular-diagrams';
+import { DiagramComponent, ImageModel } from '@syncfusion/ej2-angular-diagrams';
 
 import { Observable } from 'rxjs';
 import { Network } from 'src/app/shared/models/network.model';
+import { IPHost } from 'src/app/shared/models/node.model';
 import { NetworkService } from 'src/app/shared/services/network.service';
 
 @Component({
@@ -34,14 +35,19 @@ export class LogicalComponent implements OnInit, AfterViewInit  {
       if( data != null ) {
         for(let key in data.nodes) {
           const node = data.nodes[key];
-          console.log(node.guid);
 
           this.diagram.add({
             id: node.guid,
             offsetX: node.x,
             offsetY: node.y,
-            width: 32,
-            height: 32
+            width: 48,
+            height: 48,
+            backgroundColor: "transparent",
+            borderColor: "transparent",
+            shape: {
+              type: "Image",
+              source: `./assets/images/${node.type}.png`,
+            } as ImageModel
           });
         }
       }

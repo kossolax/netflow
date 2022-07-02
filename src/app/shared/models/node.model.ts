@@ -8,6 +8,7 @@ import { DatalinkListener, NetworkListener } from "./protocols/protocols.model";
 export abstract class GenericNode {
   public guid: string = Math.random().toString(36).substring(2, 9);
   public name: string = "Node";
+  public type: string = "unknown";
   public x: number = 0;
   public y: number = 0;
 
@@ -17,13 +18,19 @@ export abstract class GenericNode {
 
 }
 export abstract class Node<T> extends GenericNode {
-  protected interfaces: T[] = [];
+  protected interfaces: { [key: string]: T } = {};
 
-  abstract addInterface(iface: T): T;
+  abstract addInterface(name: string): T;
 
-  getInterface(index: number): T {
-    return this.interfaces[index];
+  getInterface(index: string|number): T {
+    if( typeof index === "number" )
+      return this.interfaces[Object.keys(this.interfaces)[index]]
+    if( typeof index === "string" )
+     return this.interfaces[index];
+
+    throw new Error("Invalid index");
   }
+
 
   abstract send(message: string, dst: Address): void;
 }
@@ -32,12 +39,15 @@ export class Host extends Node<HardwareInterface> implements DatalinkListener {
   public override name = "Switch";
   public receiveTrame$: Subject<DatalinkMessage> = new Subject<DatalinkMessage>();
 
-  addInterface(): HardwareInterface {
+  addInterface(name: string = ""): HardwareInterface {
     const mac = new MacAddress();
 
-    const iface = new EthernetInterface(this, mac, this.interfaces.length.toString());
+    if( name == "" )
+      name = "GigabitEthernet0/" + Object.keys(this.interfaces).length;
+
+    const iface = new EthernetInterface(this, mac, name);
     iface.addListener(this);
-    this.interfaces.push(iface);
+    this.interfaces[name] = iface;
 
     return iface;
   }
@@ -50,15 +60,19 @@ export class Host extends Node<HardwareInterface> implements DatalinkListener {
       src, dst
     );
 
-    this.interfaces.map( i => i.sendTrame(msg) );
+    for( const name in this.interfaces ) {
+      this.interfaces[name].sendTrame(msg);
+    }
+
   }
 
   // TODO: Make this private.
   receiveTrame(message: DatalinkMessage, from: Interface): void {
-    this.interfaces.map( i => {
-      if( i != from )
-        i.sendTrame(message as DatalinkMessage);
-    });
+
+    for( const name in this.interfaces ) {
+      if( this.interfaces[name] !== from )
+        this.interfaces[name].sendTrame(message);
+    }
 
     this.receiveTrame$.next(message);
   }
@@ -69,16 +83,19 @@ export class IPHost extends Node<NetworkInterface> implements NetworkListener {
 
   public receivePacket$: Subject<NetworkMessage> = new Subject<NetworkMessage>();
 
-  addInterface(): NetworkInterface {
+  addInterface(name: string = ""): NetworkInterface {
+    if( name == "" )
+      name = "GigabitEthernet0/" + Object.keys(this.interfaces).length;
+
     const ip = new IPAddress();
     const mac = new MacAddress();
 
     const eth = new EthernetInterface(this, mac);
-    const iface = new IPInterface(this, this.interfaces.length.toString(), eth);
+    const iface = new IPInterface(this, name, eth);
     iface.addNetAddress(ip);
     iface.addListener(this);
 
-    this.interfaces.push(iface);
+    this.interfaces[name] = iface;
 
     return iface;
   }
@@ -93,7 +110,9 @@ export class IPHost extends Node<NetworkInterface> implements NetworkListener {
       net_src, net_dst
     );
 
-    this.interfaces.map( i => i.sendPacket(msg));
+    for( const name in this.interfaces ) {
+      this.interfaces[name].sendPacket(msg);
+    }
   }
 
   receivePacket(message: NetworkMessage, from: Interface): void {
