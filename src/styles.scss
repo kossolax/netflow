@@ -2,3 +2,26 @@
 @import '../node_modules/@syncfusion/ej2-base/styles/material.css';
 @import '../node_modules/@syncfusion/ej2-navigations/styles/material.css';
 @import '../node_modules/@syncfusion/ej2-angular-diagrams/styles/material.css';
+
+html, body, * {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+html, body {
+  height: 100%;
+  width: 100%;
+}
+
+app-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  app-header {
+    flex: 0 0 auto;
+  }
+  app-logical {
+    flex: 1 1 auto;
+  }
+}
