@@ -84,7 +84,7 @@ export class Network {
       const y = i.WORKSPACE.LOGICAL.Y;
 
       const type = i.ENGINE.TYPE['#text'].toLowerCase();
-      if( type == "pc" || type == "server" || type == "printer" || type == "cloud" )
+      if( type == "pc" || type == "laptop" || type == "server" || type == "printer" || type == "cloud" )
         node = new ServerHost();
       else if( type == "router" )
         node = new RouterHost();

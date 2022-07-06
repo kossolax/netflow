@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 26.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.0" id="Calque_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 252.7 180.7" style="enable-background:new 0 0 252.7 180.7;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#F39322;}
+	.st1{fill:#0871B8;}
+	.st2{display:none;}
+	.st3{display:inline;fill:#B13118;}
+	.st4{display:inline;fill:#B08410;}
+	.st5{display:inline;fill:#F3A617;}
+	.st6{display:inline;fill:#B16516;}
+	.st7{display:inline;fill:#074771;}
+</style>
+<g id="F">
+	<rect x="171.8" y="72.4" class="st0" width="63" height="18.1"/>
+	<rect x="171.8" y="18.3" class="st0" width="63" height="18.1"/>
+</g>
+<g id="N_Gauche">
+	<path class="st1" d="M18.8,18.5v144h17.7V35.9H57C71.7,50.4,86.3,65,101,79.5c4.2-4.2,8.3-8.3,12.5-12.5
+		C97.3,50.8,81,34.6,64.8,18.5C49.4,18.5,34.1,18.5,18.8,18.5z"/>
+	<path class="st1" d="M117.3,63.1c-11.6,0-21,9.4-21,21s9.4,21,21,21s21-9.4,21-21S128.8,63.1,117.3,63.1z M117.2,90.6
+		c-3.5,0-6.3-2.8-6.3-6.3s2.8-6.3,6.3-6.3s6.3,2.8,6.3,6.3S120.6,90.6,117.2,90.6z"/>
+</g>
+<g id="N_Gauche_00000056406265398540523760000005294705096488128915_">
+	<path class="st1" d="M162.7,162.8v-144H145v126.6h-20.5c-14.7-14.5-29.3-29.1-44-43.6c-4.2,4.2-8.3,8.3-12.5,12.5
+		c16.2,16.2,32.5,32.4,48.8,48.5C132.1,162.8,147.4,162.8,162.7,162.8z"/>
+	<path class="st1" d="M64.3,118.1c11.6,0,21-9.4,21-21s-9.4-21-21-21s-21,9.4-21,21S52.7,118.1,64.3,118.1z M64.4,90.6
+		c3.5,0,6.3,2.8,6.3,6.3s-2.8,6.3-6.3,6.3c-3.5,0-6.3-2.8-6.3-6.3S60.9,90.6,64.4,90.6z"/>
+</g>
+<g id="Palette" class="st2">
+	<rect x="-53.6" y="0.1" class="st3" width="18.1" height="18.1"/>
+	<rect x="-53.6" y="26.9" class="st4" width="18.1" height="18.1"/>
+	<rect x="-53.6" y="108.3" class="st5" width="18.1" height="18.1"/>
+	<rect x="-53.6" y="54.3" class="st6" width="18.1" height="18.1"/>
+	<rect x="-53.6" y="81.1" class="st7" width="18.1" height="18.1"/>
+</g>
+</svg>
