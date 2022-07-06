@@ -29,6 +29,7 @@ export class LogicalComponent implements OnInit, AfterViewInit  {
     this.network$.subscribe( data => {
       this.diagram.clear();
       this.diagram.constraints = DiagramConstraints.Default | DiagramConstraints.Bridging;
+      this.diagram.snapSettings.constraints = SnapConstraints.ShowLines | SnapConstraints.SnapToLines
 
 
       if( data != null ) {
@@ -41,6 +42,10 @@ export class LogicalComponent implements OnInit, AfterViewInit  {
             offsetY: node.y,
             width: 48,
             height: 48,
+            style: {
+              fill: "transparent",
+              strokeColor: "transparent"
+            },
             annotations: [{
               content: node.name,
               horizontalAlignment: 'Center',
@@ -53,8 +58,8 @@ export class LogicalComponent implements OnInit, AfterViewInit  {
             }],
             shape: {
               type: "Image",
-              source: `./assets/images/icons/${node.type}.png`
-            } as ImageModel,
+              source: `./assets/images/icons/${node.type}.png`,
+            },
             constraints: NodeConstraints.Default & ~NodeConstraints.Resize & ~NodeConstraints.Rotate | NodeConstraints.HideThumbs,
           });
         }
@@ -71,6 +76,7 @@ export class LogicalComponent implements OnInit, AfterViewInit  {
             annotations: [{ constraints: AnnotationConstraints.ReadOnly  }]
           });
         }
+
       }
     });
   }

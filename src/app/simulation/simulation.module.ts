@@ -6,7 +6,7 @@ import { LogicalComponent } from './components/logical/logical.component';
 import { PhysicalComponent } from './components/physical/physical.component';
 import { CoreModule } from '../core/core.module';
 
-import {  ConnectorBridgingService, DiagramModule } from '@syncfusion/ej2-angular-diagrams';
+import {  ConnectorBridgingService, DiagramModule, SnappingService } from '@syncfusion/ej2-angular-diagrams';
 
 
 @NgModule({
@@ -21,7 +21,8 @@ import {  ConnectorBridgingService, DiagramModule } from '@syncfusion/ej2-angula
     SimulationRoutingModule
   ],
   providers: [
-    ConnectorBridgingService
+    ConnectorBridgingService,
+    SnappingService
   ]
 })
 export class SimulationModule { }
