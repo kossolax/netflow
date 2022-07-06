@@ -1,5 +1,5 @@
 import { AfterViewInit, Component, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
-import { DiagramComponent, ImageModel } from '@syncfusion/ej2-angular-diagrams';
+import { AnnotationConstraints, ConnectorConstraints, DiagramComponent, DiagramConstraints, ImageModel, NodeConstraints, SnapConstraints, SnapSettingsModel } from '@syncfusion/ej2-angular-diagrams';
 
 import { Observable } from 'rxjs';
 import { Network } from 'src/app/shared/models/network.model';
@@ -27,9 +27,8 @@ export class LogicalComponent implements OnInit, AfterViewInit  {
 
     this.network$ = this.network.network$;
     this.network$.subscribe( data => {
-      console.log("LogicalComponent:", data);
-
       this.diagram.clear();
+      this.diagram.constraints = DiagramConstraints.Default | DiagramConstraints.Bridging;
 
 
       if( data != null ) {
@@ -42,12 +41,21 @@ export class LogicalComponent implements OnInit, AfterViewInit  {
             offsetY: node.y,
             width: 48,
             height: 48,
-            backgroundColor: "transparent",
-            borderColor: "transparent",
+            annotations: [{
+              content: node.name,
+              horizontalAlignment: 'Center',
+              verticalAlignment: 'Top',
+              offset: { x: 0.5, y: 1 },
+              style: {
+                fill: '#ffffff',
+              },
+              constraints: AnnotationConstraints.ReadOnly
+            }],
             shape: {
               type: "Image",
-              source: `./assets/images/${node.type}.png`,
-            } as ImageModel
+              source: `./assets/images/icons/${node.type}.png`
+            } as ImageModel,
+            constraints: NodeConstraints.Default & ~NodeConstraints.Resize & ~NodeConstraints.Rotate | NodeConstraints.HideThumbs,
           });
         }
 
@@ -56,7 +64,11 @@ export class LogicalComponent implements OnInit, AfterViewInit  {
 
           this.diagram.addConnector({
             sourceID: link.getInterface(0).Host.guid,
-            targetID: link.getInterface(1).Host.guid
+            targetID: link.getInterface(1).Host.guid,
+            sourceDecorator: { shape: "None" },
+            targetDecorator: { shape: "None" },
+            constraints: ConnectorConstraints.Default & ~ConnectorConstraints.Select,
+            annotations: [{ constraints: AnnotationConstraints.ReadOnly  }]
           });
         }
       }
