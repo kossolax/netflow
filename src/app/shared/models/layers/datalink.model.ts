@@ -51,8 +51,11 @@ export abstract class Interface {
 
     this.link = link;
   }
-  get getLink(): Link | null {
+  get Link(): Link | null {
     return this.link;
+  }
+  get Host(): GenericNode {
+    return this.host;
   }
   // ---
   addListener(listener: GenericListener): void {
@@ -112,7 +115,7 @@ export abstract class HardwareInterface extends Interface implements PhysicalLis
       return;
     }
 
-    this.getLink?.sendBits(message, this);
+    this.Link?.sendBits(message, this);
   }
 }
 export class EthernetInterface extends HardwareInterface {

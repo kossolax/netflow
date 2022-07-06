@@ -1,7 +1,7 @@
 import { mergeMap, Observable, Subject, switchMap, take } from "rxjs";
 import { MacAddress } from "../address.model";
 import { DatalinkMessage, NetworkMessage, PhysicalMessage } from "../message.model";
-import { Host } from "../node.model";
+import { SwitchHost } from "../node.model";
 import { SimpleListener } from "../protocols/protocols.model";
 import { EthernetInterface, HardwareInterface, Interface } from "./datalink.model";
 import { Link } from "./physical.model";
@@ -13,8 +13,8 @@ describe('Physical layer test', () => {
   let listener: SimpleListener;
 
   beforeEach(async () => {
-    A = new EthernetInterface(new Host(), new MacAddress());
-    B = new EthernetInterface(new Host(), new MacAddress());
+    A = new EthernetInterface(new SwitchHost(), new MacAddress());
+    B = new EthernetInterface(new SwitchHost(), new MacAddress());
 
     A.up();
     B.up();

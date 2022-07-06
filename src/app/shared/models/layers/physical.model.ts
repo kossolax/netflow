@@ -37,6 +37,14 @@ export abstract class AbstractLink {
       tap( () => destination.receiveBits(message) )
     ).subscribe();
   }
+  public getInterface(i: number): HardwareInterface {
+    if( i == 0 )
+      return this.iface1;
+    else if( i == 1 )
+      return this.iface2;
+    else
+      throw new Error(`Invalid index: ${i}`);
+  }
 }
 export class Link extends AbstractLink {
 }

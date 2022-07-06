@@ -3,7 +3,7 @@ import { DiagramComponent, ImageModel } from '@syncfusion/ej2-angular-diagrams';
 
 import { Observable } from 'rxjs';
 import { Network } from 'src/app/shared/models/network.model';
-import { IPHost } from 'src/app/shared/models/node.model';
+import { RouterHost } from 'src/app/shared/models/node.model';
 import { NetworkService } from 'src/app/shared/services/network.service';
 
 @Component({
@@ -48,6 +48,15 @@ export class LogicalComponent implements OnInit, AfterViewInit  {
               type: "Image",
               source: `./assets/images/${node.type}.png`,
             } as ImageModel
+          });
+        }
+
+        for(let key in data.links) {
+          const link = data.links[key];
+
+          this.diagram.addConnector({
+            sourceID: link.getInterface(0).Host.guid,
+            targetID: link.getInterface(1).Host.guid
           });
         }
       }

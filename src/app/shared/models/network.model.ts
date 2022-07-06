@@ -1,5 +1,5 @@
 import { Link } from "./layers/physical.model";
-import { GenericNode, IPHost, Host } from "./node.model";
+import { GenericNode, ServerHost, RouterHost, SwitchHost } from "./node.model";
 
 export class Network {
   public nodes: {[key: string]: GenericNode} = {};
@@ -8,7 +8,10 @@ export class Network {
   private parsePort(node: GenericNode, json: any, depth: number[] = []): void {
     let name = "";
 
-    if( json.TYPE.endsWith("GigabitEthernet") )
+
+    if( json.TYPE === null )
+      return;
+    else if( json.TYPE.endsWith("GigabitEthernet") )
       name = "GigabitEthernet";
     else if( json.TYPE.endsWith("FastEthernet") )
       name = "FastEthernet";
@@ -22,49 +25,57 @@ export class Network {
       throw new Error("Unknown port type: " + json.TYPE);
 
     name += depth.join("/");
-    console.log(name, json, depth);
+
+    if(  node instanceof SwitchHost || node instanceof RouterHost )
+      node.addInterface(name);
+    else
+      throw new Error("Unknown node type: " + node.type);
   }
 
-
-  private parseModule(node: GenericNode, json: any, depth: number[]  = []) : void {
-    if ( json.MODULE && json.MODULE.SLOT ) {
-      if( json.MODULE.SLOT instanceof Array ) {
-        for(let i=0; i<json.MODULE.SLOT.length; i++) {
-          const copy = depth.slice();
-          copy.push(i);
-          this.parseModule(node, json.MODULE.SLOT[i], copy);
-        }
-      }
-      else {
-        const copy = depth.slice();
-        copy.push(0);
-        this.parseModule(node, json.MODULE.SLOT, copy);
-      }
-    }
-
+  private parseModule(node: GenericNode, json: any, depth: number[]  = [], first: number = 0) : void {
     if ( json.MODULE && json.MODULE.PORT ) {
       if( json.MODULE.PORT instanceof Array ) {
+        let lastType = "";
+        let lastId = first;
         for(let i=0; i<json.MODULE.PORT.length; i++) {
+          if( json.MODULE.PORT[i].TYPE !== lastType )
+            lastId = first;
+          lastType = json.MODULE.PORT[i].TYPE;
           const copy = depth.slice();
-          copy.push(i);
+          copy.push(lastId++);
           this.parsePort(node, json.MODULE.PORT[i], copy);
         }
       }
       else {
         const copy = depth.slice();
-        copy.push(0);
+        copy.push(first);
         this.parsePort(node, json.MODULE.PORT, copy);
       }
-
-
     }
+
+    if ( json.MODULE && json.MODULE.SLOT ) {
+      if( json.MODULE.SLOT instanceof Array ) {
+        for(let i=0; i<json.MODULE.SLOT.length; i++) {
+          const copy = depth.slice();
+          if( json.MODULE.SLOT[i].TYPE !== "ePtHostModule" )
+            copy.push(i);
+          this.parseModule(node, json.MODULE.SLOT[i], copy, first);
+        }
+      }
+      else {
+        const copy = depth.slice();
+        if( json.MODULE.SLOT.TYPE !== "ePtHostModule" )
+          copy.push(0);
+        this.parseModule(node, json.MODULE.SLOT, copy, first);
+      }
+    }
+
+
 
   }
 
   private static fromPKT(json: any): Network {
     const network = new Network();
-
-    //console.log(json);
 
     json.NETWORK.DEVICES.DEVICE.map( (i: any) => {
       let node: GenericNode|null = null;
@@ -73,11 +84,13 @@ export class Network {
       const y = i.WORKSPACE.LOGICAL.Y;
 
       const type = i.ENGINE.TYPE['#text'].toLowerCase();
-      if( type == "router" || type == "pc" || type == "server" )
-        node = new IPHost();
-      if( type == "switch" || type == "hub" )
-        node = new Host();
-      if( type == "power distribution device" )
+      if( type == "pc" || type == "server" )
+        node = new ServerHost();
+      else if( type == "router" )
+        node = new RouterHost();
+      else if( type == "switch" || type == "hub" )
+        node = new SwitchHost();
+      else if( type == "power distribution device" )
         return;
 
       if( node == null )
@@ -88,20 +101,24 @@ export class Network {
       node.y = parseFloat(y);
       node.type = type;
       network.nodes[key] = node;
-
-      network.parseModule(node, i.ENGINE);
-
+      network.parseModule(node, i.ENGINE, [], node instanceof RouterHost ? 0 : 1);
     });
 
     if( json.NETWORK.LINKS && json.NETWORK.LINKS.LINK ) {
       json.NETWORK.LINKS.LINK.map( (i: any) => {
-        const type = i.TYPE;
+        const from = network.nodes[i.CABLE.FROM] as (SwitchHost|RouterHost|ServerHost);
+        const to = network.nodes[i.CABLE.TO] as (SwitchHost|RouterHost|ServerHost);
         const length = i.CABLE.LENGTH;
-        const from = network.nodes[i.CABLE.FROM] as Host;
-        const to = network.nodes[i.CABLE.TO] as Host;
-        // TODO: Attach to the right interface.
-        //const link = new Link(from.getInterface(0), to.getInterface(0), length);
-        //console.log("LINKS:", i, from, to);
+
+        try {
+          const from_iface = from.getInterface(i.CABLE.PORT[0]);
+          const to_iface = to.getInterface(i.CABLE.PORT[1]);
+
+          const link = new Link(from_iface, to_iface, length);
+          network.links.push(link);
+        } catch(e) {
+          console.log(e, i.CABLE.PORT, from, to);
+        }
       });
     }
 

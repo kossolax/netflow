@@ -1,26 +1,26 @@
 import { Link } from './physical.model';
-import { Host } from '../node.model';
+import { SwitchHost } from '../node.model';
 import { catchError, take, timeout, delay } from 'rxjs';
 import { SimpleListener } from '../protocols/protocols.model';
 import { MacAddress } from '../address.model';
 
 describe('Datalink layer test', () => {
-  let A: Host;
-  let B: Host;
-  let C: Host;
+  let A: SwitchHost;
+  let B: SwitchHost;
+  let C: SwitchHost;
   let listener: SimpleListener;
 
   beforeEach(async () => {
-    A = new Host();
+    A = new SwitchHost();
     A.name = "A";
     A.addInterface().up();
 
-    B = new Host();
+    B = new SwitchHost();
     B.name = "B";
     B.addInterface().up();
     B.addInterface().up();
 
-    C = new Host();
+    C = new SwitchHost();
     C.name = "C";
     C.addInterface().up();
 

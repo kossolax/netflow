@@ -1,26 +1,26 @@
 import { Link } from './physical.model';
-import { IPHost, Host } from '../node.model';
+import { RouterHost, SwitchHost } from '../node.model';
 import { delay, take, timeout, catchError } from 'rxjs';
 import { SimpleListener } from '../protocols/protocols.model';
 import { IPAddress } from '../address.model';
 
 describe('Network layer test', () => {
-  let A: IPHost;
-  let B: Host;
-  let C: IPHost;
+  let A: RouterHost;
+  let B: SwitchHost;
+  let C: RouterHost;
   let listener: SimpleListener;
 
   beforeEach(async () => {
-    A = new IPHost();
+    A = new RouterHost();
     A.name = "A";
     A.addInterface().up();
 
-    B = new Host();
+    B = new SwitchHost();
     B.name = "B";
     B.addInterface().up();
     B.addInterface().up();
 
-    C = new IPHost();
+    C = new RouterHost();
     C.name = "C";
     C.addInterface().up();
 

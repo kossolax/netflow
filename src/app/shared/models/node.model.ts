@@ -23,19 +23,28 @@ export abstract class Node<T> extends GenericNode {
   abstract addInterface(name: string): T;
 
   getInterface(index: string|number): T {
+    let response;
     if( typeof index === "number" )
-      return this.interfaces[Object.keys(this.interfaces)[index]]
-    if( typeof index === "string" )
-     return this.interfaces[index];
+      response = this.interfaces[Object.keys(this.interfaces)[index]]
+    else if( typeof index === "string" )
+      response =  this.interfaces[index];
+    else
+      throw new Error(`Invalid index type: ${typeof index}`);
 
-    throw new Error("Invalid index");
+    if( !response )
+      throw new Error(`Interface ${index} not found, available interfaces: ${Object.keys(this.interfaces)}`);
+
+    return response;
+  }
+  getInterfaces(): string[] {
+    return Object.keys(this.interfaces);
   }
 
 
   abstract send(message: string, dst: Address): void;
 }
 
-export class Host extends Node<HardwareInterface> implements DatalinkListener {
+export class SwitchHost extends Node<HardwareInterface> implements DatalinkListener {
   public override name = "Switch";
   public receiveTrame$: Subject<DatalinkMessage> = new Subject<DatalinkMessage>();
 
@@ -78,7 +87,7 @@ export class Host extends Node<HardwareInterface> implements DatalinkListener {
   }
 
 }
-export class IPHost extends Node<NetworkInterface> implements NetworkListener {
+export class RouterHost extends Node<NetworkInterface> implements NetworkListener {
   public override name = "Router";
 
   public receivePacket$: Subject<NetworkMessage> = new Subject<NetworkMessage>();
@@ -118,4 +127,7 @@ export class IPHost extends Node<NetworkInterface> implements NetworkListener {
   receivePacket(message: NetworkMessage, from: Interface): void {
     this.receivePacket$.next(message);
   }
+}
+export class ServerHost extends RouterHost {
+  public override name = "Server";
 }
