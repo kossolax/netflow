@@ -48,7 +48,9 @@ export abstract class NetworkInterface extends Interface implements DatalinkList
   }
 
   receiveTrame(message: DatalinkMessage): void {
-    if( message.mac_dst?.equals(this.datalink.getMacAddress()) && message.mac_dst?.isBroadcast == false ) {
+    const mac_dst = message.mac_dst as HardwareAddress;
+
+    if( mac_dst.equals(this.datalink.getMacAddress()) && mac_dst.isBroadcast == false ) {
       this.receivePacket(message as NetworkMessage);
       return;
     }
@@ -56,8 +58,7 @@ export abstract class NetworkInterface extends Interface implements DatalinkList
 
   receivePacket(message: NetworkMessage) {
     if( !this.isActive() )
-      return; // TODO: Throw error
-//      throw new Error("Interface is down");
+      throw new Error("Interface is down");
 
     this.getListener.map( i => {
       if( i != this && "receivePacket" in i)

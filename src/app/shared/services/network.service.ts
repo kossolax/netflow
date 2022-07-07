@@ -19,10 +19,11 @@ export class NetworkService {
     const formData = new FormData();
     formData.append("file", file);
 
-    return this.http.post<JSON>(environment.backend + "/decode", formData).pipe(
+    return this.http.post<JSON>(`${environment.backend}/decode`, formData).pipe(
       map(json => Network.fromPacketTracer(json))
     );
   }
+
   public setNetwork(network: Network): void {
     this._network$.next(network);
   }
