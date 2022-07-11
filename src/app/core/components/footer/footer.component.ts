@@ -1,5 +1,6 @@
 import { Component, ElementRef, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { rippleMouseHandler } from '@syncfusion/ej2-buttons';
+import { AbstractLink, Link } from 'src/app/shared/models/layers/physical.model';
 import { RouterHost, SwitchHost, GenericNode, ServerHost } from 'src/app/shared/models/node.model';
 import { NetworkService } from 'src/app/shared/services/network.service';
 
@@ -11,7 +12,7 @@ import { NetworkService } from 'src/app/shared/services/network.service';
 })
 
 export class FooterComponent implements OnInit {
-  public selectableHost: {text: string, child: GenericNode[]}[] = [
+  public selectableHost: {text: string, child: (GenericNode|AbstractLink)[]}[] = [
     {
       text: 'Router',
       child: [
@@ -39,6 +40,12 @@ export class FooterComponent implements OnInit {
         new ServerHost("PC", "pc"),
         new ServerHost("Printer", "printer"),
       ]
+    },
+    {
+      text: 'Link',
+      child: [
+        new Link()
+      ]
     }
   ];
   public node$;
@@ -50,7 +57,7 @@ export class FooterComponent implements OnInit {
   ngOnInit(): void {
   }
 
-  public onClick(node: GenericNode): void {
+  public onClick(node: GenericNode|AbstractLink): void {
     this.network.setNode(node);
   }
 }

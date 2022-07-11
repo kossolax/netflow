@@ -2,7 +2,7 @@ import { AfterViewInit, Component, OnInit, ViewChild, ViewEncapsulation } from '
 import { AnnotationConstraints, ConnectorConstraints, DiagramComponent, DiagramConstraints, ImageModel, NodeConstraints, SnapConstraints, SnapSettingsModel } from '@syncfusion/ej2-angular-diagrams';
 
 import { Observable } from 'rxjs';
-import { Link } from 'src/app/shared/models/layers/physical.model';
+import { AbstractLink, Link } from 'src/app/shared/models/layers/physical.model';
 import { Network } from 'src/app/shared/models/network.model';
 import { GenericNode, RouterHost } from 'src/app/shared/models/node.model';
 import { NetworkService } from 'src/app/shared/services/network.service';
@@ -43,8 +43,9 @@ export class LogicalComponent implements OnInit, AfterViewInit  {
       }
     });
 
-    this.network.node$.subscribe( (data: GenericNode | null) => {
-      this.node = data;
+    this.network.node$.subscribe( (data: GenericNode | AbstractLink | null) => {
+      if( data instanceof GenericNode )
+        this.node = data;
     });
   }
 
@@ -92,8 +93,8 @@ export class LogicalComponent implements OnInit, AfterViewInit  {
   }
   addLink(link: Link) {
     this.diagram.addConnector({
-      sourceID: link.getInterface(0).Host.guid,
-      targetID: link.getInterface(1).Host.guid,
+      sourceID: link.getInterface(0)?.Host.guid,
+      targetID: link.getInterface(1)?.Host.guid,
       sourceDecorator: { shape: "None" },
       targetDecorator: { shape: "None" },
       constraints: ConnectorConstraints.Default & ~ConnectorConstraints.Select,

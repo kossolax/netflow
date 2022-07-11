@@ -4,22 +4,34 @@ import { HardwareInterface, Interface } from "./datalink.model";
 import { NetworkInterface } from "./network.model";
 
 export abstract class AbstractLink {
-  protected iface1: HardwareInterface;
-  protected iface2: HardwareInterface;
+  public guid: string = Math.random().toString(36).substring(2, 9);
+  public name: string = "Link";
+  public type: string = "cable";
+
+  protected iface1: HardwareInterface|null;
+  protected iface2: HardwareInterface|null;
   protected length: number;
 
   static SPEED_OF_LIGHT: number = 299792458;
 
-  constructor( iface1: HardwareInterface|NetworkInterface, iface2: HardwareInterface|NetworkInterface, length: number) {
+  constructor( iface1: HardwareInterface|NetworkInterface|null = null, iface2: HardwareInterface|NetworkInterface|null = null, length: number=1) {
     this.iface1 = iface1 instanceof(NetworkInterface) ? iface1.getInterface(0) : iface1;
     this.iface2 = iface2 instanceof(NetworkInterface) ? iface2.getInterface(0) : iface2;
+
     this.length = length;
 
-    this.iface1.connectTo(this);
-    this.iface2.connectTo(this);
+    if( this.iface1 != null )
+      this.iface1.connectTo(this);
+    if( this.iface2 != null )
+      this.iface2.connectTo(this);
   }
   toString(): string {
     return `${this.iface1} <->  ${this.iface2}`;
+  }
+  clone(): AbstractLink {
+    const node = structuredClone(this);
+    node.guid = Math.random().toString(36).substring(2, 9);
+    return node;
   }
 
   public getPropagationDelay() {
@@ -30,6 +42,9 @@ export abstract class AbstractLink {
   }
 
   public sendBits(message: PhysicalMessage, source: HardwareInterface) {
+    if( this.iface1 == null || this.iface2 == null )
+      throw new Error("Link is not connected");
+
     let destination = this.iface1 === source ? this.iface2 : this.iface1;
 
     timer(this.getPropagationDelay() / 1000).pipe(
@@ -37,7 +52,7 @@ export abstract class AbstractLink {
       tap( () => destination.receiveBits(message) )
     ).subscribe();
   }
-  public getInterface(i: number): HardwareInterface {
+  public getInterface(i: number): HardwareInterface|null {
     if( i == 0 )
       return this.iface1;
     else if( i == 1 )

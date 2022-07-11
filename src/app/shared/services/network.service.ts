@@ -4,17 +4,18 @@ import { Subject, map, Observable } from "rxjs";
 import { environment } from "src/environments/environment";
 import { Network } from "../models/network.model";
 import { GenericNode } from "../models/node.model";
+import { AbstractLink } from "../models/layers/physical.model";
 
 @Injectable(
   { providedIn: "root" }
 )
 export class NetworkService {
   private _network$ = new Subject<Network>();
-  private _node$ = new Subject<GenericNode|null>();
+  private _node$ = new Subject<GenericNode|AbstractLink|null>();
   get network$(): Observable<Network> {
     return this._network$.asObservable();
   }
-  get node$(): Observable<GenericNode|null> {
+  get node$(): Observable<GenericNode|AbstractLink|null> {
     return this._node$.asObservable();
   }
 
@@ -31,7 +32,7 @@ export class NetworkService {
   public setNetwork(network: Network): void {
     this._network$.next(network);
   }
-  public setNode(node: GenericNode|null) {
+  public setNode(node: GenericNode|AbstractLink|null) {
     this._node$.next(node);
   }
 }
