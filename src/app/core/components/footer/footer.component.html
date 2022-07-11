@@ -1,0 +1,15 @@
+<ejs-tab id="element" #element class="e-fill" data-ripple="true">
+  <e-tabitems>
+    <e-tabitem *ngFor="let key of selectableHost" [header]="{text: key.text}">
+      {{key}}
+      <ng-template #content>
+        <ul class="e-btn-group" data-ripple="true">
+          <li *ngFor="let item of key.child" (click)="onClick(item)" [attr.data-guid]="item.guid" [ngClass]="{selected: (node$ | async)?.guid === item.guid}">
+            <img src="assets/images/icons/{{ item.type }}.png" />
+            <label>{{item.name}}</label>
+          </li>
+        </ul>
+      </ng-template>
+    </e-tabitem>
+  </e-tabitems>
+</ejs-tab>

@@ -46,7 +46,17 @@ export abstract class Node<T> extends GenericNode {
 
 export class SwitchHost extends Node<HardwareInterface> implements DatalinkListener {
   public override name = "Switch";
+  public override type = "switch";
   public receiveTrame$: Subject<DatalinkMessage> = new Subject<DatalinkMessage>();
+
+  constructor(name: string="", iface: number=0) {
+    super();
+    if( name != "" )
+      this.name = name;
+
+    for(let i=0; i<iface; i++)
+      this.addInterface();
+  }
 
   addInterface(name: string = ""): HardwareInterface {
     const mac = new MacAddress();
@@ -89,8 +99,18 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
 }
 export class RouterHost extends Node<NetworkInterface> implements NetworkListener {
   public override name = "Router";
+  public override type = "router";
 
   public receivePacket$: Subject<NetworkMessage> = new Subject<NetworkMessage>();
+
+  constructor(name: string="", iface: number=0) {
+    super();
+    if( name != "" )
+      this.name = name;
+
+    for(let i=0; i<iface; i++)
+      this.addInterface();
+  }
 
   addInterface(name: string = ""): NetworkInterface {
     if( name == "" )
@@ -130,4 +150,5 @@ export class RouterHost extends Node<NetworkInterface> implements NetworkListene
 }
 export class ServerHost extends RouterHost {
   public override name = "Server";
+  public override type = "server";
 }

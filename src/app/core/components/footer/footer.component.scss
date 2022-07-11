@@ -1,0 +1,38 @@
+$gap: 0.5em;
+$size: 48px;
+$color: #e3165b;
+
+:host {
+  ul {
+    margin: $gap;
+    display: flex;
+    list-style-type: none;
+    flex-flow: wrap;
+    column-gap: $gap;
+    max-height: 2*$size;
+    overflow-y: auto;
+
+    li {
+      display: flex;
+      flex-direction: column;
+      height: auto;
+      width: $size;
+      align-items: center;
+      justify-content: center;
+      background-color: white;
+      border:  1px solid $color;
+      border-radius: 10%;
+
+      img {
+        width: 90%;
+      }
+
+      &.selected {
+        background-color: $color;
+        border:  1px dashed $color;
+      }
+    }
+
+  }
+
+}

@@ -1,10 +1,7 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
-import { enableRipple } from '@syncfusion/ej2-base';
 import { MenuEventArgs, MenuItemModel } from '@syncfusion/ej2-angular-navigations';
 import { Network } from 'src/app/shared/models/network.model';
 import { NetworkService } from 'src/app/shared/services/network.service';
-
-enableRipple(true);
 
 @Component({
   selector: 'app-header',
