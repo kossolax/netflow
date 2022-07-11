@@ -108,5 +108,7 @@
       }
     }
   },
-  "defaultProject": "netflow"
+  "cli": {
+    "analytics": "475a08ac-a7c1-4e03-a547-5acea0c007f2"
+  }
 }

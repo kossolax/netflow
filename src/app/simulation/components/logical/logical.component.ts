@@ -26,7 +26,7 @@ export class LogicalComponent implements OnInit, AfterViewInit  {
 
   ngAfterViewInit(): void {
 
-    this.network.network$.subscribe( data => {
+    this.network.network$.subscribe( (data: Network) => {
       this.diagram.clear();
       this.diagram.constraints = DiagramConstraints.Default | DiagramConstraints.Bridging;
       this.diagram.snapSettings.constraints = SnapConstraints.ShowLines | SnapConstraints.SnapToLines
@@ -40,7 +40,7 @@ export class LogicalComponent implements OnInit, AfterViewInit  {
       }
     });
 
-    this.network.node$.subscribe( data => {
+    this.network.node$.subscribe( (data: GenericNode | null) => {
       this.node = data;
     });
   }
