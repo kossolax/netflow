@@ -14,6 +14,7 @@ import { NetworkService } from 'src/app/shared/services/network.service';
   encapsulation: ViewEncapsulation.None
 })
 export class LogicalComponent implements OnInit, AfterViewInit  {
+  currentNetwork!: Network;
   node: GenericNode|null = null;
 
   @ViewChild("diagram") diagram!: DiagramComponent;
@@ -22,11 +23,13 @@ export class LogicalComponent implements OnInit, AfterViewInit  {
   }
 
   ngOnInit(): void {
+    this.currentNetwork = new Network();
   }
 
   ngAfterViewInit(): void {
 
     this.network.network$.subscribe( (data: Network) => {
+      this.currentNetwork = data;
       this.diagram.clear();
       this.diagram.constraints = DiagramConstraints.Default | DiagramConstraints.Bridging;
       this.diagram.snapSettings.constraints = SnapConstraints.ShowLines | SnapConstraints.SnapToLines
@@ -50,10 +53,11 @@ export class LogicalComponent implements OnInit, AfterViewInit  {
       return;
 
 
-    const node = structuredClone(this.node);
+    const node = this.node.clone();
     node.x = e.position.x;
     node.y = e.position.y;
 
+    this.currentNetwork.nodes[node.guid] = node;
     this.addNode(node);
     this.network.setNode(null);
   }

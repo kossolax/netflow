@@ -15,6 +15,11 @@ export abstract class GenericNode {
   toString(): string {
     return this.name;
   }
+  clone(): GenericNode {
+    const node = structuredClone(this);
+    node.guid = Math.random().toString(36).substring(2, 9);
+    return node;
+  }
 
 }
 export abstract class Node<T> extends GenericNode {
