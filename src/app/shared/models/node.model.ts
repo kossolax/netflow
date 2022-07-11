@@ -156,4 +156,15 @@ export class RouterHost extends Node<NetworkInterface> implements NetworkListene
 export class ServerHost extends RouterHost {
   public override name = "Server";
   public override type = "server";
+
+  constructor(name: string = "", type: string = "", iface: number=1) {
+    super();
+    if( name != "" )
+      this.name = name;
+    if( type != "" )
+      this.type = type;
+
+    for(let i=0; i<iface; i++)
+      this.addInterface();
+  }
 }
