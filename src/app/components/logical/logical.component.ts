@@ -18,8 +18,6 @@ export class LogicalComponent implements OnInit, AfterViewInit  {
   currentNetwork: Network;
   node: GenericNode|null = null;
 
-
-
   @ViewChild("diagram") diagram!: DiagramComponent;
 
   constructor(private network: NetworkService) {
@@ -28,7 +26,6 @@ export class LogicalComponent implements OnInit, AfterViewInit  {
   ngOnInit(): void {
   }
   ngAfterViewInit(): void {
-
     this.diagram.constraints = DiagramConstraints.Default | DiagramConstraints.Bridging;
     this.diagram.snapSettings.constraints = SnapConstraints.ShowLines | SnapConstraints.SnapToLines;
     this.diagram.getCustomTool = (action: string) => {

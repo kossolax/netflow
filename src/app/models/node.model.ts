@@ -48,10 +48,8 @@ export abstract class Node<T extends Interface> extends GenericNode {
   }
   getFirstAvailableInterface(): T {
     for(let key in this.interfaces) {
-      console.log(this.name, key, this.interfaces[key].isConnected());
-      if( !this.interfaces[key].isConnected() ) {
+      if( !this.interfaces[key].isConnected() )
         return this.interfaces[key];
-      }
     }
 
     throw new Error("No available interfaces");
