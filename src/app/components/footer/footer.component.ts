@@ -1,8 +1,7 @@
-import { Component, ElementRef, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
-import { rippleMouseHandler } from '@syncfusion/ej2-buttons';
-import { AbstractLink, Link } from 'src/app/shared/models/layers/physical.model';
-import { RouterHost, SwitchHost, GenericNode, ServerHost } from 'src/app/shared/models/node.model';
-import { NetworkService } from 'src/app/shared/services/network.service';
+import { Component, ElementRef, OnInit } from '@angular/core';
+import { AbstractLink, Link } from 'src/app/models/layers/physical.model';
+import { GenericNode, RouterHost, ServerHost, SwitchHost } from 'src/app/models/node.model';
+import { NetworkService } from 'src/app/services/network.service';
 
 
 @Component({

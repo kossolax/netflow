@@ -1,12 +1,11 @@
 import { AfterViewInit, Component, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
-import { AnnotationConstraints, ConnectorConstraints, Diagram, DiagramComponent, DiagramConstraints, NodeConstraints, SnapConstraints, ConnectorModel, DiagramTools, ConnectorDrawingTool, MouseEventArgs, Connector, ToolBase, CommandHandler } from '@syncfusion/ej2-angular-diagrams';
-
-import { HardwareInterface } from 'src/app/shared/models/layers/datalink.model';
-import { NetworkInterface } from 'src/app/shared/models/layers/network.model';
-import { AbstractLink, Link } from 'src/app/shared/models/layers/physical.model';
-import { Network } from 'src/app/shared/models/network.model';
-import { GenericNode, RouterHost, SwitchHost } from 'src/app/shared/models/node.model';
-import { NetworkService } from 'src/app/shared/services/network.service';
+import { AnnotationConstraints, ConnectorConstraints, DiagramComponent, DiagramConstraints, NodeConstraints, SnapConstraints, ConnectorModel, DiagramTools, ConnectorDrawingTool, MouseEventArgs, Connector, ToolBase, CommandHandler } from '@syncfusion/ej2-angular-diagrams';
+import { HardwareInterface } from 'src/app/models/layers/datalink.model';
+import { NetworkInterface } from 'src/app/models/layers/network.model';
+import { AbstractLink, Link } from 'src/app/models/layers/physical.model';
+import { Network } from 'src/app/models/network.model';
+import { GenericNode, RouterHost, SwitchHost } from 'src/app/models/node.model';
+import { NetworkService } from 'src/app/services/network.service';
 
 
 @Component({
@@ -142,7 +141,7 @@ class CustomConnectorDrawingTool extends ConnectorDrawingTool {
   private startNode: SwitchHost|RouterHost|null = null;
   private startIface: HardwareInterface|NetworkInterface|null = null;
 
-  private stopNode: RouterHost|SwitchHost|null = null;
+  private stopNode: SwitchHost|RouterHost|null = null;
   private stopIface: HardwareInterface|NetworkInterface|null = null;
 
   constructor(commandHandler: CommandHandler, endPoint: string, sourceObject: Connector, parentComponent: LogicalComponent) {

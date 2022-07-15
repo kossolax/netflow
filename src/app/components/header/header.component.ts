@@ -1,7 +1,6 @@
-import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { MenuEventArgs, MenuItemModel } from '@syncfusion/ej2-angular-navigations';
-import { Network } from 'src/app/shared/models/network.model';
-import { NetworkService } from 'src/app/shared/services/network.service';
+import { NetworkService } from 'src/app/services/network.service';
 
 @Component({
   selector: 'app-header',

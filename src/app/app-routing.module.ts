@@ -1,9 +1,13 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
+import { LogicalComponent } from './components/logical/logical.component';
+import { PhysicalComponent } from './components/physical/physical.component';
+
 
 const routes: Routes = [
-  { path: 'simulation', loadChildren: () => import('./simulation/simulation.module').then(m => m.SimulationModule) },
-  { path: '**', redirectTo: 'simulation' }
+  { path: 'logical', component: LogicalComponent },
+  { path: 'physical', component: PhysicalComponent },
+  { path: '**', redirectTo: 'logical' }
 ];
 
 @NgModule({

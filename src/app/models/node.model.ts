@@ -2,7 +2,7 @@ import { Observable, Subject } from "rxjs";
 import { Address, MacAddress, IPAddress } from "./address.model";
 import { EthernetInterface, HardwareInterface, Interface } from "./layers/datalink.model";
 import { IPInterface, NetworkInterface } from "./layers/network.model";
-import { DatalinkMessage, Message, NetworkMessage } from "./message.model";
+import { DatalinkMessage, NetworkMessage } from "./message.model";
 import { DatalinkListener, NetworkListener } from "./protocols/protocols.model";
 
 export abstract class GenericNode {
