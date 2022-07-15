@@ -4,39 +4,38 @@ import { HttpClientModule } from '@angular/common/http';
 import { BrowserModule } from '@angular/platform-browser';
 
 import { enableRipple } from '@syncfusion/ej2-base';
-import { DiagramModule, SnappingService } from '@syncfusion/ej2-angular-diagrams';
 import { MenuModule, TabModule } from '@syncfusion/ej2-angular-navigations';
 
 
 import { AppComponent } from './app.component';
-import { AppRoutingModule } from './app-routing.module';
 import { FooterComponent } from './components/footer/footer.component';
 import { HeaderComponent } from './components/header/header.component';
-import { LogicalComponent } from './components/logical/logical.component';
-import { PhysicalComponent } from './components/physical/physical.component';
+import { RouterModule, Routes } from '@angular/router';
 
 enableRipple(true);
+
+const routes: Routes = [
+  { path: 'view', loadChildren: () => import('./app.lazy.module').then(m => m.AppLazyModule) },
+  { path: '**', redirectTo: '/view/logical' }
+];
 
 @NgModule({
   declarations: [
     AppComponent,
     HeaderComponent,
-    FooterComponent,
-    LogicalComponent,
-    PhysicalComponent
-
+    FooterComponent
   ],
   imports: [
+    RouterModule.forRoot(routes),
+
     CommonModule,
     HttpClientModule,
     BrowserModule,
-    AppRoutingModule,
 
     MenuModule,
-    TabModule,
-    DiagramModule,
+    TabModule
   ],
-  providers: [SnappingService],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
+  exports: [RouterModule]
 })
 export class AppModule { }
