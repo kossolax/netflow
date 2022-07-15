@@ -12,22 +12,13 @@ export class HeaderComponent implements OnInit {
   public menuItems: MenuItemModel[] = [
     {
       text: 'File',
-      iconCss: 'em-icons e-file',
+      iconCss: 'fa-solid fa-bars',
       items: [
-          { text: 'Open', iconCss: 'em-icons e-open', id: 'menu-item-open' },
-          { text: 'Save', iconCss: 'em-icons e-save' },
+          { text: 'Open', iconCss: 'fa-solid fa-folder-open', id: 'menu-item-open' },
+          { text: 'Save', iconCss: 'fa-solid fa-floppy-disk' },
           { separator: true },
           { text: 'Exit' }
       ]
-    },
-    {
-        text: 'Edit',
-        iconCss: 'em-icons e-edit',
-        items: [
-            { text: 'Cut', iconCss: 'em-icons e-cut' },
-            { text: 'Copy', iconCss: 'em-icons e-copy' },
-            { text: 'Paste', iconCss: 'em-icons e-paste' }
-        ]
     },
     { separator: true },
     {
