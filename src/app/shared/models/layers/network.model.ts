@@ -46,6 +46,9 @@ export abstract class NetworkInterface extends Interface implements DatalinkList
     super.down();
     this.datalink.down();
   }
+  override isConnected(): boolean {
+    return this.datalink.isConnected();
+  }
 
   receiveTrame(message: DatalinkMessage): void {
     const mac_dst = message.mac_dst as HardwareAddress;

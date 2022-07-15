@@ -15,18 +15,20 @@ export abstract class GenericNode {
   toString(): string {
     return this.name;
   }
-  clone(): GenericNode {
-    const node = structuredClone(this);
+  abstract clone(): GenericNode;
+  protected cloneInto(node: GenericNode): void {
     node.guid = Math.random().toString(36).substring(2, 9);
-    return node;
+    node.name = this.name;
+    node.type = this.type;
+    node.x = this.x;
+    node.y = this.y;
   }
 
 }
-export abstract class Node<T> extends GenericNode {
+export abstract class Node<T extends Interface> extends GenericNode {
   protected interfaces: { [key: string]: T } = {};
 
   abstract addInterface(name: string): T;
-
   getInterface(index: string|number): T {
     let response;
     if( typeof index === "number" )
@@ -44,7 +46,22 @@ export abstract class Node<T> extends GenericNode {
   getInterfaces(): string[] {
     return Object.keys(this.interfaces);
   }
+  getFirstAvailableInterface(): T {
+    for(let key in this.interfaces) {
+      console.log(this.name, key, this.interfaces[key].isConnected());
+      if( !this.interfaces[key].isConnected() ) {
+        return this.interfaces[key];
+      }
+    }
 
+    throw new Error("No available interfaces");
+  }
+
+  protected override cloneInto(node: Node<T>): void {
+    super.cloneInto(node);
+    for(let key in this.interfaces)
+      node.addInterface(key);
+  }
 
   abstract send(message: string, dst: Address): void;
 }
@@ -74,6 +91,12 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
     this.interfaces[name] = iface;
 
     return iface;
+  }
+
+  clone(): SwitchHost {
+    const clone = new SwitchHost();
+    this.cloneInto(clone);
+    return clone;
   }
 
   send(message: string, dst: MacAddress): void {
@@ -115,6 +138,12 @@ export class RouterHost extends Node<NetworkInterface> implements NetworkListene
 
     for(let i=0; i<iface; i++)
       this.addInterface();
+  }
+
+  clone(): RouterHost {
+    const clone = new RouterHost();
+    this.cloneInto(clone);
+    return clone;
   }
 
   addInterface(name: string = ""): NetworkInterface {
