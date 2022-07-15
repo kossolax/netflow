@@ -2,7 +2,9 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { BrowserModule } from '@angular/platform-browser';
-import { DiagramModule } from '@syncfusion/ej2-angular-diagrams';
+
+import { enableRipple } from '@syncfusion/ej2-base';
+import { DiagramModule, SnappingService } from '@syncfusion/ej2-angular-diagrams';
 import { MenuModule, TabModule } from '@syncfusion/ej2-angular-navigations';
 
 
@@ -13,6 +15,7 @@ import { HeaderComponent } from './components/header/header.component';
 import { LogicalComponent } from './components/logical/logical.component';
 import { PhysicalComponent } from './components/physical/physical.component';
 
+enableRipple(true);
 
 @NgModule({
   declarations: [
@@ -33,7 +36,7 @@ import { PhysicalComponent } from './components/physical/physical.component';
     TabModule,
     DiagramModule,
   ],
-  providers: [],
+  providers: [SnappingService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
