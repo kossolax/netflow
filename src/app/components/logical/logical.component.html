@@ -1,4 +1,5 @@
 <ejs-diagram #diagram id="diagram"
   (click)="onClick($event)"
->
-</ejs-diagram>
+  (doubleClick)="onDoubleClick($event)"
+></ejs-diagram>
+<app-dialog-config [node]="configNode" (exit)="configNode=null"></app-dialog-config>

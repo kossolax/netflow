@@ -1,12 +1,13 @@
 import { AfterViewInit, Component, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { AnnotationConstraints, ConnectorConstraints, DiagramComponent, DiagramConstraints, NodeConstraints, SnapConstraints, ConnectorModel, DiagramTools, ConnectorDrawingTool, MouseEventArgs, Connector, ToolBase, CommandHandler } from '@syncfusion/ej2-angular-diagrams';
+import { Observable } from 'rxjs';
+
 import { HardwareInterface } from 'src/app/models/layers/datalink.model';
 import { NetworkInterface } from 'src/app/models/layers/network.model';
 import { AbstractLink, Link } from 'src/app/models/layers/physical.model';
 import { Network } from 'src/app/models/network.model';
 import { GenericNode, RouterHost, SwitchHost } from 'src/app/models/node.model';
 import { NetworkService } from 'src/app/services/network.service';
-
 
 @Component({
   selector: 'app-logical',
@@ -16,7 +17,8 @@ import { NetworkService } from 'src/app/services/network.service';
 })
 export class LogicalComponent implements OnInit, AfterViewInit  {
   currentNetwork: Network;
-  node: GenericNode|null = null;
+  addingNode: GenericNode|null = null;
+  configNode: GenericNode|null = null;
 
   @ViewChild("diagram") diagram!: DiagramComponent;
 
@@ -55,9 +57,9 @@ export class LogicalComponent implements OnInit, AfterViewInit  {
 
     this.network.node$.subscribe( (data: GenericNode | AbstractLink | null) => {
       if( data instanceof GenericNode )
-        this.node = data;
+        this.addingNode = data;
       else
-        this.node = null;
+        this.addingNode = null;
 
       if( data instanceof AbstractLink )
         this.diagram.tool = DiagramTools.ContinuousDraw;
@@ -67,17 +69,25 @@ export class LogicalComponent implements OnInit, AfterViewInit  {
     });
   }
 
-
   onClick(e: any): void {
-    if( e.position === undefined || this.node === null )
+    if( e.position === undefined || this.addingNode === null )
       return;
 
-    const node = this.node.clone();
+    const node = this.addingNode.clone();
     node.x = e.position.x;
     node.y = e.position.y;
 
     this.onNewNode(node);
   }
+  onDoubleClick(e: any) {
+    if( e.position === undefined || e.source === null )
+      return;
+
+    const nodeId = (e.source as any).properties.id as string;
+    const node = this.currentNetwork.nodes[nodeId];
+    this.configNode = node;
+  }
+
   onNewNode(node: GenericNode) {
     this.currentNetwork.nodes[node.guid] = node;
     this.addNode(node);

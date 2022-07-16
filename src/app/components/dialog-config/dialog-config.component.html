@@ -1,0 +1,11 @@
+<ejs-dialog id='dialog' #template showCloseIcon='true' isModal="true" [visible]="node!==null" height='250px' width='435px' (close)="onClose()">
+  <ng-template #header>
+    {{node?.name}}
+  </ng-template>
+  <ng-template #content>
+    CONTENT
+  </ng-template>
+  <ng-template #footerTemplate>
+    FOOTER
+  </ng-template>
+</ejs-dialog>

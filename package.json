@@ -20,6 +20,7 @@
     "@angular/router": "^14.0.5",
     "@syncfusion/ej2-angular-diagrams": "^20.1.61",
     "@syncfusion/ej2-angular-navigations": "^20.1.61",
+    "@syncfusion/ej2-angular-popups": "^20.1.47",
     "@syncfusion/ej2-navigations": "^20.1.61",
     "rxjs": "~7.5.0",
     "tslib": "^2.3.0",
