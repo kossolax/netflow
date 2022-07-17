@@ -79,7 +79,7 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
   }
 
   addInterface(name: string = ""): HardwareInterface {
-    const mac = new MacAddress();
+    const mac = MacAddress.generateAddress();
 
     if( name == "" )
       name = "GigabitEthernet0/" + Object.keys(this.interfaces).length;
@@ -148,8 +148,8 @@ export class RouterHost extends Node<NetworkInterface> implements NetworkListene
     if( name == "" )
       name = "GigabitEthernet0/" + Object.keys(this.interfaces).length;
 
-    const ip = new IPAddress();
-    const mac = new MacAddress();
+    const ip = IPAddress.generateAddress();
+    const mac = MacAddress.generateAddress();
 
     const eth = new EthernetInterface(this, mac);
     const iface = new IPInterface(this, name, eth);

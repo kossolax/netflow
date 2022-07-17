@@ -25,18 +25,43 @@
                   <ng-template #content>
                     <ng-container *ngIf="node.getInterface(item) as iface">
 
-                      <ejs-switch onLabel="ON" offLabel="OFF" [checked]="iface.isActive()" (change)="$event.checked ? iface.up() : iface.down()"></ejs-switch>
+                      <div class="e-input-group">
+                        <ejs-switch
+                          onLabel="ON" offLabel="OFF"
+                          [checked]="iface.isActive()"
+                          (change)="$event.checked ? iface.up() : iface.down()"
+                        >
+                        </ejs-switch>
+                      </div>
 
-                      <fieldset>
+                      <div class="e-input-group">
                         <ejs-radiobutton label="1000" name="speed" value="1000" checked="true"></ejs-radiobutton>
                         <ejs-radiobutton label="100"  name="speed" value="100" ></ejs-radiobutton>
                         <ejs-radiobutton label="10"   name="speed" value="10"  ></ejs-radiobutton>
-                      </fieldset>
+                      </div>
 
-                      <fieldset>
-                        <ejs-textbox *ngIf="$any(iface).getMacAddress" placeholder="The MAC address" floatLabelType="Auto" [value]="$any(iface).getMacAddress()"></ejs-textbox>
-                        <ejs-textbox *ngIf="$any(iface).getNetAddress" placeholder="The NET address" floatLabelType="Auto" [value]="$any(iface).getNetAddress()"></ejs-textbox>
-                      </fieldset>
+                      <div class="e-input-group">
+                        <ejs-textbox
+                          *ngIf="$any(iface).getMacAddress"
+                          placeholder="The MAC address"
+                          floatLabelType="Auto"
+                          class="e-input"
+                          [value]="$any(iface).getMacAddress().toString()"
+                          (change)="setMacAddress($any(iface), $event)"
+                        >
+                        </ejs-textbox>
+                      </div>
+                      <div class="e-input-group">
+                        <ejs-textbox
+                          *ngIf="$any(iface).getNetAddress"
+                          placeholder="The NET address"
+                          floatLabelType="Auto"
+                          class="e-input"
+                          [value]="$any(iface).getNetAddress().toString()"
+                          (change)="setNetAddress($any(iface), $event)"
+                        >
+                        </ejs-textbox>
+                      </div>
                     </ng-container>
                   </ng-template>
                 </e-tabitem>

@@ -1,4 +1,4 @@
-import { HardwareAddress, NetworkAddress } from "../address.model";
+import { HardwareAddress, IPAddress, NetworkAddress } from "../address.model";
 import { DatalinkMessage, NetworkMessage } from "../message.model";
 import { GenericNode } from "../node.model";
 import { ArpProtocol } from "../protocols/arp.model";
@@ -29,11 +29,18 @@ export abstract class NetworkInterface extends Interface implements DatalinkList
       throw new Error("IP address already added");
     this.addresses.push(ip);
   }
-  getNetAddress(): NetworkAddress {
-    return this.addresses[0];
+  getNetAddress(index: number=0): NetworkAddress {
+    return this.addresses[index];
   }
+  setNetAddress(addr: NetworkAddress, index: number=0) {
+    this.addresses[index] = addr;
+  }
+
   getMacAddress(): HardwareAddress {
     return this.datalink.getMacAddress();
+  }
+  setMacAddress(addr: HardwareAddress) {
+    return this.datalink.setMacAddress(addr);
   }
   getInterface(index: number): HardwareInterface {
     return this.datalink;

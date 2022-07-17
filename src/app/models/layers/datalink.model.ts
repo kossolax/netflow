@@ -81,6 +81,9 @@ export abstract class HardwareInterface extends Interface implements PhysicalLis
   getMacAddress(): HardwareAddress {
     return this.address;
   }
+  setMacAddress(addr: HardwareAddress) {
+    return this.address;
+  }
 
 
   receiveBits(message: PhysicalMessage): void {
