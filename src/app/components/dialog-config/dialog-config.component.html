@@ -1,11 +1,48 @@
-<ejs-dialog id='dialog' #template showCloseIcon='true' isModal="true" [visible]="node!==null" height='250px' width='435px' (close)="onClose()">
+<ejs-dialog id='dialog' #dialog showCloseIcon='true' isModal="true" [visible]="node!==null" height='600px' width='600px' (close)="onClose()">
   <ng-template #header>
     {{node?.name}}
   </ng-template>
   <ng-template #content>
-    CONTENT
+    <ejs-tab id="tabs" #tabs class="e-fill">
+      <e-tabitems>
+        <e-tabitem *ngIf="false">
+          <ng-template #headerTemplate>Physical</ng-template>
+          <ng-template #content>cc</ng-template>
+        </e-tabitem>
+        <e-tabitem>
+          <ng-template #headerTemplate>Configuration</ng-template>
+          <ng-template #content>
+            <ejs-tab id="tab_config" #tab_config class="e-fill" headerPlacement="Left" headerStyle="Fill">
+              <e-tabitems>
+                <e-tabitem>
+                  <ng-template #headerTemplate>Setting</ng-template>
+                  <ng-template #content>cc</ng-template>
+                </e-tabitem>
+                <ng-container *ngIf="node!==null">
+                  <e-tabitem *ngFor="let item of $any(node).getInterfaces()">
+                    <ng-template #headerTemplate>{{item}}</ng-template>
+                  </e-tabitem>
+                </ng-container>
+              </e-tabitems>
+            </ejs-tab>
+          </ng-template>
+        </e-tabitem>
+        <e-tabitem *ngIf="IsServer(node)">
+          <ng-template #headerTemplate>Service</ng-template>
+          <ng-template #content>cc</ng-template>
+        </e-tabitem>
+        <e-tabitem *ngIf="IsServer(node)">
+          <ng-template #headerTemplate>Desktop</ng-template>
+          <ng-template #content>cc</ng-template>
+        </e-tabitem>
+        <e-tabitem *ngIf="!IsServer(node)">
+          <ng-template #headerTemplate>Command-line</ng-template>
+          <ng-template #content>cc</ng-template>
+        </e-tabitem>
+      </e-tabitems>
+    </ejs-tab>
   </ng-template>
   <ng-template #footerTemplate>
-    FOOTER
+    {{node?.name}}
   </ng-template>
 </ejs-dialog>

@@ -15,7 +15,7 @@ import { NetworkService } from 'src/app/services/network.service';
   styleUrls: ['./logical.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class LogicalComponent implements OnInit, AfterViewInit  {
+export class LogicalComponent implements AfterViewInit  {
   currentNetwork: Network;
   addingNode: GenericNode|null = null;
   configNode: GenericNode|null = null;
@@ -24,8 +24,7 @@ export class LogicalComponent implements OnInit, AfterViewInit  {
 
   constructor(private network: NetworkService) {
     this.currentNetwork = new Network();
-  }
-  ngOnInit(): void {
+    this.configNode = new RouterHost("Router-Test", 5);
   }
   ngAfterViewInit(): void {
     this.diagram.constraints = DiagramConstraints.Default | DiagramConstraints.Bridging;
