@@ -18,7 +18,7 @@ import { NetworkService } from 'src/app/services/network.service';
 export class LogicalComponent implements AfterViewInit  {
   currentNetwork: Network;
   addingNode: GenericNode|null = null;
-  configNode: GenericNode|null = null;
+  configNode: SwitchHost|RouterHost|null = null;
 
   @ViewChild("diagram") diagram!: DiagramComponent;
 
@@ -84,7 +84,7 @@ export class LogicalComponent implements AfterViewInit  {
 
     const nodeId = (e.source as any).properties.id as string;
     const node = this.currentNetwork.nodes[nodeId];
-    this.configNode = node;
+    this.configNode = node as (SwitchHost|RouterHost);
   }
 
   onNewNode(node: GenericNode) {

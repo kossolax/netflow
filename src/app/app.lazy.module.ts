@@ -9,9 +9,10 @@ import { DialogModule } from '@syncfusion/ej2-angular-popups';
 
 import { LogicalComponent } from './components/logical/logical.component';
 import { PhysicalComponent } from './components/physical/physical.component';
-import { BrowserModule } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { DialogConfigComponent } from './components/dialog-config/dialog-config.component';
+import { TextBoxModule } from '@syncfusion/ej2-angular-inputs';
+import { CheckBoxModule, RadioButtonModule, SwitchModule } from '@syncfusion/ej2-angular-buttons';
 
 const routes: Routes = [
   { path: 'logical', component: LogicalComponent },
@@ -36,6 +37,9 @@ const routes: Routes = [
     TabModule,
     DiagramModule,
     DialogModule,
+    TextBoxModule,
+    SwitchModule,
+    RadioButtonModule
   ],
   providers: [SnappingService],
   bootstrap: [],

@@ -12,17 +12,34 @@
         <e-tabitem>
           <ng-template #headerTemplate>Configuration</ng-template>
           <ng-template #content>
-            <ejs-tab id="tab_config" #tab_config class="e-fill" headerPlacement="Left" headerStyle="Fill">
+            <ejs-tab id="tab_config" #tab_config class="e-fill" headerPlacement="Left" headerStyle="Fill" *ngIf="node!==null">
               <e-tabitems>
                 <e-tabitem>
                   <ng-template #headerTemplate>Setting</ng-template>
-                  <ng-template #content>cc</ng-template>
+                  <ng-template #content>
+                    <ejs-textbox placeholder="The name of the router" floatLabelType="Auto" [(value)]="node.name"></ejs-textbox>
+                  </ng-template>
                 </e-tabitem>
-                <ng-container *ngIf="node!==null">
-                  <e-tabitem *ngFor="let item of $any(node).getInterfaces()">
-                    <ng-template #headerTemplate>{{item}}</ng-template>
-                  </e-tabitem>
-                </ng-container>
+                <e-tabitem *ngFor="let item of node.getInterfaces()">
+                  <ng-template #headerTemplate>{{item}}</ng-template>
+                  <ng-template #content>
+                    <ng-container *ngIf="node.getInterface(item) as iface">
+
+                      <ejs-switch onLabel="ON" offLabel="OFF" [checked]="iface.isActive()" (change)="$event.checked ? iface.up() : iface.down()"></ejs-switch>
+
+                      <fieldset>
+                        <ejs-radiobutton label="1000" name="speed" value="1000" checked="true"></ejs-radiobutton>
+                        <ejs-radiobutton label="100"  name="speed" value="100" ></ejs-radiobutton>
+                        <ejs-radiobutton label="10"   name="speed" value="10"  ></ejs-radiobutton>
+                      </fieldset>
+
+                      <fieldset>
+                        <ejs-textbox *ngIf="$any(iface).getMacAddress" placeholder="The MAC address" floatLabelType="Auto" [value]="$any(iface).getMacAddress()"></ejs-textbox>
+                        <ejs-textbox *ngIf="$any(iface).getNetAddress" placeholder="The NET address" floatLabelType="Auto" [value]="$any(iface).getNetAddress()"></ejs-textbox>
+                      </fieldset>
+                    </ng-container>
+                  </ng-template>
+                </e-tabitem>
               </e-tabitems>
             </ejs-tab>
           </ng-template>

@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { TabComponent } from '@syncfusion/ej2-angular-navigations';
 import { DialogComponent } from '@syncfusion/ej2-angular-popups';
-import { GenericNode, RouterHost, ServerHost } from 'src/app/models/node.model';
+import { GenericNode, RouterHost, ServerHost, SwitchHost } from 'src/app/models/node.model';
 
 @Component({
   selector: 'app-dialog-config',
@@ -12,7 +12,7 @@ export class DialogConfigComponent implements OnInit, OnChanges {
   @ViewChild('dialog') dialog!: DialogComponent;
   @ViewChild('tabs') tabs!: TabComponent;
 
-  @Input() node: GenericNode|null = null;
+  @Input() node: SwitchHost|RouterHost|null = null;
   @Output() exit: EventEmitter<void> = new EventEmitter<void>();
 
   IsServer(node: GenericNode|null): boolean {
