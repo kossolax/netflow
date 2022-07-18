@@ -1,0 +1,38 @@
+<ejs-dialog id='dialog' #dialog showCloseIcon='true' isModal="true" [visible]="node!==null" height='600px' width='600px' (close)="onClose()">
+  <ng-template #header>
+    {{node?.name}}
+  </ng-template>
+  <ng-template #content>
+    <ejs-tab id="tabs" #tabs class="e-fill">
+      <e-tabitems>
+        <e-tabitem *ngIf="false">
+          <ng-template #headerTemplate>Physical</ng-template>
+          <ng-template #content>cc</ng-template>
+        </e-tabitem>
+        <e-tabitem>
+          <ng-template #headerTemplate>Configuration</ng-template>
+          <ng-template #content>
+            <app-dialog-config [node]="node"></app-dialog-config>
+          </ng-template>
+        </e-tabitem>
+        <e-tabitem *ngIf="IsServer(node)">
+          <ng-template #headerTemplate>Service</ng-template>
+          <ng-template #content>cc</ng-template>
+        </e-tabitem>
+        <e-tabitem *ngIf="IsServer(node)">
+          <ng-template #headerTemplate>Desktop</ng-template>
+          <ng-template #content>cc</ng-template>
+        </e-tabitem>
+        <e-tabitem *ngIf="!IsServer(node)">
+          <ng-template #headerTemplate>Command-line</ng-template>
+          <ng-template #content>
+            <app-dialog-cli [node]="node"></app-dialog-cli>
+          </ng-template>
+        </e-tabitem>
+      </e-tabitems>
+    </ejs-tab>
+  </ng-template>
+  <ng-template #footerTemplate>
+    {{node?.name}}
+  </ng-template>
+</ejs-dialog>
