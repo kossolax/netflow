@@ -15,6 +15,7 @@ export abstract class Address {
   toString(): string {
     return this.address;
   }
+  abstract get length(): number;
 
   get isBroadcast() {
     return this.broadcast;
@@ -52,6 +53,9 @@ export class MacAddress extends HardwareAddress {
     }
 
     return true;
+  }
+  get length(): number {
+    return 6;
   }
 
   static generateAddress(): MacAddress {
@@ -98,6 +102,9 @@ export class IPAddress extends NetworkAddress {
         return false;
     }
     return true;
+  }
+  get length(): number {
+    return 4;
   }
 
   static generateAddress(): IPAddress {

@@ -10,9 +10,14 @@ export abstract class Message {
   toString(): string {
     return this.payload.toString();
   }
+  get length(): number {
+    return this.payload.length;
+  }
 }
 export class PhysicalMessage extends Message {
-
+  override get length(): number {
+    return super.length;
+  }
 }
 export class DatalinkMessage extends PhysicalMessage {
   mac_src: HardwareAddress;
@@ -24,6 +29,11 @@ export class DatalinkMessage extends PhysicalMessage {
     this.mac_src = mac_src;
     this.mac_dst = mac_dst;
   }
+
+  override get length(): number {
+    return super.length + this.mac_src.length * 2;
+  }
+
 }
 export class NetworkMessage extends DatalinkMessage {
   net_src: NetworkAddress;
@@ -35,5 +45,9 @@ export class NetworkMessage extends DatalinkMessage {
     super(payload, mac_src, mac_dst);
     this.net_src = net_src;
     this.net_dst = net_dst;
+  }
+
+  override get length(): number {
+    return super.length + this.net_src.length * 2;
   }
 }
