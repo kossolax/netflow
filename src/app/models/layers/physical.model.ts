@@ -37,6 +37,9 @@ export abstract class AbstractLink {
     node.guid = Math.random().toString(36).substring(2, 9);
     return node;
   }
+  get Speed(): number {
+    return this.speed;
+  }
 
   public getPropagationDelay() {
 		return length / (Link.SPEED_OF_LIGHT*2/3);
