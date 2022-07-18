@@ -13,8 +13,8 @@ describe('Physical layer test', () => {
   let listener: SimpleListener;
 
   beforeEach(async () => {
-    A = new EthernetInterface(new SwitchHost(), new MacAddress());
-    B = new EthernetInterface(new SwitchHost(), new MacAddress());
+    A = new EthernetInterface(new SwitchHost(), MacAddress.generateAddress());
+    B = new EthernetInterface(new SwitchHost(), MacAddress.generateAddress());
 
     A.up();
     B.up();

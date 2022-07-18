@@ -132,7 +132,7 @@ describe('Network layer test', () => {
   it( 'L3 NetAddress function ', () => {
 
     const addr1 = A.getInterface(0).getNetAddress();
-    const addr2 = new IPAddress();
+    const addr2 = IPAddress.generateAddress();
 
     expect(A.getInterface(0).hasNetAddress(addr1)).toBe(true);
     expect(A.getInterface(0).hasNetAddress(IPAddress.generateBroadcast())).toBe(true);

@@ -135,7 +135,7 @@ describe('Datalink layer test', () => {
   it( 'L2 MacAddress function ', () => {
 
     const mac1 = A.getInterface(0).getMacAddress();
-    const mac2 = new MacAddress();
+    const mac2 = MacAddress.generateAddress();
 
     expect(A.getInterface(0).hasMacAddress(mac1)).toBe(true);
     expect(A.getInterface(0).hasMacAddress(MacAddress.generateBroadcast())).toBe(true);

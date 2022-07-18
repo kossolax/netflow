@@ -46,8 +46,8 @@ export class MacAddress extends HardwareAddress {
       return false;
 
     for( let i = 0; i < 6; i++ ) {
-      const value = Number(mac[i]);
-      if( mac[i].length === 0 || isNaN(value) || value < 0 || value > 255 )
+      const value = parseInt(mac[i], 16);
+      if( mac[i].length === 0 || value.toString(16).toUpperCase() !== mac[i] || isNaN(value) || value < 0 || value > 255 )
         return false;
     }
 
@@ -57,7 +57,7 @@ export class MacAddress extends HardwareAddress {
   static generateAddress(): MacAddress {
     const mac = new Array(6);
     for (let i = 0; i < 6; i++)
-      mac[i] = Math.floor(Math.random() * 256);
+      mac[i] = Math.floor(Math.random() * 256).toString(16);
     return new MacAddress(mac.join(':'));
   }
 
@@ -82,6 +82,7 @@ export class IPAddress extends NetworkAddress {
 
     if( address == "255.255.255.255" )
       this.broadcast = true;
+
     if( !this.IsValid() )
       throw new Error("Invalid IP address");
   }
@@ -92,8 +93,8 @@ export class IPAddress extends NetworkAddress {
       return false;
 
     for( let i = 0; i < 4; i++ ) {
-      const value = Number(ip[i]);
-      if( ip[i].length === 0 || isNaN(value) || value < 0 || value > 255 )
+      const value = parseInt(ip[i], 10);
+      if( ip[i].length === 0 || value.toString(10) !== ip[i] || isNaN(value) || value < 0 || value > 255 )
         return false;
     }
     return true;
