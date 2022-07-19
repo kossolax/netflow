@@ -78,7 +78,10 @@ export class MacAddress extends HardwareAddress {
 }
 
 export abstract class NetworkAddress extends Address {
-  isMask: boolean = false;
+  protected isMask: boolean = false;
+  get IsMask(): boolean {
+    return this.isMask;
+  }
   abstract generateMask(): IPAddress;
 }
 export class IPAddress extends NetworkAddress {

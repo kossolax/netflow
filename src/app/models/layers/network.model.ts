@@ -40,11 +40,14 @@ export abstract class NetworkInterface extends Interface implements DatalinkList
     return this.addresses[index].mask;
   }
   setNetAddress(addr: NetworkAddress, index: number=0) {
+    if( addr.IsMask )
+      throw new Error("Invalid netmask");
+
     this.addresses[index].addr = addr;
     this.addresses[index].mask = addr.generateMask();
   }
   setNetMask(addr: NetworkAddress, index: number=0) {
-    if( !addr.isMask )
+    if( !addr.IsMask )
       throw new Error("Invalid netmask");
     this.addresses[index].mask = addr;
   }
