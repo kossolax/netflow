@@ -40,6 +40,9 @@ export abstract class AbstractLink {
   get Speed(): number {
     return this.speed;
   }
+  set Speed(speed: number) {
+    this.speed = speed;
+  }
 
   public getPropagationDelay() {
 		return length / (Link.SPEED_OF_LIGHT*2/3);

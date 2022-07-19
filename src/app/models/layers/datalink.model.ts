@@ -34,6 +34,11 @@ export abstract class Interface {
   get Speed(): number {
     return this.link?.Speed || 0;
   }
+  set Speed(speed: number) {
+    if( !this.link )
+      throw new Error("Link is not connected");
+    this.link.Speed = speed;
+  }
   // ---
   isConnected(): boolean {
     return this.link != null;
