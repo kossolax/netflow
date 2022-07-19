@@ -21,12 +21,12 @@
           </div>
 
           <div class="e-input-group">
-            <ejs-radiobutton label="1000" name="speed" value="1000" [checked]="iface.Link?.Speed===1000"></ejs-radiobutton>
-            <ejs-radiobutton label="100"  name="speed" value="100"  [checked]="iface.Link?.Speed===100"></ejs-radiobutton>
-            <ejs-radiobutton label="10"   name="speed" value="10"   [checked]="iface.Link?.Speed===10"></ejs-radiobutton>
-
-
-            {{iface.Link?.Speed}}
+            <ejs-radiobutton *ngFor="let speed of [1000, 100, 10, 0]"
+              name="speed"
+              [label]="speed === 0 ? 'Auto' : speed + 'mbps'"
+              [value]="speed*1000*1000"
+              [checked]="iface.Speed===speed*1000*1000"
+            ></ejs-radiobutton>
           </div>
 
           <div class="e-input-group">

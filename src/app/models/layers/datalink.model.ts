@@ -31,6 +31,9 @@ export abstract class Interface {
   isActive() : boolean {
     return this.status;
   }
+  get Speed(): number {
+    return this.link?.Speed || 0;
+  }
   // ---
   isConnected(): boolean {
     return this.link != null;
@@ -51,7 +54,7 @@ export abstract class Interface {
 
     this.link = link;
   }
-  get Link(): Link | null {
+  protected get Link(): Link | null {
     return this.link;
   }
   get Host(): GenericNode {
