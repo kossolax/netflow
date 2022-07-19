@@ -13,7 +13,7 @@
         </div>
       </ng-template>
     </e-tabitem>
-    <e-tabitem *ngFor="let item of node.getInterfaces()">
+    <e-tabitem *ngFor="let item of node.getInterfaces(); let idx=index">
       <ng-template #headerTemplate>{{item}}</ng-template>
       <ng-template #content>
         <ng-container *ngIf="node.getInterface(item) as iface">
@@ -35,7 +35,7 @@
 
           <div class="e-input-group">
             <ejs-radiobutton *ngFor="let speed of [1000, 100, 10, 0]"
-              name="speed"
+              [name]="'speed_' + idx"
               [label]="speed === 0 ? 'Auto' : speed + 'mbps'"
               [value]="speed"
               [checked]="iface.Speed===speed"
