@@ -1,6 +1,7 @@
+@import '../../../theme.scss';
+
 $gap: 0.5em;
 $size: 64px;
-$color: #e3165b;
 
 :host {
   ul {
@@ -20,7 +21,7 @@ $color: #e3165b;
       align-items: center;
       justify-content: center;
       background-color: white;
-      border:  1px solid $color;
+      border:  1px solid $primary;
       border-radius: 10%;
 
       img {
@@ -28,8 +29,8 @@ $color: #e3165b;
       }
 
       &.selected {
-        background-color: $color;
-        border:  1px dashed $color;
+        background-color: $primary;
+        border:  1px dashed $accent;
       }
     }
 
