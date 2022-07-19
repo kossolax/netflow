@@ -41,6 +41,8 @@ export abstract class AbstractLink {
     return this.speed;
   }
   set Speed(speed: number) {
+    if( speed % 10 != 0 )
+      throw new Error("Speed must be a multiple of 10");
     this.speed = speed;
   }
 
@@ -48,7 +50,11 @@ export abstract class AbstractLink {
 		return length / (Link.SPEED_OF_LIGHT*2/3);
 	}
   public getTransmissionDelay(bytes: number) {
-    return bytes / this.speed;
+    let speed = this.speed;
+    if( speed === 0 )
+      speed = 10;
+
+    return bytes / (speed*1000*1000);
   }
   public getDelay(bytes: number) {
     return this.getPropagationDelay() + this.getTransmissionDelay(bytes);
