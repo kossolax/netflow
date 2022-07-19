@@ -89,7 +89,6 @@ export class IPAddress extends NetworkAddress {
     if( !isMask && address == "255.255.255.255" )
       this.broadcast = true;
 
-      console.log(this.address);
     if( !this.IsValid() )
       throw new Error("Invalid IP address");
   }
@@ -106,7 +105,7 @@ export class IPAddress extends NetworkAddress {
     }
 
     if( this.isMask ) {
-      const binary = this.address.split('.').map(value => parseInt(value, 10).toString(2));
+      const binary = this.address.split('.').map(value => parseInt(value, 10).toString(2).padStart(8, '0')).join('');
 
       let lookForOne = true;
       for( let i = 0; i < binary.length; i++ ) {
