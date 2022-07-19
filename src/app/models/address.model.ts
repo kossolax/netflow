@@ -78,16 +78,18 @@ export class MacAddress extends HardwareAddress {
 }
 
 export abstract class NetworkAddress extends Address {
+  isMask: boolean = false;
   abstract generateMask(): IPAddress;
 }
 export class IPAddress extends NetworkAddress {
-
-  constructor(address: string) {
+  constructor(address: string, isMask: boolean = false) {
     super(address);
 
-    if( address == "255.255.255.255" )
+    this.isMask = isMask;
+    if( !isMask && address == "255.255.255.255" )
       this.broadcast = true;
 
+      console.log(this.address);
     if( !this.IsValid() )
       throw new Error("Invalid IP address");
   }
@@ -102,6 +104,23 @@ export class IPAddress extends NetworkAddress {
       if( ip[i].length === 0 || value.toString(10) !== ip[i] || isNaN(value) || value < 0 || value > 255 )
         return false;
     }
+
+    if( this.isMask ) {
+      const binary = this.address.split('.').map(value => parseInt(value, 10).toString(2));
+
+      let lookForOne = true;
+      for( let i = 0; i < binary.length; i++ ) {
+        const bit = binary[i];
+
+        if( lookForOne && bit === '0' )
+          lookForOne = false;
+        else if( !lookForOne && bit === '1' )
+          return false;
+      }
+
+    }
+
+
     return true;
   }
   get length(): number {
@@ -122,15 +141,15 @@ export class IPAddress extends NetworkAddress {
     const firstBlock = parseInt(this.address.split('.')[0]);
 
     if( firstBlock >= 0 && firstBlock <= 127 )        // class A
-      return new IPAddress("255.0.0.0.0");
+      return new IPAddress("255.0.0.0", true);
     else if( firstBlock >= 128 && firstBlock <= 191 ) // class B
-      return new IPAddress("255.255.0.0");
+      return new IPAddress("255.255.0.0", true);
     else if( firstBlock >= 192 && firstBlock <= 223 ) // class C
-      return new IPAddress("255.255.255.255.0");
+      return new IPAddress("255.255.255.0", true);
     else if( firstBlock >= 224 && firstBlock <= 240 ) // class D, multicast
-      return new IPAddress("255.255.255.255.0");
+      return new IPAddress("255.255.255.0", true);
     else                                              // class E, reserved
-      return new IPAddress("255.255.255.255.0");
+      return new IPAddress("255.255.255.0", true);
   }
 
   static generateBroadcast(): IPAddress {

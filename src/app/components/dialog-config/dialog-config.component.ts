@@ -49,7 +49,7 @@ export class DialogConfigComponent implements OnInit {
     evt.container.classList.remove("e-error");
 
     try {
-      iface.setNetMask(new IPAddress(evt.value));
+      iface.setNetMask(new IPAddress(evt.value, true));
     } catch( e ) {
       evt.container.classList.add("e-error");
     }
