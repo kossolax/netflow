@@ -1,4 +1,4 @@
-import { HardwareAddress, IPAddress, NetworkAddress } from "../address.model";
+import { HardwareAddress, NetworkAddress } from "../address.model";
 import { DatalinkMessage, NetworkMessage } from "../message.model";
 import { GenericNode } from "../node.model";
 import { ArpProtocol } from "../protocols/arp.model";
@@ -89,9 +89,6 @@ export abstract class NetworkInterface extends Interface implements DatalinkList
   }
 
   receivePacket(message: NetworkMessage) {
-    if( !this.isActive() )
-      throw new Error("Interface is down");
-
     this.getListener.map( i => {
       if( i != this && "receivePacket" in i)
         (i as NetworkListener).receivePacket(message, this);

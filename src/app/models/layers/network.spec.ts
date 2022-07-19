@@ -2,7 +2,7 @@ import { Link } from './physical.model';
 import { RouterHost, SwitchHost } from '../node.model';
 import { delay, take, timeout, catchError } from 'rxjs';
 import { SimpleListener } from '../protocols/protocols.model';
-import { IPAddress } from '../address.model';
+import { IPAddress, MacAddress } from '../address.model';
 
 describe('Network layer test', () => {
   let A: RouterHost;
@@ -129,6 +129,18 @@ describe('Network layer test', () => {
 
   });
 
+  it( 'L3 MacAddress function ', () => {
+
+    const mac1 = A.getInterface(0).getMacAddress();
+    const mac2 = MacAddress.generateAddress();
+
+    expect(A.getInterface(0).getMacAddress()).toEqual(mac1);
+
+    A.getInterface(0).setMacAddress(mac2);
+    expect(A.getInterface(0).getMacAddress()).toEqual(mac2);
+
+  });
+
   it( 'L3 NetAddress function ', () => {
 
     const addr1 = A.getInterface(0).getNetAddress();
@@ -140,5 +152,31 @@ describe('Network layer test', () => {
 
     expect( () => A.getInterface(0).addNetAddress(addr1)).toThrow();
     expect( () => A.getInterface(0).addNetAddress(IPAddress.generateBroadcast())).toThrow();
+
+    A.getInterface(0).setNetAddress(addr2);
+    expect(A.getInterface(0).hasNetAddress(addr2)).toBe(true);
+
+    const mask = new IPAddress("255.0.0.0", true);
+    A.getInterface(0).setNetMask(mask);
+    expect(A.getInterface(0).getNetMask()).toEqual(new IPAddress("255.0.0.0", true))
+
+    expect( () => A.getInterface(0).setNetAddress(mask)).toThrow();
+    expect( () => A.getInterface(0).setNetMask(new IPAddress("255.0.255.0", true))).toThrow();
+    expect( () => A.getInterface(0).setNetMask(new IPAddress("255.0.255.0"))).toThrow();
+  });
+
+  it( 'L3 speed function ', () => {
+    let tmp = 10;
+
+    expect( () => A.getInterface(0).Speed = tmp ).toThrow();
+    expect( A.getInterface(0).Speed ).toBe(0);
+
+    let link1 = new Link(A.getInterface(0), B.getInterface(0), 100);
+    expect( () => A.getInterface(0).Speed = 42 ).toThrow();
+
+    [0, 10, 100, 1000].map( speed => {
+      A.getInterface(0).Speed = speed;
+      expect( link1.Speed ).toBe(speed);
+    });
   });
 });
