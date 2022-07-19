@@ -24,7 +24,30 @@ export class LogicalComponent implements AfterViewInit  {
 
   constructor(private network: NetworkService) {
     this.currentNetwork = new Network();
-    this.configNode = new RouterHost("Router-Test", 5);
+
+    setTimeout(() => {
+      this.debug();
+    }, 100);
+    this.configNode = null;
+    // this.configNode = new RouterHost("Router-Test", 5);
+  }
+
+  debug() {
+    let net = new Network();
+    let nodes: RouterHost[] = [];
+    nodes.push(new RouterHost("Router-1A", 2));
+    nodes.push(new RouterHost("Router-1B", 2));
+
+    let index = 0;
+    nodes.map( i => {
+      i.x = 256 + index*512 + Math.random() * 256;
+      i.y = 128 + Math.random() * 256;
+      net.nodes[i.guid] = i;
+      index++;
+    });
+    net.links.push(new Link(nodes[0].getFirstAvailableInterface(), nodes[1].getFirstAvailableInterface(), 10));
+    this.configNode = nodes[0];
+    this.network.setNetwork(net);
   }
   ngAfterViewInit(): void {
     this.diagram.constraints = DiagramConstraints.Default | DiagramConstraints.Bridging;

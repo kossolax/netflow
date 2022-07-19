@@ -20,14 +20,13 @@ export abstract class AbstractLink {
     this.iface2 = iface2 instanceof(NetworkInterface) ? iface2.getInterface(0) : iface2;
 
     this.length = length;
+    this.speed = 0;
 
     if( this.iface1 != null )
       this.iface1.connectTo(this);
     if( this.iface2 != null )
       this.iface2.connectTo(this);
 
-    const mbps = 100;
-    this.speed = mbps * 1000 * 1000;
   }
   toString(): string {
     return `${this.iface1} <->  ${this.iface2}`;
