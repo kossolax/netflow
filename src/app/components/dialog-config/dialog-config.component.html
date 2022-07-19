@@ -3,7 +3,14 @@
     <e-tabitem>
       <ng-template #headerTemplate>Setting</ng-template>
       <ng-template #content>
-        <ejs-textbox placeholder="The name of the router" floatLabelType="Auto" [(value)]="node.name"></ejs-textbox>
+        <div class="e-input-group">
+          <ejs-textbox
+            placeholder="The name of the router"
+            floatLabelType="Auto"
+            [(value)]="node.name"
+          >
+        </ejs-textbox>
+        </div>
       </ng-template>
     </e-tabitem>
     <e-tabitem *ngFor="let item of node.getInterfaces()">
@@ -14,7 +21,7 @@
           <div class="e-input-group">
 
             <label for="check">
-              <span *ngIf="iface.isActive()">ON</span>
+              <span *ngIf="iface.isActive()">ON&nbsp;&nbsp;</span>
               <span *ngIf="!iface.isActive()">OFF</span>
             </label>
 
