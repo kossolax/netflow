@@ -18,6 +18,15 @@ export class DialogConfigComponent implements OnInit {
   ngOnInit(): void {
   }
 
+  setSpeed(iface: HardwareInterface|NetworkInterface, evt: any): void {
+    try {
+      iface.Speed = evt.value;
+    } catch( e ) {
+      console.log(evt, evt.event.target.value);
+//      evt.event.target.value = 0;
+    }
+  }
+
   setMacAddress(iface: HardwareInterface|NetworkInterface, evt: any): void {
     evt.container.classList.remove("e-error");
 
@@ -32,6 +41,15 @@ export class DialogConfigComponent implements OnInit {
 
     try {
       iface.setNetAddress(new IPAddress(evt.value));
+    } catch( e ) {
+      evt.container.classList.add("e-error");
+    }
+  }
+  setNetMask(iface: NetworkInterface, evt: any): void {
+    evt.container.classList.remove("e-error");
+
+    try {
+      iface.setNetMask(new IPAddress(evt.value));
     } catch( e ) {
       evt.container.classList.add("e-error");
     }

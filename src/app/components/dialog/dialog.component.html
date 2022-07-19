@@ -1,4 +1,4 @@
-<ejs-dialog id='dialog' #dialog showCloseIcon='true' isModal="true" [visible]="node!==null" height='600px' width='600px' (close)="onClose()">
+<ejs-dialog id='dialog' #dialog showCloseIcon='true' isModal="true" [visible]="node!==null" height='480px' width='640px' (close)="onClose()">
   <ng-template #header>
     {{node?.name}}
   </ng-template>
@@ -31,8 +31,5 @@
         </e-tabitem>
       </e-tabitems>
     </ejs-tab>
-  </ng-template>
-  <ng-template #footerTemplate>
-    {{node?.name}}
   </ng-template>
 </ejs-dialog>
