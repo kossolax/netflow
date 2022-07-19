@@ -1,4 +1,4 @@
-import { HardwareAddress, NetworkAddress } from "../address.model";
+import { HardwareAddress, MacAddress, NetworkAddress } from "../address.model";
 import { HardwareInterface } from "../layers/datalink.model";
 import { NetworkInterface } from "../layers/network.model";
 import { DatalinkMessage, NetworkMessage } from "../message.model";
@@ -44,7 +44,7 @@ export class ArpProtocol implements DatalinkListener {
   sendArpRequest(addr: NetworkAddress): void {
     const arp = new ArpMessage("request", addr);
 
-    const message: DatalinkMessage = new DatalinkMessage(arp, this.interface.getMacAddress(), this.interface.getMacAddress().generateBroadcast());
+    const message: DatalinkMessage = new DatalinkMessage(arp, this.interface.getMacAddress(), MacAddress.generateBroadcast());
     this.interface.sendTrame(message);
   }
 

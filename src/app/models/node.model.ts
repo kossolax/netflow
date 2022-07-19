@@ -1,5 +1,5 @@
 import { Observable, Subject } from "rxjs";
-import { Address, MacAddress, IPAddress, NetworkAddress } from "./address.model";
+import { Address, MacAddress, IPAddress, NetworkAddress, HardwareAddress } from "./address.model";
 import { EthernetInterface, HardwareInterface, Interface } from "./layers/datalink.model";
 import { IPInterface, NetworkInterface } from "./layers/network.model";
 import { DatalinkMessage, NetworkMessage } from "./message.model";
@@ -97,7 +97,7 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
     return clone;
   }
 
-  send(message: string, dst: MacAddress): void {
+  send(message: string, dst: HardwareAddress): void {
     const src = this.getInterface(0).getMacAddress();
 
     const msg = new DatalinkMessage(
