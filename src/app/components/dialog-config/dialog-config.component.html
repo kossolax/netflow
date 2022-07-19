@@ -12,8 +12,14 @@
         <ng-container *ngIf="node.getInterface(item) as iface">
 
           <div class="e-input-group">
+
+            <label for="check">
+              <span *ngIf="iface.isActive()">ON</span>
+              <span *ngIf="!iface.isActive()">OFF</span>
+            </label>
+
             <ejs-switch
-              onLabel="ON" offLabel="OFF"
+              id="check"
               [checked]="iface.isActive()"
               (change)="$event.checked ? iface.up() : iface.down()"
             >
@@ -26,6 +32,8 @@
               [label]="speed === 0 ? 'Auto' : speed + 'mbps'"
               [value]="speed*1000*1000"
               [checked]="iface.Speed===speed*1000*1000"
+              [disabled]="!iface.isConnected() && speed!==0"
+              (change)="setSpeed(iface, $event)"
             ></ejs-radiobutton>
           </div>
 
@@ -48,6 +56,15 @@
               class="e-input"
               [value]="$any(iface).getNetAddress().toString()"
               (change)="setNetAddress($any(iface), $event)"
+            >
+            </ejs-textbox>
+            <ejs-textbox
+              *ngIf="$any(iface).getNetMask"
+              placeholder="The subnet MASK"
+              floatLabelType="Auto"
+              class="e-input"
+              [value]="$any(iface).getNetMask().toString()"
+              (change)="setNetMask($any(iface), $event)"
             >
             </ejs-textbox>
           </div>
