@@ -1,5 +1,5 @@
 import { Observable, Subject } from "rxjs";
-import { Address, MacAddress, IPAddress } from "./address.model";
+import { Address, MacAddress, IPAddress, NetworkAddress } from "./address.model";
 import { EthernetInterface, HardwareInterface, Interface } from "./layers/datalink.model";
 import { IPInterface, NetworkInterface } from "./layers/network.model";
 import { DatalinkMessage, NetworkMessage } from "./message.model";
@@ -161,7 +161,7 @@ export class RouterHost extends Node<NetworkInterface> implements NetworkListene
     return iface;
   }
 
-  send(message: string, net_dst: IPAddress): void {
+  send(message: string, net_dst: NetworkAddress): void {
     const mac_src = this.getInterface(0).getMacAddress();
     const net_src = this.getInterface(0).getNetAddress();
 

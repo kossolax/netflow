@@ -7,7 +7,7 @@ import { HardwareInterface, Interface } from "./datalink.model";
 
 
 export abstract class NetworkInterface extends Interface implements DatalinkListener, NetworkListener {
-  private addresses: NetworkAddress[] = [];
+  private addresses: {addr: NetworkAddress, mask: NetworkAddress}[] = [];
   private datalink: HardwareInterface;
   private discovery: ArpProtocol;
 
@@ -22,18 +22,29 @@ export abstract class NetworkInterface extends Interface implements DatalinkList
     if( ip.isBroadcast )
       return true;
 
-    return this.addresses.filter( i => i.equals(ip) ).length > 0;
+    return this.addresses.filter( i => i.addr.equals(ip) ).length > 0;
   }
   addNetAddress(ip: NetworkAddress): void {
     if( this.hasNetAddress(ip) )
       throw new Error("IP address already added");
-    this.addresses.push(ip);
+
+    this.addresses.push({
+      addr: ip,
+      mask: ip.generateMask()
+    });
   }
   getNetAddress(index: number=0): NetworkAddress {
-    return this.addresses[index];
+    return this.addresses[index].addr;
+  }
+  getNetMask(index: number=0): NetworkAddress {
+    return this.addresses[index].mask;
   }
   setNetAddress(addr: NetworkAddress, index: number=0) {
-    this.addresses[index] = addr;
+    this.addresses[index].addr = addr;
+    this.addresses[index].mask = addr.generateMask();
+  }
+  setNetMask(addr: NetworkAddress, index: number=0) {
+    this.addresses[index].mask = addr;
   }
 
   getMacAddress(): HardwareAddress {
@@ -58,6 +69,9 @@ export abstract class NetworkInterface extends Interface implements DatalinkList
   }
   override get Speed(): number {
     return this.datalink.Speed;
+  }
+  override set Speed(speed: number) {
+    this.datalink.Speed = speed;
   }
 
   receiveTrame(message: DatalinkMessage): void {
@@ -89,7 +103,7 @@ export abstract class NetworkInterface extends Interface implements DatalinkList
       throw new Error("Interface is down");
 
 
-    const loopback = this.addresses.filter( i => i.equals(message.net_dst) );
+    const loopback = this.addresses.filter( i => i.addr.equals(message.net_dst) );
     if( loopback.length > 0 ) {
       message.mac_dst = this.getMacAddress();
       this.receivePacket(message);

@@ -78,6 +78,7 @@ export class MacAddress extends HardwareAddress {
 }
 
 export abstract class NetworkAddress extends Address {
+  abstract generateMask(): IPAddress;
 }
 export class IPAddress extends NetworkAddress {
 
@@ -117,6 +118,21 @@ export class IPAddress extends NetworkAddress {
   override generateBroadcast(): IPAddress {
     return IPAddress.generateBroadcast();
   }
+  generateMask(): IPAddress {
+    const firstBlock = parseInt(this.address.split('.')[0]);
+
+    if( firstBlock >= 0 && firstBlock <= 127 )        // class A
+      return new IPAddress("255.0.0.0.0");
+    else if( firstBlock >= 128 && firstBlock <= 191 ) // class B
+      return new IPAddress("255.255.0.0");
+    else if( firstBlock >= 192 && firstBlock <= 223 ) // class C
+      return new IPAddress("255.255.255.255.0");
+    else if( firstBlock >= 224 && firstBlock <= 240 ) // class D, multicast
+      return new IPAddress("255.255.255.255.0");
+    else                                              // class E, reserved
+      return new IPAddress("255.255.255.255.0");
+  }
+
   static generateBroadcast(): IPAddress {
     const ip = new IPAddress("255.255.255.255");
     ip.broadcast = true;
