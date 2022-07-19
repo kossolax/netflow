@@ -11,18 +11,20 @@ describe('Datalink layer test', () => {
   let listener: SimpleListener;
 
   beforeEach(async () => {
-    A = new SwitchHost();
-    A.name = "A";
-    A.addInterface().up();
+    A = new SwitchHost("A", 1);
+    A.getInterfaces().map( i => {
+      A.getInterface(i).up();
+    });
 
-    B = new SwitchHost();
-    B.name = "B";
-    B.addInterface().up();
-    B.addInterface().up();
+    B = new SwitchHost("B", 2);
+    B.getInterfaces().map( i => {
+      B.getInterface(i).up();
+    });
 
-    C = new SwitchHost();
-    C.name = "C";
-    C.addInterface().up();
+    C = new SwitchHost("C", 1);
+    C.getInterfaces().map( i => {
+      C.getInterface(i).up();
+    });
 
 
     listener = new SimpleListener();
@@ -140,6 +142,10 @@ describe('Datalink layer test', () => {
     expect(A.getInterface(0).hasMacAddress(mac1)).toBe(true);
     expect(A.getInterface(0).hasMacAddress(MacAddress.generateBroadcast())).toBe(true);
     expect(A.getInterface(0).hasMacAddress(mac2)).toBe(mac1.equals(mac2));
+
+    A.getInterface(0).setMacAddress(mac2);
+    expect(A.getInterface(0).hasMacAddress(mac2)).toBe(true);
+
   });
 
   it( 'L2 link function ', () => {
@@ -161,4 +167,25 @@ describe('Datalink layer test', () => {
     expect( () => A.getInterface(0).connectTo(link1) ).toThrow();
     expect( () => A.getInterface(0).connectTo(link2) ).toThrow();
   });
+
+  it( 'L2 speed function ', () => {
+    let tmp = 10;
+
+    expect( () => A.getInterface(0).Speed = tmp ).toThrow();
+    expect( A.getInterface(0).Speed ).toBe(0);
+
+    let link1 = new Link(A.getInterface(0), B.getInterface(0), 100);
+    expect( () => A.getInterface(0).Speed = 42 ).toThrow();
+
+    [0, 10, 100, 1000].map( speed => {
+      A.getInterface(0).Speed = speed;
+      expect( link1.Speed ).toBe(speed);
+    });
+  });
+
+  it( 'L2 other function ', () => {
+    expect(A.getInterface(0).Host).toEqual(A);
+    expect( () => A.getInterface(2) ).toThrow();
+  });
+
 });

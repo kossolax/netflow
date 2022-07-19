@@ -37,6 +37,7 @@ export abstract class Interface {
   set Speed(speed: number) {
     if( !this.link )
       throw new Error("Link is not connected");
+
     this.link.Speed = speed;
   }
   // ---
@@ -90,7 +91,7 @@ export abstract class HardwareInterface extends Interface implements PhysicalLis
     return this.address;
   }
   setMacAddress(addr: HardwareAddress) {
-    return this.address;
+    this.address = addr;
   }
 
 
@@ -107,10 +108,6 @@ export abstract class HardwareInterface extends Interface implements PhysicalLis
     this.receiveTrame(message as DatalinkMessage);
   }
   receiveTrame(message: DatalinkMessage): void {
-    if( !this.isActive() )
-      return; // TODO: Throw  error.
-//      throw new Error("Interface is down");
-
     this.getListener.map( i => {
       if( i != this && "receiveTrame" in i)
         (i as DatalinkListener).receiveTrame(message, this);
