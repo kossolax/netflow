@@ -1,5 +1,5 @@
-import { AfterViewInit, Component, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
-import { AnnotationConstraints, ConnectorConstraints, DiagramComponent, DiagramConstraints, NodeConstraints, SnapConstraints, ConnectorModel, DiagramTools, ConnectorDrawingTool, MouseEventArgs, Connector, ToolBase, CommandHandler, BasicShape, BasicShapeModel } from '@syncfusion/ej2-angular-diagrams';
+import { AfterViewInit, Component, Host, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { AnnotationConstraints, ConnectorConstraints, DiagramComponent, DiagramConstraints, NodeConstraints, SnapConstraints, ConnectorModel, DiagramTools, ConnectorDrawingTool, MouseEventArgs, Connector, ToolBase, CommandHandler, BasicShape, BasicShapeModel, NodeModel } from '@syncfusion/ej2-angular-diagrams';
 import { timer } from 'rxjs';
 
 import { HardwareInterface, Interface } from 'src/app/models/layers/datalink.model';
@@ -56,7 +56,7 @@ export class LogicalComponent implements AfterViewInit  {
       net.links.push(i);
     });
 
-    timer(1000, 1000).subscribe( () => {
+    timer(5000, 5000).subscribe( () => {
       nodes[0].send("coucou", nodes[1].getInterface(0).getNetAddress());
     });
 
@@ -95,55 +95,12 @@ export class LogicalComponent implements AfterViewInit  {
     });
 
     this.networkSpy.sendBits$.subscribe( data => {
-
-      let src = {
-        x: this.diagram.getNodeObject(data.source.Host.guid).offsetX as number,
-        y: this.diagram.getNodeObject(data.source.Host.guid).offsetY as number,
-      }
-      let dst = {
-        x: this.diagram.getNodeObject(data.destination.Host.guid).offsetX as number,
-        y: this.diagram.getNodeObject(data.destination.Host.guid).offsetY as number,
-      }
-
-      const duration = data.delay * 1000 * 1000;
-      const start = new Date().getTime() / 1000;
-      const node = this.diagram.addNode({
-        id: start + "-" + Math.random(),
-        offsetX: src.x,
-        offsetY: src.y,
-        shape: {
-          type: "Basic",
-          shape: "Rectangle",
-          width: 10,
-          height: 10,
-        } as BasicShapeModel,
-
-        constraints: NodeConstraints.ReadOnly,
-      })
-
-      const i = setInterval(() => {
-        const now = new Date().getTime() / 1000;
-        const progress = (now - start) / duration;
-
-        if( progress > 1 ) {
-          clearInterval(i);
-          this.diagram.removeElements(node);
-        }
-        else {
-          src = {
-            x: this.diagram.getNodeObject(data.source.Host.guid).offsetX as number,
-            y: this.diagram.getNodeObject(data.source.Host.guid).offsetY as number,
-          }
-          dst = {
-            x: this.diagram.getNodeObject(data.destination.Host.guid).offsetX as number,
-            y: this.diagram.getNodeObject(data.destination.Host.guid).offsetY as number,
-          }
-
-          node.offsetX = src.x + (dst.x - src.x) * progress;
-          node.offsetY = src.y + (dst.y - src.y) * progress;
-        }
-      }, 100);
-
+      this.animate(
+        this.diagram.getNodeObject(data.source.Host.guid),
+        this.diagram.getNodeObject(data.destination.Host.guid),
+        data.delay,
+        data.message.toString()
+      );
     });
 
     this.network.node$.subscribe( (data: GenericNode | AbstractLink | null) => {
@@ -231,6 +188,54 @@ export class LogicalComponent implements AfterViewInit  {
       annotations: [{ constraints: AnnotationConstraints.ReadOnly  }]
     });
   }
+
+
+
+  public animate(source: NodeModel, destination: NodeModel, delay: number, message: string=""): void {
+    const start = new Date().getTime() / 1000;
+
+    const node = this.diagram.addNode({
+      id: start + "-" + Math.random(),
+      offsetX: source.offsetX,
+      offsetY: source.offsetY as number - 10,
+      width: 30,
+      height: 30,
+      shape: {
+        type: "Basic",
+        shape: "Rectangle",
+      } as BasicShapeModel,
+      constraints: NodeConstraints.ReadOnly,
+      annotations: [{
+        content: message,
+      }]
+    })
+
+    const render = (() => {
+      const now = new Date().getTime() / 1000;
+      const progress = (now - start) / delay;
+
+      if( progress > 1 ) {
+        this.diagram.removeElements(node);
+      }
+      else {
+        let src = {
+          x: source.offsetX as number,
+          y: source.offsetY as number,
+        }
+        let dst = {
+          x: destination.offsetX as number,
+          y: destination.offsetY as number,
+        }
+
+        node.offsetX = src.x + (dst.x - src.x) * progress;
+        node.offsetY = src.y + (dst.y - src.y) * progress - 10;
+        requestAnimationFrame(render);
+      }
+    });
+
+    requestAnimationFrame(render);
+
+  }
 }
 
 class CustomConnectorDrawingTool extends ConnectorDrawingTool {
@@ -304,4 +309,6 @@ class CustomConnectorDrawingTool extends ConnectorDrawingTool {
 
     return super.mouseDown(args);
   }
+
+
 }

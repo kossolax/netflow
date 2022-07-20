@@ -17,6 +17,9 @@ export class ArpMessage implements Payload {
   get length(): number {
     return this.request.length * 2 + 1;
   }
+  toString(): string {
+    return "ARP" + this.type;
+  }
 }
 
 export class ArpProtocol implements DatalinkListener {

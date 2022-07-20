@@ -17,6 +17,7 @@ export abstract class AbstractLink implements PhysicalListener, PhysicalSender {
   protected speed: number;
 
   static SPEED_OF_LIGHT: number = 299792458;
+  static SPEED_SLOWDOWN_MULTIPLIER: number = 1000*1000;
 
   constructor( iface1: HardwareInterface|NetworkInterface|null = null, iface2: HardwareInterface|NetworkInterface|null = null, length: number=1) {
     this.iface1 = iface1 instanceof(NetworkInterface) ? iface1.getInterface(0) : iface1;
@@ -59,7 +60,7 @@ export abstract class AbstractLink implements PhysicalListener, PhysicalSender {
     return bytes / (speed*1000*1000);
   }
   public getDelay(bytes: number) {
-    return (this.getPropagationDelay() + this.getTransmissionDelay(bytes));
+    return (this.getPropagationDelay() + this.getTransmissionDelay(bytes)) * Link.SPEED_SLOWDOWN_MULTIPLIER;
   }
 
   public isConnectedTo(iface: Interface) {
