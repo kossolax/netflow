@@ -95,9 +95,13 @@ export class LogicalComponent implements AfterViewInit  {
     });
 
     this.networkSpy.sendBits$.subscribe( data => {
+
+      if( data.delay < 0.1 ) // this packet is too fast, we don't need to show it
+        return;
+
       this.animate(
-        this.diagram.getNodeObject(data.source.Host.guid),
-        this.diagram.getNodeObject(data.destination.Host.guid),
+        data.source.Host,
+        data.destination.Host,
         data.delay,
         data.message.toString()
       );
@@ -191,13 +195,13 @@ export class LogicalComponent implements AfterViewInit  {
 
 
 
-  public animate(source: NodeModel, destination: NodeModel, delay: number, message: string=""): void {
+  public animate(source: GenericNode, destination: GenericNode, delay: number, message: string=""): void {
     const start = new Date().getTime() / 1000;
 
     const node = this.diagram.addNode({
       id: start + "-" + Math.random(),
-      offsetX: source.offsetX,
-      offsetY: source.offsetY as number - 10,
+      offsetX: this.diagram.getNodeObject(source.guid).offsetX,
+      offsetY: this.diagram.getNodeObject(source.guid).offsetY as number - 10,
       width: 30,
       height: 30,
       shape: {
@@ -207,6 +211,7 @@ export class LogicalComponent implements AfterViewInit  {
       constraints: NodeConstraints.ReadOnly,
       annotations: [{
         content: message,
+        constraints: AnnotationConstraints.ReadOnly,
       }]
     })
 
@@ -219,12 +224,12 @@ export class LogicalComponent implements AfterViewInit  {
       }
       else {
         let src = {
-          x: source.offsetX as number,
-          y: source.offsetY as number,
+          x: this.diagram.getNodeObject(source.guid).offsetX as number,
+          y: this.diagram.getNodeObject(source.guid).offsetY as number,
         }
         let dst = {
-          x: destination.offsetX as number,
-          y: destination.offsetY as number,
+          x: this.diagram.getNodeObject(destination.guid).offsetX as number,
+          y: this.diagram.getNodeObject(destination.guid).offsetY as number,
         }
 
         node.offsetX = src.x + (dst.x - src.x) * progress;
