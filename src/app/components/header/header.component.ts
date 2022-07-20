@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { MenuEventArgs, MenuItemModel } from '@syncfusion/ej2-angular-navigations';
 import { NetworkService } from 'src/app/services/network.service';
+import { Link } from 'src/app/models/layers/physical.model';
 
 @Component({
   selector: 'app-header',
@@ -25,6 +26,13 @@ export class HeaderComponent implements OnInit {
         text: 'Help'
     }
   ];
+
+  public get Speed(): number {
+    return Math.log10(Link.SPEED_SLOWDOWN_MULTIPLIER);
+  }
+  public set Speed(speed: number) {
+    Link.SPEED_SLOWDOWN_MULTIPLIER = Math.pow(10, speed);
+  }
 
   constructor(private network: NetworkService) { }
 
