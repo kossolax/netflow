@@ -1,12 +1,14 @@
 import { AfterViewInit, Component, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { AnnotationConstraints, ConnectorConstraints, DiagramComponent, DiagramConstraints, NodeConstraints, SnapConstraints, ConnectorModel, DiagramTools, ConnectorDrawingTool, MouseEventArgs, Connector, ToolBase, CommandHandler } from '@syncfusion/ej2-angular-diagrams';
-import { Observable } from 'rxjs';
+import { timer } from 'rxjs';
 
-import { HardwareInterface } from 'src/app/models/layers/datalink.model';
+import { HardwareInterface, Interface } from 'src/app/models/layers/datalink.model';
 import { NetworkInterface } from 'src/app/models/layers/network.model';
 import { AbstractLink, Link } from 'src/app/models/layers/physical.model';
+import { PhysicalMessage } from 'src/app/models/message.model';
 import { Network } from 'src/app/models/network.model';
 import { GenericNode, RouterHost, SwitchHost } from 'src/app/models/node.model';
+import { LinkLayerSpy } from 'src/app/models/protocols/protocols.model';
 import { NetworkService } from 'src/app/services/network.service';
 
 @Component({
@@ -19,6 +21,7 @@ export class LogicalComponent implements AfterViewInit  {
   currentNetwork: Network;
   addingNode: GenericNode|null = null;
   configNode: SwitchHost|RouterHost|null = null;
+  networkSpy: LinkLayerSpy = new LinkLayerSpy();
 
   @ViewChild("diagram") diagram!: DiagramComponent;
 
@@ -40,12 +43,24 @@ export class LogicalComponent implements AfterViewInit  {
 
     let index = 0;
     nodes.map( i => {
-      i.x = 256 + index*512 + Math.random() * 256;
-      i.y = 128 + Math.random() * 256;
+      i.x = 200 + index * 400;
+      i.y = 200;
       net.nodes[i.guid] = i;
+      i.getInterfaces().map( j => i.getInterface(j).up() );
       index++;
     });
-    net.links.push(new Link(nodes[0].getFirstAvailableInterface(), nodes[1].getFirstAvailableInterface(), 10));
+
+    let links = [];
+    links.push(new Link(nodes[0].getFirstAvailableInterface(), nodes[1].getFirstAvailableInterface(), 10));
+    links.map( i => {
+      net.links.push(i);
+    });
+
+    timer(1000, 1000).subscribe( () => {
+      nodes[0].send("coucou", nodes[1].getInterface(0).getNetAddress());
+    });
+
+
     this.configNode = nodes[0];
     this.network.setNetwork(net);
   }
@@ -73,8 +88,18 @@ export class LogicalComponent implements AfterViewInit  {
         this.addNode(data.nodes[key]);
       }
       for(let key in data.links) {
-        this.addLink(data.links[key]);
+        let link = data.links[key];
+        this.addLink(link);
+        link.addListener(this.networkSpy);
       }
+    });
+
+    this.networkSpy.sendBits$.subscribe( data => {
+      const src = data.source.Host;
+      const dst = data.destination.Host;
+      const delay = data.delay;
+
+      console.log(src.name, dst.name, delay);
     });
 
     this.network.node$.subscribe( (data: GenericNode | AbstractLink | null) => {

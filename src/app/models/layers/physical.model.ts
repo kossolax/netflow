@@ -59,7 +59,7 @@ export abstract class AbstractLink implements PhysicalListener, PhysicalSender {
     return bytes / (speed*1000*1000);
   }
   public getDelay(bytes: number) {
-    return this.getPropagationDelay() + this.getTransmissionDelay(bytes);
+    return (this.getPropagationDelay() + this.getTransmissionDelay(bytes));
   }
 
   public isConnectedTo(iface: Interface) {
@@ -70,28 +70,30 @@ export abstract class AbstractLink implements PhysicalListener, PhysicalSender {
     if( this.iface1 == null || this.iface2 == null )
       throw new Error("Link is not connected");
 
+    const destination = this.iface1 === source ? this.iface2 : this.iface1;
+    const delay = this.getDelay(message.length);
+
     this.getListener.map( i => {
-      if( i != this && "receivePacket" in i)
-        (i as PhysicalSender).sendBits(message, source);
+      if( i != this && "sendBits" in i)
+        (i as PhysicalSender).sendBits(message, source, destination, delay);
     });
 
-    let destination = this.iface1 === source ? this.iface2 : this.iface1;
 
-    timer(this.getDelay(message.length) * 1000).pipe(
+    timer(delay * 1000).pipe(
       take(1),
-      tap( () => this.receiveBits(message, destination) )
+      tap( () => this.receiveBits(message, source, destination) )
     ).subscribe();
   }
 
-  public receiveBits(message: PhysicalMessage, destination: HardwareInterface) {
+  public receiveBits(message: PhysicalMessage, source: HardwareInterface, destination: HardwareInterface) {
 
     this.getListener.map( i => {
       if( i != this && "receiveBits" in i)
-        (i as PhysicalListener).receiveBits(message, destination);
+        (i as PhysicalListener).receiveBits(message, source, destination);
     });
 
     // send to L2
-    destination.receiveBits(message);
+    destination.receiveBits(message, source, destination);
   }
 
   public getInterface(i: number): HardwareInterface|null {

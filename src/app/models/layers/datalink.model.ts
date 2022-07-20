@@ -95,14 +95,14 @@ export abstract class HardwareInterface extends Interface implements PhysicalLis
   }
 
 
-  receiveBits(message: PhysicalMessage): void {
+  receiveBits(message: PhysicalMessage, source: HardwareInterface, destination: HardwareInterface): void {
     if( !this.isActive() )
       return; // TODO: Throw  error.
     //      throw new Error("Interface is down");
 
     this.getListener.map( i => {
       if( i != this && "receiveBits" in i)
-        (i as PhysicalListener).receiveBits(message, this);
+        (i as PhysicalListener).receiveBits(message, source, this);
     });
 
     this.receiveTrame(message as DatalinkMessage);
