@@ -2,11 +2,11 @@ import { HardwareAddress, NetworkAddress } from "../address.model";
 import { DatalinkMessage, NetworkMessage } from "../message.model";
 import { GenericNode } from "../node.model";
 import { ArpProtocol } from "../protocols/arp.model";
-import { DatalinkListener, NetworkListener } from "../protocols/protocols.model";
+import { DatalinkListener, NetworkListener, NetworkSender } from "../protocols/protocols.model";
 import { HardwareInterface, Interface } from "./datalink.model";
 
 
-export abstract class NetworkInterface extends Interface implements DatalinkListener, NetworkListener {
+export abstract class NetworkInterface extends Interface implements DatalinkListener, NetworkListener, NetworkSender {
   private addresses: {addr: NetworkAddress, mask: NetworkAddress}[] = [];
   private datalink: HardwareInterface;
   private discovery: ArpProtocol;
@@ -97,13 +97,14 @@ export abstract class NetworkInterface extends Interface implements DatalinkList
     //throw new Error("IP forwarding is not implemented on NetworkInterface");
   }
 
-  sendTrame(message: DatalinkMessage) {
-    this.datalink.sendTrame(message);
-  }
   sendPacket(message: NetworkMessage) {
     if( !this.isActive() )
       throw new Error("Interface is down");
 
+    this.getListener.map( i => {
+      if( i != this && "sendPacket" in i)
+        (i as NetworkSender).sendPacket(message, this);
+    });
 
     const loopback = this.addresses.filter( i => i.addr.equals(message.net_dst) );
     if( loopback.length > 0 ) {

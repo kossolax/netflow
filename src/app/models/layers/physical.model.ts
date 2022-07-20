@@ -1,12 +1,15 @@
 import { timer, take, tap } from "rxjs";
-import { DatalinkMessage, PhysicalMessage } from "../message.model";
+import { PhysicalMessage } from "../message.model";
+import { GenericListener, PhysicalListener, PhysicalSender } from "../protocols/protocols.model";
 import { HardwareInterface, Interface } from "./datalink.model";
 import { NetworkInterface } from "./network.model";
 
-export abstract class AbstractLink {
+export abstract class AbstractLink implements PhysicalListener, PhysicalSender {
   public guid: string = Math.random().toString(36).substring(2, 9);
   public name: string = "Link";
   public type: string = "cable";
+
+  private listener: GenericListener[] = [];
 
   protected iface1: HardwareInterface|null;
   protected iface2: HardwareInterface|null;
@@ -67,13 +70,30 @@ export abstract class AbstractLink {
     if( this.iface1 == null || this.iface2 == null )
       throw new Error("Link is not connected");
 
+    this.getListener.map( i => {
+      if( i != this && "receivePacket" in i)
+        (i as PhysicalSender).sendBits(message, source);
+    });
+
     let destination = this.iface1 === source ? this.iface2 : this.iface1;
 
     timer(this.getDelay(message.length) * 1000).pipe(
       take(1),
-      tap( () => destination.receiveBits(message) )
+      tap( () => this.receiveBits(message, destination) )
     ).subscribe();
   }
+
+  public receiveBits(message: PhysicalMessage, destination: HardwareInterface) {
+
+    this.getListener.map( i => {
+      if( i != this && "receiveBits" in i)
+        (i as PhysicalListener).receiveBits(message, destination);
+    });
+
+    // send to L2
+    destination.receiveBits(message);
+  }
+
   public getInterface(i: number): HardwareInterface|null {
     if( i == 0 )
       return this.iface1;
@@ -81,6 +101,15 @@ export abstract class AbstractLink {
       return this.iface2;
     else
       throw new Error(`Invalid index: ${i}`);
+  }
+
+
+  // ---
+  addListener(listener: GenericListener): void {
+    this.listener.push(listener);
+  }
+  get getListener(): GenericListener[] {
+    return this.listener;
   }
 }
 export class Link extends AbstractLink {

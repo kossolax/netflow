@@ -45,7 +45,7 @@ export class ArpProtocol implements DatalinkListener {
     const arp = new ArpMessage("request", addr);
 
     const message: DatalinkMessage = new DatalinkMessage(arp, this.interface.getMacAddress(), MacAddress.generateBroadcast());
-    this.interface.sendTrame(message);
+    this.interface.getInterface(0).sendTrame(message);
   }
 
   receiveTrame(message: DatalinkMessage): void {
@@ -57,7 +57,8 @@ export class ArpProtocol implements DatalinkListener {
         reply.response = this.interface.getMacAddress();
 
         const replyMessage: DatalinkMessage = new DatalinkMessage(reply, this.interface.getMacAddress(), message.mac_src);
-        this.interface.sendTrame(replyMessage);
+
+        this.interface.getInterface(0).sendTrame(replyMessage);
       }
       else if( arp.type == "reply" && arp.response != null ) {
         this.table.set(arp.request as NetworkAddress, arp.response as HardwareAddress);

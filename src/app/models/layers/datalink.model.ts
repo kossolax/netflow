@@ -2,7 +2,7 @@ import { HardwareAddress, MacAddress } from "../address.model";
 import { Link } from "./physical.model";
 import { GenericNode } from "../node.model";
 import { PhysicalMessage, DatalinkMessage } from "../message.model";
-import { DatalinkListener, GenericListener, PhysicalListener } from "../protocols/protocols.model";
+import { DatalinkListener, DatalinkSender, GenericListener, PhysicalListener } from "../protocols/protocols.model";
 
 export abstract class Interface {
   protected host: GenericNode;
@@ -74,7 +74,7 @@ export abstract class Interface {
     return this.listener;
   }
 }
-export abstract class HardwareInterface extends Interface implements PhysicalListener, DatalinkListener {
+export abstract class HardwareInterface extends Interface implements PhysicalListener, DatalinkListener, DatalinkSender {
   private address: HardwareAddress;
 
   constructor(host: GenericNode, address: HardwareAddress, name: string) {
@@ -116,6 +116,11 @@ export abstract class HardwareInterface extends Interface implements PhysicalLis
   sendTrame(message: DatalinkMessage): void {
     if( !this.isActive() )
       throw new Error("Interface is down");
+
+    this.getListener.map( i => {
+      if( i != this && "sendTrame" in i ) // prevent loop between L2 and L3
+        (i as DatalinkSender).sendTrame(message, this);
+    });
 
     const loopback = this.address.equals(message.mac_dst);
     if( loopback ) {
