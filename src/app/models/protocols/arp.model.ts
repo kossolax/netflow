@@ -1,10 +1,10 @@
 import { HardwareAddress, MacAddress, NetworkAddress } from "../address.model";
 import { HardwareInterface } from "../layers/datalink.model";
 import { NetworkInterface } from "../layers/network.model";
-import { DatalinkMessage, NetworkMessage } from "../message.model";
+import { DatalinkMessage, NetworkMessage, Payload } from "../message.model";
 import { DatalinkListener } from "./protocols.model";
 
-export class ArpMessage {
+export class ArpMessage implements Payload {
   type: "request"|"reply";
   request: NetworkAddress;
   response?: HardwareAddress|null;
@@ -12,6 +12,10 @@ export class ArpMessage {
   constructor(type: "request"|"reply", request: NetworkAddress) {
     this.type = type;
     this.request = request;
+  }
+
+  get length(): number {
+    return this.request.length * 2 + 1;
   }
 }
 

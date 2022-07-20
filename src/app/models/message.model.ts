@@ -1,7 +1,11 @@
 import { HardwareAddress, NetworkAddress } from "./address.model";
 
+export interface Payload {
+  get length(): number;
+}
+
 export abstract class Message {
-  payload: any;
+  payload: Payload|string;
 
   constructor(payload: any) {
     this.payload = payload;
