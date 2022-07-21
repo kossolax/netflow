@@ -215,7 +215,7 @@ export class LogicalComponent implements AfterViewInit  {
         content: message,
         constraints: AnnotationConstraints.ReadOnly,
       }]
-    })
+    });
 
     const render = (() => {
       const now = new Date().getTime() / 1000;

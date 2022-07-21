@@ -26,7 +26,10 @@ describe('packet tracer decoding host', () => {
     http = TestBed.inject(HttpClient);
   });
   it( 'switch', (done) => {
-    if( bypass ) return done();
+    if( bypass ) {
+      expect(true).toBe(true);
+      return done();
+    }
 
     http.get(`./assets/saves/switch.pkt`, { responseType: 'blob' }).pipe(
       switchMap( i => service.decode(new File([i], "switch.pkt", { type: "application/octet-stream" })))
@@ -51,7 +54,10 @@ describe('packet tracer decoding host', () => {
   });
 
   it( 'router1', (done) => {
-    if( bypass ) return done();
+    if( bypass ) {
+      expect(true).toBe(true);
+      return done();
+    }
 
     http.get(`./assets/saves/router1.pkt`, { responseType: 'blob' }).pipe(
       switchMap( i => service.decode(new File([i], "router1.pkt", { type: "application/octet-stream" })))
@@ -80,7 +86,10 @@ describe('packet tracer decoding host', () => {
     });
   });
   it( 'router2', (done) => {
-    if( bypass ) return done();
+    if( bypass ) {
+      expect(true).toBe(true);
+      return done();
+    }
 
     http.get(`./assets/saves/router2.pkt`, { responseType: 'blob' }).pipe(
       switchMap( i => service.decode(new File([i], "router2.pkt", { type: "application/octet-stream" })))
@@ -102,7 +111,10 @@ describe('packet tracer decoding host', () => {
     });
   });
   it( 'router3', (done) => {
-    if( bypass ) return done();
+    if( bypass ) {
+      expect(true).toBe(true);
+      return done();
+    }
 
     http.get(`./assets/saves/router3.pkt`, { responseType: 'blob' }).pipe(
       switchMap( i => service.decode(new File([i], "router3.pkt", { type: "application/octet-stream" })))
@@ -128,7 +140,10 @@ describe('packet tracer decoding host', () => {
   });
 
   it( 'full', (done) => {
-    if( bypass ) return done();
+    if( bypass ) {
+      expect(true).toBe(true);
+      return done();
+    }
 
     http.get(`./assets/saves/full.pkt`, { responseType: 'blob' }).pipe(
       switchMap( i => service.decode(new File([i], "full.pkt", { type: "application/octet-stream" })))

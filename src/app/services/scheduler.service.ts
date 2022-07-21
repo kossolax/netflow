@@ -12,9 +12,9 @@ export enum SchedulerState {
   { providedIn: "root" }
 )
 export class SchedulerService {
-  private static TRANSMISSION_MULTIPLIER: number = (1000*1000);
-  private static SPEED_OF_LIGHT_MULTIPLIER: number = 1000;
-  private static STATE: SchedulerState = SchedulerState.SLOWER;
+  private static TRANSMISSION_MULTIPLIER: number = 1;
+  private static SPEED_OF_LIGHT_MULTIPLIER: number = 1;
+  private static STATE: SchedulerState = SchedulerState.REAL_TIME;
 
   public static get Transmission(): number {
     return SchedulerService.TRANSMISSION_MULTIPLIER;
