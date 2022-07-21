@@ -4,7 +4,7 @@
       </ejs-menu>
 
       Slowdown: 10<sup>{{Speed}}</sup>
-      <ng-container *ngFor="let speed of [1, 5, 6, 7]">
+      <ng-container *ngFor="let speed of [0, 1, 2, 3]">
         <input name="speed" type="radio" value="{{speed}}" (click)="Speed = speed" [checked]="Speed==speed"/>
       </ng-container>
   </div>

@@ -1,4 +1,5 @@
 import { timer, take, tap } from "rxjs";
+import { SchedulerService } from "src/app/services/scheduler.service";
 import { PhysicalMessage } from "../message.model";
 import { GenericListener, PhysicalListener, PhysicalSender } from "../protocols/protocols.model";
 import { HardwareInterface, Interface } from "./datalink.model";
@@ -15,9 +16,9 @@ export abstract class AbstractLink implements PhysicalListener, PhysicalSender {
   protected iface2: HardwareInterface|null;
   protected length: number;
   protected speed: number;
+  private scheduler: SchedulerService;
 
   static SPEED_OF_LIGHT: number = 299792458;
-  static SPEED_SLOWDOWN_MULTIPLIER: number = 1000*1000;
 
   constructor( iface1: HardwareInterface|NetworkInterface|null = null, iface2: HardwareInterface|NetworkInterface|null = null, length: number=1) {
     this.iface1 = iface1 instanceof(NetworkInterface) ? iface1.getInterface(0) : iface1;
@@ -31,6 +32,7 @@ export abstract class AbstractLink implements PhysicalListener, PhysicalSender {
     if( this.iface2 != null )
       this.iface2.connectTo(this);
 
+    this.scheduler = new SchedulerService();
   }
   toString(): string {
     return `${this.iface1} <->  ${this.iface2}`;
@@ -50,17 +52,17 @@ export abstract class AbstractLink implements PhysicalListener, PhysicalSender {
   }
 
   public getPropagationDelay() {
-		return length / (Link.SPEED_OF_LIGHT*2/3);
+		return SchedulerService.SpeedOfLight * (length / (Link.SPEED_OF_LIGHT*2/3));
 	}
   public getTransmissionDelay(bytes: number) {
     let speed = this.speed;
     if( speed === 0 )
       speed = 10;
 
-    return bytes / (speed*1000*1000);
+    return SchedulerService.Transmission * (bytes / (speed*1000*1000));
   }
   public getDelay(bytes: number) {
-    return (this.getPropagationDelay() + this.getTransmissionDelay(bytes)) * Link.SPEED_SLOWDOWN_MULTIPLIER;
+    return this.getPropagationDelay() + this.getTransmissionDelay(bytes);
   }
 
   public isConnectedTo(iface: Interface) {
@@ -79,11 +81,9 @@ export abstract class AbstractLink implements PhysicalListener, PhysicalSender {
         (i as PhysicalSender).sendBits(message, source, destination, delay);
     });
 
-
-    timer(delay * 1000).pipe(
-      take(1),
-      tap( () => this.receiveBits(message, source, destination) )
-    ).subscribe();
+    SchedulerService.once(delay).subscribe(() => {
+      this.receiveBits(message, source, destination)
+    });
   }
 
   public receiveBits(message: PhysicalMessage, source: HardwareInterface, destination: HardwareInterface) {

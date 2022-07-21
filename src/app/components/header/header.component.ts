@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { MenuEventArgs, MenuItemModel } from '@syncfusion/ej2-angular-navigations';
 import { NetworkService } from 'src/app/services/network.service';
 import { Link } from 'src/app/models/layers/physical.model';
+import { SchedulerService, SchedulerState } from 'src/app/services/scheduler.service';
 
 @Component({
   selector: 'app-header',
@@ -27,11 +28,11 @@ export class HeaderComponent implements OnInit {
     }
   ];
 
-  public get Speed(): number {
-    return Math.log10(Link.SPEED_SLOWDOWN_MULTIPLIER);
+  public get Speed(): SchedulerState {
+    return SchedulerService.Speed;
   }
-  public set Speed(speed: number) {
-    Link.SPEED_SLOWDOWN_MULTIPLIER = Math.pow(10, speed);
+  public set Speed(speed: SchedulerState) {
+    SchedulerService.Speed = speed;
   }
 
   constructor(private network: NetworkService) { }

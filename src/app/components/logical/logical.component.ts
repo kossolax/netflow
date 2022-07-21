@@ -10,6 +10,7 @@ import { Network } from 'src/app/models/network.model';
 import { GenericNode, RouterHost, SwitchHost } from 'src/app/models/node.model';
 import { LinkLayerSpy } from 'src/app/models/protocols/protocols.model';
 import { NetworkService } from 'src/app/services/network.service';
+import { SchedulerService } from 'src/app/services/scheduler.service';
 
 @Component({
   selector: 'app-logical',
@@ -56,7 +57,8 @@ export class LogicalComponent implements AfterViewInit  {
       net.links.push(i);
     });
 
-    timer(5000, 5000).subscribe( () => {
+    SchedulerService.repeat(5).subscribe( () => {
+      console.log("hi");
       nodes[0].send("coucou", nodes[1].getInterface(0).getNetAddress());
     });
 
