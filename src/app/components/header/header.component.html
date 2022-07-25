@@ -3,7 +3,9 @@
       <ejs-menu [items]='menuItems' (select)='select($event)' showItemOnClick="true">
       </ejs-menu>
 
-      Slowdown: 10<sup>{{Speed}}</sup>
+      Speed: {{SpeedString }}
+      {{Time}}
+
       <ng-container *ngFor="let speed of [0, 1, 2, 3]">
         <input name="speed" type="radio" value="{{speed}}" (click)="Speed = speed" [checked]="Speed==speed"/>
       </ng-container>

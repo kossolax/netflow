@@ -28,11 +28,38 @@ export class HeaderComponent implements OnInit {
     }
   ];
 
+  public get SpeedString(): string {
+    let str = SchedulerState[this.Speed].replace(/_/g, ' ').toLowerCase();
+    str = str.charAt(0).toUpperCase() + str.slice(1);
+    return str;
+  }
   public get Speed(): SchedulerState {
     return SchedulerService.Speed;
   }
   public set Speed(speed: SchedulerState) {
     SchedulerService.Speed = speed;
+  }
+  public get Time(): string {
+    let time = Math.floor(SchedulerService.Time);
+    let seconds = Math.floor(SchedulerService.Time / 1000);
+    let minutes = Math.floor(seconds / 60);
+    let hours = Math.floor(minutes / 60);
+
+    let str_miliseconds = (time % 1000).toString().padStart(3, '0');
+    let str_seconds = (seconds % 60).toString().padStart(2, '0');
+    let str_minutes = (minutes % 60).toString().padStart(2, '0');
+    let str_hours = (hours).toString().padStart(2, '0');
+
+    let formated_string = '';
+    if( hours > 0 )
+      formated_string += `${str_hours}:`;
+
+    formated_string += `${str_minutes}:${str_seconds}`;
+
+    if( SchedulerService.SpeedOfLight < 1 )
+      formated_string += `.${str_miliseconds}`;
+
+    return formated_string;
   }
 
   constructor(private network: NetworkService) { }

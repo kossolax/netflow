@@ -1,4 +1,3 @@
-import { timer, take, tap } from "rxjs";
 import { SchedulerService } from "src/app/services/scheduler.service";
 import { PhysicalMessage } from "../message.model";
 import { GenericListener, PhysicalListener, PhysicalSender } from "../protocols/protocols.model";
@@ -16,7 +15,6 @@ export abstract class AbstractLink implements PhysicalListener, PhysicalSender {
   protected iface2: HardwareInterface|null;
   protected length: number;
   protected speed: number;
-  private scheduler: SchedulerService;
 
   static SPEED_OF_LIGHT: number = 299792458;
 
@@ -31,8 +29,6 @@ export abstract class AbstractLink implements PhysicalListener, PhysicalSender {
       this.iface1.connectTo(this);
     if( this.iface2 != null )
       this.iface2.connectTo(this);
-
-    this.scheduler = new SchedulerService();
   }
   toString(): string {
     return `${this.iface1} <->  ${this.iface2}`;
@@ -52,14 +48,14 @@ export abstract class AbstractLink implements PhysicalListener, PhysicalSender {
   }
 
   public getPropagationDelay() {
-		return SchedulerService.SpeedOfLight * (length / (Link.SPEED_OF_LIGHT*2/3));
+		return (length / (Link.SPEED_OF_LIGHT*2/3)) / SchedulerService.SpeedOfLight;
 	}
   public getTransmissionDelay(bytes: number) {
     let speed = this.speed;
     if( speed === 0 )
       speed = 10;
 
-    return SchedulerService.Transmission * (bytes / (speed*1000*1000));
+    return (bytes / (speed*1000*1000)) / SchedulerService.Transmission;
   }
   public getDelay(bytes: number) {
     return this.getPropagationDelay() + this.getTransmissionDelay(bytes);

@@ -57,7 +57,7 @@ export class LogicalComponent implements AfterViewInit  {
       net.links.push(i);
     });
 
-    SchedulerService.repeat(5).subscribe( () => {
+    SchedulerService.repeat(1).subscribe( () => {
       console.log("hi");
       nodes[0].send("coucou", nodes[1].getInterface(0).getNetAddress());
     });
@@ -197,7 +197,7 @@ export class LogicalComponent implements AfterViewInit  {
 
 
 
-  public animate(source: GenericNode, destination: GenericNode, delay: number, message: string=""): void {
+  public animate(source: GenericNode, target: GenericNode, delay: number, message: string=""): void {
     const start = new Date().getTime() / 1000;
 
     const node = this.diagram.addNode({
@@ -230,8 +230,8 @@ export class LogicalComponent implements AfterViewInit  {
           y: this.diagram.getNodeObject(source.guid).offsetY as number,
         }
         let dst = {
-          x: this.diagram.getNodeObject(destination.guid).offsetX as number,
-          y: this.diagram.getNodeObject(destination.guid).offsetY as number,
+          x: this.diagram.getNodeObject(target.guid).offsetX as number,
+          y: this.diagram.getNodeObject(target.guid).offsetY as number,
         }
 
         node.offsetX = src.x + (dst.x - src.x) * progress;
