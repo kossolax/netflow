@@ -4,7 +4,8 @@
 
 export const environment = {
   production: false,
-  backend: 'https://backend.netflow.dev'
+  backend: 'https://backend.netflow.dev',
+  testBackend: false
 };
 
 /*

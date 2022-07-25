@@ -4,13 +4,13 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { BrowserModule } from '@angular/platform-browser';
 import { switchMap } from 'rxjs';
 import { SwitchHost, RouterHost } from '../models/node.model';
+import { environment } from 'src/environments/environment';
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
 
 describe('packet tracer decoding host', () => {
   let service: NetworkService;
   let http: HttpClient;
-  let bypass = true;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -26,7 +26,7 @@ describe('packet tracer decoding host', () => {
     http = TestBed.inject(HttpClient);
   });
   it( 'switch', (done) => {
-    if( bypass ) {
+    if( !environment.testBackend ) {
       expect(true).toBe(true);
       return done();
     }
@@ -54,7 +54,7 @@ describe('packet tracer decoding host', () => {
   });
 
   it( 'router1', (done) => {
-    if( bypass ) {
+    if( !environment.testBackend ) {
       expect(true).toBe(true);
       return done();
     }
@@ -86,7 +86,7 @@ describe('packet tracer decoding host', () => {
     });
   });
   it( 'router2', (done) => {
-    if( bypass ) {
+    if( !environment.testBackend ) {
       expect(true).toBe(true);
       return done();
     }
@@ -111,7 +111,7 @@ describe('packet tracer decoding host', () => {
     });
   });
   it( 'router3', (done) => {
-    if( bypass ) {
+    if( !environment.testBackend ) {
       expect(true).toBe(true);
       return done();
     }
@@ -140,7 +140,7 @@ describe('packet tracer decoding host', () => {
   });
 
   it( 'full', (done) => {
-    if( bypass ) {
+    if( !environment.testBackend ) {
       expect(true).toBe(true);
       return done();
     }
