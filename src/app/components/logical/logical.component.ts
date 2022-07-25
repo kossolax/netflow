@@ -59,7 +59,9 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
       net.links.push(i);
     });
 
-    this.scheduler.repeat(1).subscribe( () => {
+    this.scheduler.repeat(1).pipe(
+      takeUntil(this.onDestroy$)
+    ).subscribe( () => {
       console.log("hi");
       nodes[0].send("coucou", nodes[1].getInterface(0).getNetAddress());
     });
