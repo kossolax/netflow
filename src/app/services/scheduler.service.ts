@@ -67,6 +67,7 @@ export class SchedulerService {
   }
 
   public static get Instance(): SchedulerService {
+    // TODO: check l'injection de dépendance dans les tests unitaires
     if( !SchedulerService.instance )
       SchedulerService.instance = new SchedulerService();
     return SchedulerService.instance;
