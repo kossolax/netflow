@@ -26,7 +26,7 @@ export class LogicalComponent implements AfterViewInit  {
 
   @ViewChild("diagram") diagram!: DiagramComponent;
 
-  constructor(private network: NetworkService) {
+  constructor(private network: NetworkService, private scheduler: SchedulerService) {
     this.currentNetwork = new Network();
 
     setTimeout(() => {
@@ -57,7 +57,7 @@ export class LogicalComponent implements AfterViewInit  {
       net.links.push(i);
     });
 
-    SchedulerService.repeat(1).subscribe( () => {
+    this.scheduler.repeat(1).subscribe( () => {
       console.log("hi");
       nodes[0].send("coucou", nodes[1].getInterface(0).getNetAddress());
     });

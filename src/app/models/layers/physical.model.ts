@@ -48,14 +48,14 @@ export abstract class AbstractLink implements PhysicalListener, PhysicalSender {
   }
 
   public getPropagationDelay() {
-		return (length / (Link.SPEED_OF_LIGHT*2/3)) / SchedulerService.SpeedOfLight;
+		return (length / (Link.SPEED_OF_LIGHT*2/3)) / SchedulerService.Instance.SpeedOfLight;
 	}
   public getTransmissionDelay(bytes: number) {
     let speed = this.speed;
     if( speed === 0 )
       speed = 10;
 
-    return (bytes / (speed*1000*1000)) / SchedulerService.Transmission;
+    return (bytes / (speed*1000*1000)) / SchedulerService.Instance.Transmission;
   }
   public getDelay(bytes: number) {
     return this.getPropagationDelay() + this.getTransmissionDelay(bytes);
@@ -77,7 +77,7 @@ export abstract class AbstractLink implements PhysicalListener, PhysicalSender {
         (i as PhysicalSender).sendBits(message, source, destination, delay);
     });
 
-    SchedulerService.once(delay).subscribe(() => {
+    SchedulerService.Instance.once(delay).subscribe(() => {
       this.receiveBits(message, source, destination)
     });
   }

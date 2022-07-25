@@ -11,8 +11,7 @@ import { map, Observable, Subject, timer } from 'rxjs';
   styleUrls: ['./header.component.scss']
 })
 export class HeaderComponent implements OnInit {
-
-  public time$: Observable<string> = new Subject<string>();
+  public time$!: Observable<string>;
 
   public menuItems: MenuItemModel[] = [
     {
@@ -37,40 +36,18 @@ export class HeaderComponent implements OnInit {
     return str;
   }
   public get Speed(): SchedulerState {
-    return SchedulerService.Speed;
+    return this.scheduler.Speed;
   }
   public set Speed(speed: SchedulerState) {
-    SchedulerService.Speed = speed;
-  }
-  private calculateStringTime(): string {
-    let time = Math.floor(SchedulerService.Time);
-    let seconds = Math.floor(SchedulerService.Time / 1000);
-    let minutes = Math.floor(seconds / 60);
-    let hours = Math.floor(minutes / 60);
-
-    let str_miliseconds = (time % 1000).toString().padStart(3, '0');
-    let str_seconds = (seconds % 60).toString().padStart(2, '0');
-    let str_minutes = (minutes % 60).toString().padStart(2, '0');
-    let str_hours = (hours).toString().padStart(2, '0');
-
-    let formated_string = '';
-    if( hours > 0 )
-      formated_string += `${str_hours}:`;
-
-    formated_string += `${str_minutes}:${str_seconds}`;
-
-    if( SchedulerService.SpeedOfLight < 1 )
-      formated_string += `.${str_miliseconds}`;
-
-    return formated_string;
+    this.scheduler.Speed = speed;
   }
 
-  constructor(private network: NetworkService) { }
+
+  constructor(private network: NetworkService, private scheduler: SchedulerService) {
+  }
 
   ngOnInit(): void {
-    this.time$ = timer(1, 1).pipe(
-      map(() => this.calculateStringTime())
-    );
+    this.time$ = this.scheduler.Timer$;
   }
 
   public select(args: MenuEventArgs): void {

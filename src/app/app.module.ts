@@ -11,6 +11,7 @@ import { AppComponent } from './app.component';
 import { FooterComponent } from './components/footer/footer.component';
 import { HeaderComponent } from './components/header/header.component';
 import { RouterModule, Routes } from '@angular/router';
+import { SchedulerService } from './services/scheduler.service';
 
 enableRipple(true);
 
@@ -36,6 +37,9 @@ const routes: Routes = [
     TabModule
   ],
   bootstrap: [AppComponent],
-  exports: [RouterModule]
+  exports: [RouterModule],
+  providers: [
+    SchedulerService
+  ]
 })
 export class AppModule { }
