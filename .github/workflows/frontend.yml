@@ -1,4 +1,10 @@
-on: [push]
+name: build frontend
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
 
 jobs:
   deploy:
@@ -11,7 +17,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2.0.0
 
@@ -21,7 +27,7 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: nologin
           password: ${{ secrets.SECRET_KEY }}
-      
+
       - name: Build
         uses: docker/build-push-action@v3.0.0
         env:
@@ -30,7 +36,7 @@ jobs:
           file: Dockerfile.front
           push: true
           tags: ${{ env.IMAGE }}
-      
+
       - name: Scaleway Container Deploy action
         id: deploy
         uses:  philibea/scaleway-containers-deploy@v1.0.7
