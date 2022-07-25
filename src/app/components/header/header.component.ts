@@ -3,7 +3,7 @@ import { MenuEventArgs, MenuItemModel } from '@syncfusion/ej2-angular-navigation
 import { NetworkService } from 'src/app/services/network.service';
 import { Link } from 'src/app/models/layers/physical.model';
 import { SchedulerService, SchedulerState } from 'src/app/services/scheduler.service';
-import { map, Observable, Subject, timer } from 'rxjs';
+import { Observable, take } from 'rxjs';
 
 @Component({
   selector: 'app-header',
@@ -62,7 +62,9 @@ export class HeaderComponent implements OnInit {
       return;
 
     const file = files.item(0) as File;
-    this.network.decode(file).subscribe( data => {
+    this.network.decode(file).pipe(
+      take( 1 )
+    ).subscribe( data => {
       this.network.setNetwork(data);
     });
   }

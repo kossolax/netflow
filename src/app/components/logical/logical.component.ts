@@ -1,6 +1,6 @@
-import { AfterViewInit, Component, Host, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { AfterViewInit, Component, Host, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { AnnotationConstraints, ConnectorConstraints, DiagramComponent, DiagramConstraints, NodeConstraints, SnapConstraints, ConnectorModel, DiagramTools, ConnectorDrawingTool, MouseEventArgs, Connector, ToolBase, CommandHandler, BasicShape, BasicShapeModel, NodeModel } from '@syncfusion/ej2-angular-diagrams';
-import { timer } from 'rxjs';
+import { Subject, takeUntil, timer } from 'rxjs';
 
 import { HardwareInterface, Interface } from 'src/app/models/layers/datalink.model';
 import { NetworkInterface } from 'src/app/models/layers/network.model';
@@ -18,11 +18,13 @@ import { SchedulerService } from 'src/app/services/scheduler.service';
   styleUrls: ['./logical.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class LogicalComponent implements AfterViewInit  {
+export class LogicalComponent implements AfterViewInit, OnDestroy  {
   currentNetwork: Network;
   addingNode: GenericNode|null = null;
   configNode: SwitchHost|RouterHost|null = null;
   networkSpy: LinkLayerSpy = new LinkLayerSpy();
+
+  private onDestroy$: Subject<void> = new Subject<void>();
 
   @ViewChild("diagram") diagram!: DiagramComponent;
 
@@ -66,6 +68,12 @@ export class LogicalComponent implements AfterViewInit  {
     this.configNode = nodes[0];
     this.network.setNetwork(net);
   }
+
+
+  ngOnDestroy(): void {
+    this.onDestroy$.next();
+    this.onDestroy$.complete();
+  }
   ngAfterViewInit(): void {
     this.diagram.constraints = DiagramConstraints.Default | DiagramConstraints.Bridging;
     this.diagram.snapSettings.constraints = SnapConstraints.ShowLines | SnapConstraints.SnapToLines;
@@ -82,7 +90,9 @@ export class LogicalComponent implements AfterViewInit  {
       constraints: ConnectorConstraints.Default & ~ConnectorConstraints.Select,
     } as ConnectorModel;
 
-    this.network.network$.subscribe( (data: Network) => {
+    this.network.network$.pipe(
+      takeUntil(this.onDestroy$)
+    ).subscribe( (data: Network) => {
       this.currentNetwork = data;
       this.diagram.clear();
 
@@ -96,7 +106,9 @@ export class LogicalComponent implements AfterViewInit  {
       }
     });
 
-    this.networkSpy.sendBits$.subscribe( data => {
+    this.networkSpy.sendBits$.pipe(
+      takeUntil(this.onDestroy$)
+    ).subscribe( data => {
 
       if( data.delay < 0.1 ) // this packet is too fast, we don't need to show it
         return;
@@ -109,7 +121,9 @@ export class LogicalComponent implements AfterViewInit  {
       );
     });
 
-    this.network.node$.subscribe( (data: GenericNode | AbstractLink | null) => {
+    this.network.node$.pipe(
+      takeUntil(this.onDestroy$)
+    ).subscribe( (data: GenericNode | AbstractLink | null) => {
       if( data instanceof GenericNode )
         this.addingNode = data;
       else
