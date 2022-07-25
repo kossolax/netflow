@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit } from '@angular/core';
+import { Component, ElementRef } from '@angular/core';
 import { AbstractLink, Link } from 'src/app/models/layers/physical.model';
 import { GenericNode, RouterHost, ServerHost, SwitchHost } from 'src/app/models/node.model';
 import { NetworkService } from 'src/app/services/network.service';
@@ -10,7 +10,7 @@ import { NetworkService } from 'src/app/services/network.service';
   styleUrls: ['./footer.component.scss']
 })
 
-export class FooterComponent implements OnInit {
+export class FooterComponent {
   public selectableHost: {text: string, child: (GenericNode|AbstractLink)[]}[] = [
     {
       text: 'Router',
@@ -51,9 +51,6 @@ export class FooterComponent implements OnInit {
 
   constructor(private elRef:ElementRef, private network: NetworkService) {
     this.node$ = this.network.node$;
-  }
-
-  ngOnInit(): void {
   }
 
   public onClick(node: GenericNode|AbstractLink): void {

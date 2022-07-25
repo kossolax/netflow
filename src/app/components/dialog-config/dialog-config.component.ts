@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input } from '@angular/core';
 
 import { IPAddress, MacAddress } from 'src/app/models/address.model';
 import { HardwareInterface } from 'src/app/models/layers/datalink.model';
@@ -10,13 +10,10 @@ import { RouterHost, SwitchHost } from 'src/app/models/node.model';
   templateUrl: './dialog-config.component.html',
   styleUrls: ['./dialog-config.component.scss']
 })
-export class DialogConfigComponent implements OnInit {
+export class DialogConfigComponent {
   @Input() node: SwitchHost|RouterHost|null = null;
 
   constructor() { }
-
-  ngOnInit(): void {
-  }
 
   setSpeed(iface: HardwareInterface|NetworkInterface, evt: any): void {
     try {

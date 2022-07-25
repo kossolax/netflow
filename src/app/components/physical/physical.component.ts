@@ -1,15 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 
 @Component({
   selector: 'app-physical',
   templateUrl: './physical.component.html',
   styleUrls: ['./physical.component.scss']
 })
-export class PhysicalComponent implements OnInit {
+export class PhysicalComponent {
 
   constructor() { }
-
-  ngOnInit(): void {
-  }
-
 }

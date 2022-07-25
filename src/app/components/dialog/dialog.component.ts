@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges, ViewChild } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { TabComponent } from '@syncfusion/ej2-angular-navigations';
 import { DialogComponent as SyncfusionDialogComponent } from '@syncfusion/ej2-angular-popups';
 import { GenericNode, RouterHost, ServerHost, SwitchHost } from 'src/app/models/node.model';
@@ -8,7 +8,7 @@ import { GenericNode, RouterHost, ServerHost, SwitchHost } from 'src/app/models/
   templateUrl: './dialog.component.html',
   styleUrls: ['./dialog.component.scss']
 })
-export class DialogComponent implements OnInit, OnChanges {
+export class DialogComponent implements OnChanges {
   @ViewChild('dialog') dialog!: SyncfusionDialogComponent;
   @ViewChild('tabs') tabs!: TabComponent;
 
@@ -19,6 +19,7 @@ export class DialogComponent implements OnInit, OnChanges {
     return node instanceof ServerHost;
   }
   constructor() { }
+
   ngOnChanges(changes: SimpleChanges): void {
     try {
       if( changes["node"] ) {
@@ -26,9 +27,6 @@ export class DialogComponent implements OnInit, OnChanges {
           this.dialog.show();
       }
     } catch( e ) { }
-  }
-
-  ngOnInit(): void {
   }
 
   onClose(): void {

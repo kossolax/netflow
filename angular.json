@@ -35,7 +35,7 @@
             ],
             "stylePreprocessorOptions": {
               "includePaths": [
-                  "node_modules/@syncfusion"
+                "node_modules/@syncfusion"
               ]
             },
             "scripts": []
@@ -109,7 +109,7 @@
             ],
             "stylePreprocessorOptions": {
               "includePaths": [
-                  "node_modules/@syncfusion"
+                "node_modules/@syncfusion"
               ]
             },
             "scripts": []
@@ -123,15 +123,26 @@
                 }
               ]
             },
-            "development": {
-            }
+            "development": {}
           },
           "defaultConfiguration": "development"
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": [
+              "src/**/*.ts",
+              "src/**/*.html"
+            ]
+          }
         }
       }
     }
   },
   "cli": {
-    "analytics": "475a08ac-a7c1-4e03-a547-5acea0c007f2"
+    "analytics": "475a08ac-a7c1-4e03-a547-5acea0c007f2",
+    "schematicCollections": [
+      "@angular-eslint/schematics"
+    ]
   }
 }
