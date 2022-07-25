@@ -4,7 +4,7 @@
       </ejs-menu>
 
       Speed: {{SpeedString }}
-      {{Time}}
+      {{time$ | async}}
 
       <ng-container *ngFor="let speed of [0, 1, 2, 3]">
         <input name="speed" type="radio" value="{{speed}}" (click)="Speed = speed" [checked]="Speed==speed"/>

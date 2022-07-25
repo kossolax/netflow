@@ -3,6 +3,7 @@ import { MenuEventArgs, MenuItemModel } from '@syncfusion/ej2-angular-navigation
 import { NetworkService } from 'src/app/services/network.service';
 import { Link } from 'src/app/models/layers/physical.model';
 import { SchedulerService, SchedulerState } from 'src/app/services/scheduler.service';
+import { map, Observable, Subject, timer } from 'rxjs';
 
 @Component({
   selector: 'app-header',
@@ -10,6 +11,8 @@ import { SchedulerService, SchedulerState } from 'src/app/services/scheduler.ser
   styleUrls: ['./header.component.scss']
 })
 export class HeaderComponent implements OnInit {
+
+  public time$: Observable<string> = new Subject<string>();
 
   public menuItems: MenuItemModel[] = [
     {
@@ -39,7 +42,7 @@ export class HeaderComponent implements OnInit {
   public set Speed(speed: SchedulerState) {
     SchedulerService.Speed = speed;
   }
-  public get Time(): string {
+  private calculateStringTime(): string {
     let time = Math.floor(SchedulerService.Time);
     let seconds = Math.floor(SchedulerService.Time / 1000);
     let minutes = Math.floor(seconds / 60);
@@ -65,6 +68,9 @@ export class HeaderComponent implements OnInit {
   constructor(private network: NetworkService) { }
 
   ngOnInit(): void {
+    this.time$ = timer(1, 1).pipe(
+      map(() => this.calculateStringTime())
+    );
   }
 
   public select(args: MenuEventArgs): void {
