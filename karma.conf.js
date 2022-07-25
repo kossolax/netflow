@@ -28,9 +28,9 @@ module.exports = function (config) {
       dir: require('path').join(__dirname, './coverage/netflow'),
       subdir: '.',
       reporters: [
-        { type: 'html' },
         { type: 'text-summary' },
-        { type: 'lcov' }
+        { type: 'lcov' },
+        { type: 'cobertura' }
       ]
     },
     reporters: ['progress', 'kjhtml'],
