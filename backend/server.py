@@ -46,12 +46,12 @@ def decode():
       ext = file.filename.split(".")[-1]
 
       if ext in ["pkt", "pka"]:
-        input = "input." + ext
+        file_input = "input." + ext
 
-        if os.path.isfile(input):
-          file.save(input)
+        if os.path.isfile(file_input):
+          file.save(file_input)
 
-          process = subprocess.Popen(["pka2xml", "-d", input, "output.xml"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+          process = subprocess.Popen(["pka2xml", "-d", file_input, "output.xml"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
           _, _ = process.communicate()
 
           with open("output.xml", mode="r") as file:
@@ -62,6 +62,7 @@ def decode():
   return json.dumps({
     "message": "errored"
   })
+
 
 if __name__ == "__main__":
   # Scaleway's system will inject a PORT environment variable on which your application should start the server.
