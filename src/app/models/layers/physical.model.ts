@@ -1,4 +1,4 @@
-import { SchedulerService } from "src/app/services/scheduler.service";
+import { SchedulerService, SchedulerState } from "src/app/services/scheduler.service";
 import { PhysicalMessage } from "../message.model";
 import { GenericListener, PhysicalListener, PhysicalSender } from "../protocols/protocols.model";
 import { HardwareInterface, Interface } from "./datalink.model";
@@ -58,6 +58,8 @@ export abstract class AbstractLink implements PhysicalListener, PhysicalSender {
     return (bytes / (speed*1000*1000)) / SchedulerService.Instance.Transmission;
   }
   public getDelay(bytes: number) {
+    if( SchedulerService.Instance.Speed === SchedulerState.PAUSED )
+      return 99999999999999;
     return this.getPropagationDelay() + this.getTransmissionDelay(bytes);
   }
 

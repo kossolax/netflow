@@ -17,6 +17,7 @@ export class SchedulerService {
   private transmissionMultiplier: number = 1;
   private speedOfLightMultiplier: number = 1;
   private startTime: number = new Date().getTime();
+  private startPause: number = 0;
   private listener: {delay: number, callback: BehaviorSubject<number>}[] = [];
 
   public get Transmission(): number {
@@ -55,10 +56,16 @@ export class SchedulerService {
     }
 
     this.currentState = delay;
-    this.reset();
     // recalculate start time to compensate for the change in speed
-    this.startTime = (new Date().getTime()) - delta / this.speedOfLightMultiplier;
+    if( delay === SchedulerState.PAUSED ) {
+      this.startTime = (new Date().getTime()) - delta;
+      this.startPause = new Date().getTime();
+    }
+    else {
+      this.startTime = (new Date().getTime()) - delta / this.speedOfLightMultiplier;
+    }
 
+    this.reset();
   }
   public get Timer$(): Observable<string> {
     return timer(1, 10).pipe(
@@ -84,12 +91,12 @@ export class SchedulerService {
 
   private calculateStringTime(): string {
     let deltaTime = this.getDeltaTime();
-    let time = Math.floor(deltaTime);
+    let time = Math.floor(deltaTime / 100);
     let seconds = Math.floor(deltaTime / 1000);
     let minutes = Math.floor(seconds / 60);
     let hours = Math.floor(minutes / 60);
 
-    let str_miliseconds = (time % 1000).toString().padStart(3, '0');
+    let str_miliseconds = (time % 10).toString().padStart(1, '0');
     let str_seconds = (seconds % 60).toString().padStart(2, '0');
     let str_minutes = (minutes % 60).toString().padStart(2, '0');
     let str_hours = (hours).toString().padStart(2, '0');
@@ -99,14 +106,17 @@ export class SchedulerService {
       formated_string += `${str_hours}:`;
 
     formated_string += `${str_minutes}:${str_seconds}`;
-
-    if( this.SpeedOfLight < 1 )
-      formated_string += `.${str_miliseconds}`;
+    formated_string += `.${str_miliseconds}`;
 
     return formated_string;
   }
 
   private getDeltaTime(): number {
+    if( this.currentState == SchedulerState.PAUSED ) {
+      const timeSincePause = new Date().getTime() - this.startPause;
+
+      return (new Date().getTime() - this.startTime) - timeSincePause;
+    }
     return (new Date().getTime() - this.startTime) * this.speedOfLightMultiplier;
   }
 
