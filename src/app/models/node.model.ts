@@ -1,4 +1,5 @@
 import { Observable, Subject } from "rxjs";
+import { SchedulerService } from "../services/scheduler.service";
 import { Address, MacAddress, IPAddress, NetworkAddress, HardwareAddress } from "./address.model";
 import { EthernetInterface, HardwareInterface, Interface } from "./layers/datalink.model";
 import { IPInterface, NetworkInterface } from "./layers/network.model";
@@ -69,6 +70,8 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
   public override type = "switch";
   public receiveTrame$: Subject<DatalinkMessage> = new Subject<DatalinkMessage>();
 
+  private ARPTable: Map<HardwareAddress, {iface: HardwareInterface, lastSeen: number}[]> = new Map<HardwareAddress, {iface: HardwareInterface, lastSeen: number}[]>();
+
   constructor(name: string="", iface: number=0) {
     super();
     if( name != "" )
@@ -76,6 +79,10 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
 
     for(let i=0; i<iface; i++)
       this.addInterface();
+
+    SchedulerService.Instance.repeat(10).subscribe(() => {
+      this.cleanARPTable();
+    });
   }
 
   addInterface(name: string = ""): HardwareInterface {
@@ -112,17 +119,72 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
   }
 
   // TODO: Make this private.
-  receiveTrame(message: DatalinkMessage, from: Interface): void {
+  receiveTrame(message: DatalinkMessage, from: HardwareInterface): void {
+    const src = message.mac_src as HardwareAddress;
+    const dst = message.mac_dst as HardwareAddress;
 
-    for( const name in this.interfaces ) {
-      if( this.interfaces[name] !== from )
-        this.interfaces[name].sendTrame(message);
+    let found = false;
+    this.ARPTable.get(src)?.map( i => {
+      if( i.iface.getMacAddress().equals(from.getMacAddress()) ) {
+        found = true;
+        i.lastSeen = SchedulerService.Instance.getDeltaTime();
+      }
+    });
+
+    if( !found ) {
+      if( !this.ARPTable.get(src) )
+        this.ARPTable.set(src, []);
+      this.ARPTable.get(src)?.push({iface: from, lastSeen: SchedulerService.Instance.getDeltaTime()});
+    }
+
+    if( dst.isBroadcast || this.ARPTable.get(dst) === undefined ) {
+      for( const name in this.interfaces ) {
+        if( this.interfaces[name] !== from )
+          this.interfaces[name].sendTrame(message);
+      }
+    }
+    else {
+      this.ARPTable.get(dst)?.map( i => {
+        if( i.iface !== from )
+          i.iface.sendTrame(message);
+      });
     }
 
     this.receiveTrame$.next(message);
   }
 
+  cleanARPTable(): void {
+    const cleanDelay = SchedulerService.Instance.getDelay(60 * 5);
+
+    for( const key of this.ARPTable.keys() ) {
+
+      let interfaces = this.ARPTable.get(key);
+      if( interfaces !== undefined ) {
+
+        let updated = false;
+        let i = 0;
+        while( i < interfaces.length ) {
+          const timeSinceLastSeen = SchedulerService.Instance.getDeltaTime() - interfaces[i].lastSeen;
+
+          if( timeSinceLastSeen > cleanDelay ) {
+            interfaces.splice(i, 1);
+            updated = true;
+          }
+          else {
+            i++;
+          }
+        }
+
+        if( interfaces.length == 0 )
+          this.ARPTable.delete(key);
+        else if( updated )
+          this.ARPTable.set(key, interfaces);
+      }
+    }
+  }
+
 }
+
 export class RouterHost extends Node<NetworkInterface> implements NetworkListener {
   public override name = "Router";
   public override type = "router";

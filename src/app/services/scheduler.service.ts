@@ -111,7 +111,7 @@ export class SchedulerService {
     return formated_string;
   }
 
-  private getDeltaTime(): number {
+  public getDeltaTime(): number {
     if( this.currentState == SchedulerState.PAUSED ) {
       const timeSincePause = new Date().getTime() - this.startPause;
 
@@ -120,7 +120,7 @@ export class SchedulerService {
     return (new Date().getTime() - this.startTime) * this.speedOfLightMultiplier;
   }
 
-  private getDelay(delay: number): number {
+  public getDelay(delay: number): number {
     if( this.currentState == SchedulerState.PAUSED )
       return 99999999999999; // Number.MAX_SAFE_INTEGER and Number.MAX_VALUE seems too big.
     return delay / this.speedOfLightMultiplier * 1000;

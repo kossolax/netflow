@@ -72,7 +72,10 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
       takeUntil(this.onDestroy$)
     ).subscribe( () => {
       console.log("hi");
-      nodes[0].send("coucou", (nodes[2].getInterface(0) as NetworkInterface).getNetAddress());
+      nodes[0].send("A", (nodes[2].getInterface(0) as NetworkInterface).getNetAddress());
+    });
+    this.scheduler.once(0.5).subscribe( () => {
+      nodes[3].send("B", (nodes[0].getInterface(0) as NetworkInterface).getNetAddress());
     });
 
 
