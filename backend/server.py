@@ -2,7 +2,6 @@ from flask import Flask, request
 from flask_cors import CORS
 from flask_compress import Compress
 
-import io
 import os
 import subprocess
 import json
@@ -45,18 +44,20 @@ def decode():
     if 'file' in request.files:
       file = request.files['file']
       ext = file.filename.split(".")[-1]
-      file.save("input." + ext )
 
-      bashCommand = "pka2xml -d input."+ext+" output.xml"
-      process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-      output, error = process.communicate()
+      if ext in ["pkt", "pka"]:
+        input = "input." + ext
 
-      response = []
+        if os.path.isfile(input):
+          file.save(input)
 
-      with open("output.xml", mode="r") as file:
-        clean = illegal_xml_chars_re.sub('', file.read())
-        data_dict = xmltodict.parse(clean)
-        return json.dumps(data_dict)
+          process = subprocess.Popen(["pka2xml", "-d", input, "output.xml"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+          _, _ = process.communicate()
+
+          with open("output.xml", mode="r") as file:
+            clean = illegal_xml_chars_re.sub('', file.read())
+            data_dict = xmltodict.parse(clean)
+            return json.dumps(data_dict)
 
   return json.dumps({
     "message": "errored"
