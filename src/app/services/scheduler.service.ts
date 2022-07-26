@@ -33,7 +33,7 @@ export class SchedulerService {
 
     switch (delay) {
       case SchedulerState.FASTER: {
-        this.transmissionMultiplier = (1000*1000);
+        this.transmissionMultiplier = (100*1000);
         this.speedOfLightMultiplier = 10;
         break;
       }
@@ -43,7 +43,7 @@ export class SchedulerService {
         break;
       }
       case SchedulerState.SLOWER: {
-        this.transmissionMultiplier = 1 / (1000*1000);
+        this.transmissionMultiplier = 1 / (100*1000);
         this.speedOfLightMultiplier = 1 / 10;
         break;
       }

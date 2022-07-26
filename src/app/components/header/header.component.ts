@@ -35,6 +35,12 @@ export class HeaderComponent implements OnInit {
     str = str.charAt(0).toUpperCase() + str.slice(1);
     return str;
   }
+  public get SpeedOfLight(): number {
+    return SchedulerService.Instance.SpeedOfLight;
+  }
+  public get SpeedOfTransmission(): number {
+    return SchedulerService.Instance.Transmission;
+  }
   public get Speed(): SchedulerState {
     return this.scheduler.Speed;
   }

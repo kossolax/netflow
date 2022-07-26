@@ -35,7 +35,6 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
       this.debug();
     }, 100);
     this.configNode = null;
-    // this.configNode = new RouterHost("Router-Test", 5);
   }
 
   debug() {
@@ -67,7 +66,7 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
     });
 
 
-    this.configNode = nodes[0];
+    //this.configNode = nodes[0];
     this.network.setNetwork(net);
   }
 
@@ -214,7 +213,7 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
 
 
   public animate(source: GenericNode, target: GenericNode, delay: number, message: string=""): void {
-    const start = new Date().getTime() / 1000;
+    const start = new Date().getTime() / 1000 * this.scheduler.SpeedOfLight;
 
     const node = this.diagram.addNode({
       id: start + "-" + Math.random(),
@@ -234,7 +233,7 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
     });
 
     const render = (() => {
-      const now = new Date().getTime() / 1000;
+      const now = new Date().getTime() / 1000 * this.scheduler.SpeedOfLight;
       const progress = (now - start) / delay;
 
       if( progress > 1 ) {
