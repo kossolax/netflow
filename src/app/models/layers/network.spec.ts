@@ -3,6 +3,7 @@ import { RouterHost, SwitchHost } from '../node.model';
 import { delay, take, timeout, catchError } from 'rxjs';
 import { SimpleListener } from '../protocols/protocols.model';
 import { IPAddress, MacAddress } from '../address.model';
+import { SchedulerService, SchedulerState } from 'src/app/services/scheduler.service';
 
 describe('Network layer test', () => {
   let A: RouterHost;
@@ -26,6 +27,7 @@ describe('Network layer test', () => {
 
 
     listener = new SimpleListener();
+    SchedulerService.Instance.Speed = SchedulerState.FASTER;
   });
 
   it( 'L3 (down) -> L3', () => {

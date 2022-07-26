@@ -3,6 +3,7 @@ import { SwitchHost } from '../node.model';
 import { catchError, take, timeout, delay } from 'rxjs';
 import { SimpleListener } from '../protocols/protocols.model';
 import { MacAddress } from '../address.model';
+import { SchedulerService, SchedulerState } from 'src/app/services/scheduler.service';
 
 describe('Datalink layer test', () => {
   let A: SwitchHost;
@@ -28,6 +29,7 @@ describe('Datalink layer test', () => {
 
 
     listener = new SimpleListener();
+    SchedulerService.Instance.Speed = SchedulerState.FASTER;
   });
 
   it( 'L2 (down) -> L2', () => {
@@ -119,8 +121,8 @@ describe('Datalink layer test', () => {
   });
 
   it( 'L2 -> L2 -> L2', (done) => {
-    let link1 = new Link(A.getInterface(0), B.getInterface(0), 100);
-    let link2 = new Link(B.getInterface(1), C.getInterface(0), 100);
+    let link1 = new Link(A.getInterface(0), B.getInterface(0), 10);
+    let link2 = new Link(B.getInterface(1), C.getInterface(0), 10);
 
     const message = `${link1} <--> ${link2} ${Math.random()}`;
     A.send(message, C.getInterface(0).getMacAddress());

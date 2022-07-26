@@ -1,4 +1,5 @@
 import { catchError, take, timeout } from "rxjs";
+import { SchedulerService, SchedulerState } from "src/app/services/scheduler.service";
 import { MacAddress } from "../address.model";
 import { PhysicalMessage } from "../message.model";
 import { SwitchHost } from "../node.model";
@@ -20,6 +21,7 @@ describe('Physical layer test', () => {
     B.up();
 
     listener = new SimpleListener();
+    SchedulerService.Instance.Speed = SchedulerState.FASTER;
   });
 
   it("L1 -> L1", (done) => {
