@@ -1,26 +1,28 @@
 @import 'theme.scss';
-
 @import '../node_modules/@syncfusion/ej2-base/styles/material.scss';
 @import '../node_modules/@syncfusion/ej2-inputs/styles/material.scss';
 @import '../node_modules/@syncfusion/ej2-buttons/styles/material.scss';
 @import '../node_modules/@syncfusion/ej2-icons/styles/material.scss';
-
 @import '../node_modules/@syncfusion/ej2-navigations/styles/material.scss';
 @import '../node_modules/@syncfusion/ej2-popups/styles/material.scss';
-
 @import '../node_modules/@syncfusion/ej2-angular-popups/styles/material.scss';
 @import '../node_modules/@syncfusion/ej2-angular-diagrams/styles/material.scss';
 @import '../node_modules/@syncfusion/ej2-angular-inputs/styles/material.scss';
 
-html, body, * {
+html,
+body,
+* {
   padding: 0;
   margin: 0;
   box-sizing: border-box;
 }
-html, body {
+
+html,
+body {
   height: 100%;
   width: 100%;
 }
+
 #dialog-container {
   display: block;
   height: 100%;

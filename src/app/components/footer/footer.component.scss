@@ -21,7 +21,7 @@ $size: 64px;
       align-items: center;
       justify-content: center;
       background-color: white;
-      border:  1px solid $primary;
+      border: 1px solid $primary;
       border-radius: 10%;
 
       img {
@@ -30,10 +30,8 @@ $size: 64px;
 
       &.selected {
         background-color: $primary;
-        border:  1px dashed $accent;
+        border: 1px dashed $accent;
       }
     }
-
   }
-
 }
