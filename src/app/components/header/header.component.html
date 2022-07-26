@@ -1,14 +1,23 @@
-<div id="defaultSample" class="control-section">
-  <div class="menu-control">
-      <ejs-menu [items]='menuItems' (select)='select($event)' showItemOnClick="true">
-      </ejs-menu>
+<div class="control-section">
 
-      Speed: {{SpeedString }}
-      {{time$ | async}}
+  <div class="toolbar-menu-control">
 
-      <ng-container *ngFor="let speed of [0, 1, 2, 3]">
-        <input name="speed" type="radio" [value]="speed" (click)="Speed = speed" [checked]="Speed===speed"/>
-      </ng-container>
+    <div id="menu">
+      <ejs-menu [items]="menuItems" (select)='select($event)' showItemOnClick="true"></ejs-menu>
+    </div>
+
+    <ejs-toolbar>
+        <e-items>
+          <e-item template='#menu'></e-item>
+          <e-item type='Separator'></e-item>
+
+          <e-item prefixIcon="play" [cssClass]="Speed==1 ? 'active' : ''" (click)="Speed=1"></e-item>
+          <e-item prefixIcon="slow" [cssClass]="Speed==2 ? 'active' : ''" (click)="Speed=2"></e-item>
+          <e-item prefixIcon="fast" [cssClass]="Speed==3 ? 'active' : ''" (click)="Speed=3"></e-item>
+          <e-item prefixIcon="pause" [cssClass]="Speed==0 ? 'active' : ''" (click)="Speed=0"></e-item>
+
+        </e-items>
+    </ejs-toolbar>
   </div>
 
   <input id="inputValue" type="file" style="display:none" (change)="onFileUpload($event)" accept=".pkt, .pka" />

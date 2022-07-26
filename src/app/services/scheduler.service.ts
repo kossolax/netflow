@@ -77,6 +77,8 @@ export class SchedulerService {
       throw new Error("SchedulerService is already provided");
     if( SchedulerService.instance )
       throw new Error("SchedulerService is already instancied");
+
+    this.Speed = SchedulerState.SLOWER;
     SchedulerService.instance = this;
   }
 

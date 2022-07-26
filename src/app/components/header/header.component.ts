@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { MenuEventArgs, MenuItemModel } from '@syncfusion/ej2-angular-navigations';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { MenuEventArgs, MenuItemModel, ToolbarComponent } from '@syncfusion/ej2-angular-navigations';
 import { NetworkService } from 'src/app/services/network.service';
 import { Link } from 'src/app/models/layers/physical.model';
 import { SchedulerService, SchedulerState } from 'src/app/services/scheduler.service';
@@ -16,10 +16,10 @@ export class HeaderComponent implements OnInit {
   public menuItems: MenuItemModel[] = [
     {
       text: 'File',
-      iconCss: 'fa-solid fa-bars',
+      iconCss: 'menu',
       items: [
-          { text: 'Open', iconCss: 'fa-solid fa-folder-open', id: 'menu-item-open' },
-          { text: 'Save', iconCss: 'fa-solid fa-floppy-disk' },
+          { text: 'Open', iconCss: 'folder', id: 'menu-item-open' },
+          { text: 'Save', iconCss: 'save' },
           { separator: true },
           { text: 'Exit' }
       ]

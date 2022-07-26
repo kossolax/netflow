@@ -4,7 +4,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { BrowserModule } from '@angular/platform-browser';
 
 import { enableRipple } from '@syncfusion/ej2-base';
-import { MenuModule, TabModule } from '@syncfusion/ej2-angular-navigations';
+import { MenuModule, TabModule, ToolbarModule } from '@syncfusion/ej2-angular-navigations';
 
 
 import { AppComponent } from './app.component';
@@ -34,6 +34,7 @@ const routes: Routes = [
     BrowserModule,
 
     MenuModule,
+    ToolbarModule,
     TabModule
   ],
   bootstrap: [AppComponent],

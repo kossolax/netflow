@@ -1,3 +1,26 @@
-:host {
-  display: block;
+@import '../../../theme.scss';
+
+.active button {
+  background-color: $primary;
+}
+.play {
+  content: url('https://api.iconify.design/mdi/play.svg');
+}
+.fast {
+  content: url('https://api.iconify.design/mdi/fast-forward.svg');
+}
+.slow {
+  content: url('https://api.iconify.design/mdi/play-pause.svg');
+}
+.pause {
+  content: url('https://api.iconify.design/mdi/pause.svg');
+}
+.folder {
+  content: url('https://api.iconify.design/mdi/folder-open-outline.svg');
+}
+.save {
+  content: url('https://api.iconify.design/mdi/content-save.svg');
+}
+.menu {
+  content: url('https://api.iconify.design/mdi/menu.svg');
 }
