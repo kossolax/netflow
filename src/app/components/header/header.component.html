@@ -11,10 +11,10 @@
           <e-item template='#menu'></e-item>
           <e-item type='Separator'></e-item>
 
-          <e-item prefixIcon="pause" [cssClass]="Speed==3 ? 'active' : ''" (click)="Speed=3"></e-item>
-          <e-item prefixIcon="slow" [cssClass]="Speed==2 ? 'active' : ''" (click)="Speed=2"></e-item>
-          <e-item prefixIcon="play" [cssClass]="Speed==1 ? 'active' : ''" (click)="Speed=1"></e-item>
-          <e-item prefixIcon="fast" [cssClass]="Speed==0 ? 'active' : ''" (click)="Speed=0"></e-item>
+          <e-item prefixIcon="pause" [cssClass]="Speed===3 ? 'active' : ''" (click)="Speed=3"></e-item>
+          <e-item prefixIcon="slow" [cssClass]="Speed===2 ? 'active' : ''" (click)="Speed=2"></e-item>
+          <e-item prefixIcon="play" [cssClass]="Speed===1 ? 'active' : ''" (click)="Speed=1"></e-item>
+          <e-item prefixIcon="fast" [cssClass]="Speed===0 ? 'active' : ''" (click)="Speed=0"></e-item>
           <e-item [text]="time$ | async"></e-item>
           <e-item prefixIcon="light" [text]="SpeedOfLight + 'x'"></e-item>
           <e-item prefixIcon="trans" [text]="SpeedOfTransmission + 'x'"></e-item>
