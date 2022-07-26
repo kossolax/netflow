@@ -47,17 +47,15 @@ def decode():
 
       if ext in ["pkt", "pka"]:
         file_input = "input." + ext
+        file.save(file_input)
 
-        if os.path.isfile(file_input):
-          file.save(file_input)
+        process = subprocess.Popen(["pka2xml", "-d", file_input, "output.xml"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        _, _ = process.communicate()
 
-          process = subprocess.Popen(["pka2xml", "-d", file_input, "output.xml"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-          _, _ = process.communicate()
-
-          with open("output.xml", mode="r") as file:
-            clean = illegal_xml_chars_re.sub('', file.read())
-            data_dict = xmltodict.parse(clean)
-            return json.dumps(data_dict)
+        with open("output.xml", mode="r") as file:
+          clean = illegal_xml_chars_re.sub('', file.read())
+          data_dict = xmltodict.parse(clean)
+          return json.dumps(data_dict)
 
   return json.dumps({
     "message": "errored"
