@@ -161,15 +161,12 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
       let interfaces = this.ARPTable.get(key);
       if( interfaces !== undefined ) {
 
-        let updated = false;
         let i = 0;
         while( i < interfaces.length ) {
           const timeSinceLastSeen = SchedulerService.Instance.getDeltaTime() - interfaces[i].lastSeen;
 
-          if( timeSinceLastSeen > cleanDelay ) {
+          if( timeSinceLastSeen > cleanDelay )
             interfaces.splice(i, 1);
-            updated = true;
-          }
           else {
             i++;
           }
@@ -177,8 +174,6 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
 
         if( interfaces.length == 0 )
           this.ARPTable.delete(key);
-        else if( updated )
-          this.ARPTable.set(key, interfaces);
       }
     }
   }
