@@ -16,8 +16,8 @@
           <e-item prefixIcon="play" [cssClass]="Speed===1 ? 'active' : ''" (click)="Speed=1"></e-item>
           <e-item prefixIcon="fast" [cssClass]="Speed===0 ? 'active' : ''" (click)="Speed=0"></e-item>
           <e-item [text]="time$ | async"></e-item>
-          <e-item prefixIcon="light" [text]="SpeedOfLight + 'x'"></e-item>
-          <e-item prefixIcon="trans" [text]="SpeedOfTransmission + 'x'"></e-item>
+          <e-item prefixIcon="light" [text]="SpeedOfLight + '✖'"></e-item>
+          <e-item prefixIcon="trans" [text]="SpeedOfTransmission + '✖'"></e-item>
 
         </e-items>
     </ejs-toolbar>

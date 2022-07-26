@@ -39,14 +39,22 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
 
   debug() {
     let net = new Network();
-    let nodes: RouterHost[] = [];
+    let nodes: (RouterHost|SwitchHost)[] = [];
     nodes.push(new RouterHost("Router-1A", 2));
+    nodes.push(new SwitchHost("Switch-1", 24));
     nodes.push(new RouterHost("Router-1B", 2));
+    nodes.push(new RouterHost("Router-2", 2));
 
     let index = 0;
     nodes.map( i => {
-      i.x = 200 + index * 400;
+      i.x = 200 + index * 200;
       i.y = 200;
+
+      if( index === nodes.length-1 ) {
+        i.x = 600;
+        i.y = 400;
+      }
+
       net.nodes[i.guid] = i;
       i.getInterfaces().map( j => i.getInterface(j).up() );
       index++;
@@ -54,6 +62,8 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
 
     let links = [];
     links.push(new Link(nodes[0].getFirstAvailableInterface(), nodes[1].getFirstAvailableInterface(), 10));
+    links.push(new Link(nodes[1].getFirstAvailableInterface(), nodes[2].getFirstAvailableInterface(), 10));
+    links.push(new Link(nodes[1].getFirstAvailableInterface(), nodes[3].getFirstAvailableInterface(), 10));
     links.map( i => {
       net.links.push(i);
     });
@@ -62,7 +72,7 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
       takeUntil(this.onDestroy$)
     ).subscribe( () => {
       console.log("hi");
-      nodes[0].send("coucou", nodes[1].getInterface(0).getNetAddress());
+      nodes[0].send("coucou", (nodes[2].getInterface(0) as NetworkInterface).getNetAddress());
     });
 
 
