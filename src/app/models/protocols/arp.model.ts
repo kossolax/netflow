@@ -1,3 +1,4 @@
+import { SchedulerService } from "src/app/services/scheduler.service";
 import { HardwareAddress, MacAddress, NetworkAddress } from "../address.model";
 import { HardwareInterface } from "../layers/datalink.model";
 import { NetworkInterface } from "../layers/network.model";
@@ -23,19 +24,23 @@ export class ArpMessage implements Payload {
 }
 
 export class ArpProtocol implements DatalinkListener {
-  private table: Map<NetworkAddress, HardwareAddress>;
+  private table: Map<NetworkAddress, {address: HardwareAddress, lastSeen: number}>;
   private queue: Map<NetworkAddress, NetworkMessage[]>;
   private interface: NetworkInterface;
 
   constructor(netface: NetworkInterface, hardface: HardwareInterface) {
-    this.table = new Map<NetworkAddress, HardwareAddress>();
+    this.table = new Map<NetworkAddress, {address: HardwareAddress, lastSeen: number}>();
     this.queue = new Map<NetworkAddress, NetworkMessage[]>();
     this.interface = netface;
     hardface.addListener(this);
+
+    SchedulerService.Instance.repeat(10).subscribe(() => {
+      this.cleanARPTable();
+    });
   }
 
   getMapping(addr: NetworkAddress): HardwareAddress|undefined {
-    return this.table.get(addr);
+    return this.table.get(addr)?.address;
   }
 
   enqueueRequest(message: NetworkMessage): void {
@@ -68,7 +73,7 @@ export class ArpProtocol implements DatalinkListener {
         this.interface.getInterface(0).sendTrame(replyMessage);
       }
       else if( arp.type == "reply" && arp.response != null ) {
-        this.table.set(arp.request as NetworkAddress, arp.response as HardwareAddress);
+        this.table.set(arp.request, {address: arp.response, lastSeen: SchedulerService.Instance.getDeltaTime()});
 
         if( this.queue.has(arp.request) ) {
           this.queue.get(arp.request)?.map( i => {
@@ -79,6 +84,17 @@ export class ArpProtocol implements DatalinkListener {
         }
       }
     }
+  }
+
+  private cleanARPTable() {
+    const cleanDelay = SchedulerService.Instance.getDelay(60 * 5);
+
+    this.table.forEach( (value, key) => {
+      const timeSinceLastSeen = SchedulerService.Instance.getDeltaTime() - value.lastSeen;
+
+      if( timeSinceLastSeen > cleanDelay )
+        this.table.delete(key);
+    } );
   }
 
 }
