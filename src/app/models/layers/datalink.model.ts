@@ -3,6 +3,7 @@ import { Link } from "./physical.model";
 import { GenericNode } from "../node.model";
 import { PhysicalMessage, DatalinkMessage } from "../message.model";
 import { DatalinkListener, DatalinkSender, GenericListener, PhysicalListener } from "../protocols/protocols.model";
+import { AutoNegotiationProtocol } from "../protocols/autonegotiation.model";
 
 export abstract class Interface {
   protected host: GenericNode;
@@ -105,7 +106,8 @@ export abstract class HardwareInterface extends Interface implements PhysicalLis
         (i as PhysicalListener).receiveBits(message, source, this);
     });
 
-    this.receiveTrame(message as DatalinkMessage);
+    if( message instanceof DatalinkMessage )
+      this.receiveTrame(message);
   }
   receiveTrame(message: DatalinkMessage): void {
     this.getListener.map( i => {
@@ -130,9 +132,33 @@ export abstract class HardwareInterface extends Interface implements PhysicalLis
 
     this.Link?.sendBits(message, this);
   }
+  sendBits(message: PhysicalMessage): void {
+    this.Link?.sendBits(message, this);
+  }
 }
 export class EthernetInterface extends HardwareInterface {
+  private discovery: AutoNegotiationProtocol;
+
   constructor(node: GenericNode, addr: MacAddress, name: string="") {
     super(node, addr, "eth" + name);
+
+    this.discovery = new AutoNegotiationProtocol(this);
+  }
+
+  override connectTo(link: Link): void {
+    super.connectTo(link);
+
+    if( link.Speed === 0 )
+      this.discovery.negociate(0, 1000, true);
+  }
+
+  override get Speed(): number {
+    return super.Speed;
+  }
+  override set Speed(speed: number) {
+    super.Speed = speed;
+
+    if( speed === 0 )
+      this.discovery.negociate(speed, 1000, true);
   }
 }

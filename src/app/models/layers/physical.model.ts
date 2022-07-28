@@ -18,12 +18,12 @@ export abstract class AbstractLink implements PhysicalListener, PhysicalSender {
 
   static SPEED_OF_LIGHT: number = 299792458;
 
-  constructor( iface1: HardwareInterface|NetworkInterface|null = null, iface2: HardwareInterface|NetworkInterface|null = null, length: number=1) {
+  constructor( iface1: HardwareInterface|NetworkInterface|null = null, iface2: HardwareInterface|NetworkInterface|null = null, length: number=1, speed: number=100) {
     this.iface1 = iface1 instanceof(NetworkInterface) ? iface1.getInterface(0) : iface1;
     this.iface2 = iface2 instanceof(NetworkInterface) ? iface2.getInterface(0) : iface2;
 
     this.length = length;
-    this.speed = 0;
+    this.speed = speed;
 
     if( this.iface1 != null )
       this.iface1.connectTo(this);
