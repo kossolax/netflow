@@ -49,10 +49,10 @@ type LinkCodeWords = LinkCodeWord_Page0|LinkCodeWord_Page1;
 // CL73-AN 802.3ck
 
 export class AutonegotiationMessage implements Payload {
-  payload: LinkCodeWords;
+  code: LinkCodeWords;
 
-  private constructor(payload: LinkCodeWords) {
-    this.payload = payload;
+  private constructor(code: LinkCodeWords) {
+    this.code = code;
   }
 
   get length(): number {
@@ -164,12 +164,23 @@ export class AutonegotiationMessage implements Payload {
 export class AutoNegotiationProtocol implements PhysicalListener {
   private iface: HardwareInterface;
 
+  private minSpeed: number = Number.MIN_SAFE_INTEGER;
+  private maxSpeed: number = Number.MAX_SAFE_INTEGER;
+  private fullDuplex: boolean = true;
+
+  private lastReceive: Date = new Date();
+  private neighbourConfig: LinkCodeWords[] = [];
+
   constructor(iface: HardwareInterface) {
     this.iface = iface;
     this.iface.addListener(this);
   }
 
   public negociate(minSpeed: number=Number.MIN_SAFE_INTEGER, maxSpeed: number=Number.MAX_SAFE_INTEGER, fullDuplex: boolean=true) {
+    this.minSpeed = minSpeed;
+    this.maxSpeed = maxSpeed;
+    this.fullDuplex = fullDuplex;
+
     let builder = new AutonegotiationMessage.Builder()
       .setMinSpeed(minSpeed)
       .setMaxSpeed(maxSpeed);
@@ -186,7 +197,88 @@ export class AutoNegotiationProtocol implements PhysicalListener {
 
   receiveBits(message: PhysicalMessage, from: Interface, to: Interface): void {
     if( message.payload instanceof AutonegotiationMessage ) {
-      console.log(message);
+
+      this.lastReceive = new Date();
+      this.neighbourConfig.push(message.payload.code);
+      if( message.payload.code.nextPage === false )
+        this.setSpeed();
+
     }
+  }
+
+  private setSpeed() {
+    let speed = 0;
+    let duplex = false;
+    let testSpeed = 0;
+
+    for(let page=0; page<this.neighbourConfig.length; page++) {
+      switch(page) {
+        case 0: {
+          let code = this.neighbourConfig[page] as LinkCodeWord_Page0;
+
+          testSpeed = 10;
+          if( this.minSpeed <= testSpeed && this.maxSpeed >= testSpeed ) {
+            if( code.technologyField & TechnologyField.A10BaseT ) {
+              speed = testSpeed;
+              duplex = false;
+            }
+            if( code.technologyField & TechnologyField.A10BaseT_FullDuplex && this.fullDuplex ) {
+              speed = testSpeed;
+              duplex = true;
+            }
+          }
+
+          testSpeed = 100;
+          if( this.minSpeed <= testSpeed && this.maxSpeed >= testSpeed ) {
+            if( code.technologyField & TechnologyField.A100BaseTX ) {
+              speed = testSpeed;
+              duplex = false;
+            }
+            if( code.technologyField & TechnologyField.A100BaseT4 ) {
+              speed = testSpeed;
+              duplex = false;
+            }
+            if( code.technologyField & TechnologyField.A100BaseTX_FullDuplex && this.fullDuplex ) {
+              speed = testSpeed;
+              duplex = true;
+            }
+          }
+
+          break;
+        }
+        case 1: {
+          let code = this.neighbourConfig[page] as LinkCodeWord_Page1;
+
+          testSpeed = 1000;
+          if( this.minSpeed <= testSpeed && this.maxSpeed >= testSpeed ) {
+            if( code.technologyField & AdvancedTechnologyField.A1000BaseT_HalfDuplex ) {
+              speed = testSpeed;
+              duplex = false;
+            }
+            if( code.technologyField & AdvancedTechnologyField.A1000BaseT && this.fullDuplex ) {
+              speed = testSpeed;
+              duplex = true;
+            }
+            if( code.technologyField & AdvancedTechnologyField.A1000BaseT_MultiPort && this.fullDuplex  ) {
+              speed = testSpeed;
+              duplex = true;
+            }
+          }
+
+          break;
+        }
+        default: {
+          throw new Error("Unsupported page");
+        }
+      }
+    }
+
+    if( speed == 0 )
+        throw new Error("Autonegotiation failed");
+
+    this.iface.Speed = speed;
+    this.iface.FullDuplex = duplex;
+
+    this.neighbourConfig = [];
   }
 }

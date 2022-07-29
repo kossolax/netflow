@@ -41,6 +41,14 @@ export abstract class Interface {
 
     this.link.Speed = speed;
   }
+  get FullDuplex(): boolean {
+    return this.link?.FullDuplex || false;
+  }
+  set FullDuplex(fullDuplex: boolean) {
+    if( !this.link )
+      throw new Error("Link is not connected");
+    this.link.FullDuplex = fullDuplex;
+  }
   // ---
   isConnected(): boolean {
     return this.link != null;

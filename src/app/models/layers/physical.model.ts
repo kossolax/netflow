@@ -15,6 +15,7 @@ export abstract class AbstractLink implements PhysicalListener, PhysicalSender {
   protected iface2: HardwareInterface|null;
   protected length: number;
   protected speed: number;
+  protected fullDuplex: boolean;
 
   static SPEED_OF_LIGHT: number = 299792458;
 
@@ -24,6 +25,7 @@ export abstract class AbstractLink implements PhysicalListener, PhysicalSender {
 
     this.length = length;
     this.speed = speed;
+    this.fullDuplex = false;
 
     if( this.iface1 != null )
       this.iface1.connectTo(this);
@@ -45,6 +47,12 @@ export abstract class AbstractLink implements PhysicalListener, PhysicalSender {
     if( speed % 10 != 0 )
       throw new Error("Speed must be a multiple of 10");
     this.speed = speed;
+  }
+  get FullDuplex(): boolean {
+    return this.fullDuplex;
+  }
+  set FullDuplex(fullDuplex: boolean) {
+    this.fullDuplex = fullDuplex;
   }
 
   public getPropagationDelay() {
