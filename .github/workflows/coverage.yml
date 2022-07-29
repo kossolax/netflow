@@ -30,3 +30,9 @@ jobs:
         COVERAGE_FILE: 'coverage/netflow/cobertura-coverage.xml'
         MINIMUM_GREEN: 90
         MINIMUM_ORANGE: 70
+
+    - name: Codacy Coverage Reporter
+      uses: codacy/codacy-coverage-reporter-action@v1.3.0
+      with:
+          api-token: ${{ secrets.CODACY_API_TOKEN }}
+          coverage-reports: 'coverage/netflow/cobertura-coverage.xml'
