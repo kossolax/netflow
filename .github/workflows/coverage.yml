@@ -23,14 +23,6 @@ jobs:
     - run: npm ci
     - run: npm run test:prod
 
-    - name: Coverage Comment
-      uses: ewjoachim/coverage-comment-action@v1.0.3
-      with:
-        GITHUB_TOKEN: ${{ github.token }}
-        COVERAGE_FILE: 'coverage/netflow/cobertura-coverage.xml'
-        MINIMUM_GREEN: 90
-        MINIMUM_ORANGE: 70
-
     - name: Codacy Coverage Reporter
       uses: codacy/codacy-coverage-reporter-action@v1.3.0
       with:
