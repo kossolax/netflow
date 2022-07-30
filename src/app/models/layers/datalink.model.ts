@@ -146,16 +146,16 @@ export class EthernetInterface extends HardwareInterface {
   protected minSpeed: number;
   protected maxSpeed: number;
   protected fullDuplexCapable: boolean;
+  protected discovery: AutoNegotiationProtocol|null = null;
 
-  private discovery: AutoNegotiationProtocol;
-
-  constructor(node: GenericNode, addr: MacAddress, name: string="", minSpeed: number=10, maxSpeed: number=1000, fullDuplexCapable: boolean=true) {
+  constructor(node: GenericNode, addr: MacAddress, name: string="", minSpeed: number=10, maxSpeed: number=1000, fullDuplexCapable: boolean=true, autonegotiate: boolean=true) {
     super(node, addr, "eth" + name);
     this.minSpeed = minSpeed;
     this.maxSpeed = maxSpeed;
+    this.Speed = maxSpeed;
     this.fullDuplexCapable = fullDuplexCapable;
-
-    this.discovery = new AutoNegotiationProtocol(this);
+    if( autonegotiate )
+      this.discovery = new AutoNegotiationProtocol(this);
   }
 
   reconfigure(minSpeed: number, maxSpeed: number, fullDuplexCapable: boolean): void {
@@ -163,19 +163,19 @@ export class EthernetInterface extends HardwareInterface {
     this.maxSpeed = maxSpeed;
     this.fullDuplexCapable = fullDuplexCapable;
 
-    this.discovery.negociate(this.minSpeed, this.maxSpeed, this.fullDuplexCapable);
+    this.discovery?.negociate(this.minSpeed, this.maxSpeed, this.fullDuplexCapable);
   }
 
   override connectTo(link: Link): void {
     super.connectTo(link);
 
-    this.discovery.negociate(this.minSpeed, this.maxSpeed, this.fullDuplexCapable);
+    this.discovery?.negociate(this.minSpeed, this.maxSpeed, this.fullDuplexCapable);
   }
   override up() {
     super.up();
 
     if( this.isConnected() )
-      this.discovery.negociate(this.minSpeed, this.maxSpeed, this.fullDuplexCapable);
+      this.discovery?.negociate(this.minSpeed, this.maxSpeed, this.fullDuplexCapable);
   }
 
   override get FullDuplex(): boolean {
@@ -197,7 +197,7 @@ export class EthernetInterface extends HardwareInterface {
     super.Speed = speed;
 
     if( speed === 0 )
-      this.discovery.negociate(this.minSpeed, this.maxSpeed, this.fullDuplexCapable);
+      this.discovery?.negociate(this.minSpeed, this.maxSpeed, this.fullDuplexCapable);
     else
       super.Speed = speed;
   }
