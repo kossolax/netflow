@@ -181,7 +181,7 @@ describe('Datalink layer test', () => {
 
     [0, 10, 100, 1000].map( speed => {
       A.getInterface(0).Speed = speed;
-      expect( link1.Speed ).toBe(speed);
+      expect( A.getInterface(0).Speed ).toBe(speed);
     });
   });
 

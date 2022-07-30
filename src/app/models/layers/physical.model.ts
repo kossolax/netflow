@@ -14,18 +14,14 @@ export abstract class AbstractLink implements PhysicalListener, PhysicalSender {
   protected iface1: HardwareInterface|null;
   protected iface2: HardwareInterface|null;
   protected length: number;
-  protected speed: number;
-  protected fullDuplex: boolean;
 
   static SPEED_OF_LIGHT: number = 299792458;
 
-  constructor( iface1: HardwareInterface|NetworkInterface|null = null, iface2: HardwareInterface|NetworkInterface|null = null, length: number=1, speed: number=100) {
+  constructor( iface1: HardwareInterface|NetworkInterface|null = null, iface2: HardwareInterface|NetworkInterface|null = null, length: number=1) {
     this.iface1 = iface1 instanceof(NetworkInterface) ? iface1.getInterface(0) : iface1;
     this.iface2 = iface2 instanceof(NetworkInterface) ? iface2.getInterface(0) : iface2;
 
     this.length = length;
-    this.speed = speed;
-    this.fullDuplex = false;
 
     if( this.iface1 != null )
       this.iface1.connectTo(this);
@@ -40,35 +36,17 @@ export abstract class AbstractLink implements PhysicalListener, PhysicalSender {
     node.guid = Math.random().toString(36).substring(2, 9);
     return node;
   }
-  get Speed(): number {
-    return this.speed;
-  }
-  set Speed(speed: number) {
-    if( speed % 10 != 0 )
-      throw new Error("Speed must be a multiple of 10");
-    this.speed = speed;
-  }
-  get FullDuplex(): boolean {
-    return this.fullDuplex;
-  }
-  set FullDuplex(fullDuplex: boolean) {
-    this.fullDuplex = fullDuplex;
-  }
 
   public getPropagationDelay() {
 		return (length / (Link.SPEED_OF_LIGHT*2/3));
 	}
-  public getTransmissionDelay(bytes: number) {
-    let speed = this.speed;
-    if( speed === 0 )
-      speed = 10;
-
+  public getTransmissionDelay(bytes: number, speed: number) {
     return (bytes / (speed*1000*1000)) / SchedulerService.Instance.Transmission;
   }
-  public getDelay(bytes: number) {
+  public getDelay(bytes: number, speed: number) {
     if( SchedulerService.Instance.Speed === SchedulerState.PAUSED )
       return 99999999999999;
-    return this.getPropagationDelay() + this.getTransmissionDelay(bytes);
+    return this.getPropagationDelay() + this.getTransmissionDelay(bytes, speed);
   }
 
   public isConnectedTo(iface: Interface) {
@@ -80,7 +58,7 @@ export abstract class AbstractLink implements PhysicalListener, PhysicalSender {
       throw new Error("Link is not connected");
 
     const destination = this.iface1 === source ? this.iface2 : this.iface1;
-    const delay = this.getDelay(message.length);
+    const delay = this.getDelay(message.length, source.Speed);
 
     this.getListener.map( i => {
       if( i != this && "sendBits" in i)

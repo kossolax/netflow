@@ -91,7 +91,7 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
     if( name == "" )
       name = "GigabitEthernet0/" + Object.keys(this.interfaces).length;
 
-    const iface = new EthernetInterface(this, mac, name);
+    const iface = new EthernetInterface(this, mac, name, 10, 1000, true);
     iface.addListener(this);
     this.interfaces[name] = iface;
 

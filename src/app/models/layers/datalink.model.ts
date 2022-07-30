@@ -14,6 +14,9 @@ export abstract class Interface {
   private name: string;
   private status: boolean;
 
+  protected speed: number = 100;
+  protected fullDuplex: boolean = false;
+
   constructor(host: GenericNode, name: string) {
     this.host = host;
     this.name = name;
@@ -33,21 +36,16 @@ export abstract class Interface {
     return this.status;
   }
   get Speed(): number {
-    return this.link?.Speed || 0;
+    return this.speed;
   }
   set Speed(speed: number) {
-    if( !this.link )
-      throw new Error("Link is not connected");
-
-    this.link.Speed = speed;
+    this.speed = speed;
   }
   get FullDuplex(): boolean {
-    return this.link?.FullDuplex || false;
+    return this.fullDuplex;
   }
   set FullDuplex(fullDuplex: boolean) {
-    if( !this.link )
-      throw new Error("Link is not connected");
-    this.link.FullDuplex = fullDuplex;
+    this.fullDuplex = fullDuplex;
   }
   // ---
   isConnected(): boolean {
@@ -145,28 +143,62 @@ export abstract class HardwareInterface extends Interface implements PhysicalLis
   }
 }
 export class EthernetInterface extends HardwareInterface {
+  protected minSpeed: number;
+  protected maxSpeed: number;
+  protected fullDuplexCapable: boolean;
+
   private discovery: AutoNegotiationProtocol;
 
-  constructor(node: GenericNode, addr: MacAddress, name: string="") {
+  constructor(node: GenericNode, addr: MacAddress, name: string="", minSpeed: number=10, maxSpeed: number=1000, fullDuplexCapable: boolean=true) {
     super(node, addr, "eth" + name);
+    this.minSpeed = minSpeed;
+    this.maxSpeed = maxSpeed;
+    this.fullDuplexCapable = fullDuplexCapable;
 
     this.discovery = new AutoNegotiationProtocol(this);
+  }
+
+  reconfigure(minSpeed: number, maxSpeed: number, fullDuplexCapable: boolean): void {
+    this.minSpeed = minSpeed;
+    this.maxSpeed = maxSpeed;
+    this.fullDuplexCapable = fullDuplexCapable;
+
+    this.discovery.negociate(this.minSpeed, this.maxSpeed, this.fullDuplexCapable);
   }
 
   override connectTo(link: Link): void {
     super.connectTo(link);
 
-    if( link.Speed === 0 )
-      this.discovery.negociate(0, 1000, true);
+    this.discovery.negociate(this.minSpeed, this.maxSpeed, this.fullDuplexCapable);
+  }
+  override up() {
+    super.up();
+
+    if( this.isConnected() )
+      this.discovery.negociate(this.minSpeed, this.maxSpeed, this.fullDuplexCapable);
+  }
+
+  override get FullDuplex(): boolean {
+    return super.FullDuplex;
+  }
+  override set FullDuplex(fullDuplex: boolean) {
+    if( fullDuplex && !this.fullDuplexCapable )
+      throw new Error("This interface does not support full duplex");
+    this.fullDuplex = fullDuplex;
   }
 
   override get Speed(): number {
     return super.Speed;
   }
   override set Speed(speed: number) {
+    if( speed < this.minSpeed || speed > this.maxSpeed )
+      throw new Error(`Speed must be between ${this.minSpeed} and ${this.maxSpeed}`);
+
     super.Speed = speed;
 
     if( speed === 0 )
-      this.discovery.negociate(speed, 1000, true);
+      this.discovery.negociate(this.minSpeed, this.maxSpeed, this.fullDuplexCapable);
+    else
+      super.Speed = speed;
   }
 }

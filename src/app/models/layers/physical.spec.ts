@@ -57,14 +57,11 @@ describe('Physical layer test', () => {
     const speeds: {propagation: number, transmission: number}[] = [];
 
     [0, 10, 100, 1000].map( speed => {
-      link1.Speed = speed;
       speeds.push({
         propagation: link1.getPropagationDelay(),
-        transmission: link1.getTransmissionDelay(42)
+        transmission: link1.getTransmissionDelay(42, speed)
       });
     });
-
-    expect( () => link1.Speed = 42 ).toThrow();
 
     // propagation is constant
     expect(speeds[0].propagation).toBe(speeds[1].propagation);
@@ -77,8 +74,8 @@ describe('Physical layer test', () => {
 
     // tranmission is longer as bytes goes up
     A.Speed = 10;
-    expect(link1.getTransmissionDelay(1000)).toBeGreaterThan(link1.getTransmissionDelay(100));
-    expect(link1.getTransmissionDelay(10000)).toBeGreaterThan(link1.getTransmissionDelay(10));
+    expect(link1.getTransmissionDelay(1000, 100)).toBeGreaterThan(link1.getTransmissionDelay(100, 100));
+    expect(link1.getTransmissionDelay(10000, 100)).toBeGreaterThan(link1.getTransmissionDelay(10, 100));
   });
 
 });
