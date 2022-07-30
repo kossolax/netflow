@@ -10,7 +10,7 @@ enum SelectorField {
 }
 
 // http://www.ethermanage.com/ethernet/pdf/dell-auto-neg.pdf
-enum TechnologyField {
+export enum TechnologyField {
   A10BaseT =              (1 << 0),
   A10BaseT_FullDuplex =   (1 << 1),
   A100BaseTX =            (1 << 2),
@@ -22,8 +22,7 @@ enum TechnologyField {
 
   AReserved =             (1 << 7),
 }
-
-enum AdvancedTechnologyField {
+export enum AdvancedTechnologyField {
   A1000BaseT =             (1 << 0),
   //A1000BaseT_MasterSlave = (1 << 1), // not implemented
   A1000BaseT_MultiPort =   (1 << 2),
@@ -66,6 +65,8 @@ export class AutonegotiationMessage implements Payload {
 
     private fastEthernet: LinkCodeWord_Page0;
     private gigaEthernet: LinkCodeWord_Page1;
+    private minSpeed: number = Number.MIN_SAFE_INTEGER;
+    private maxSpeed: number = Number.MAX_SAFE_INTEGER;
 
     constructor() {
       this.fastEthernet = {
@@ -114,17 +115,26 @@ export class AutonegotiationMessage implements Payload {
     }
 
     setMaxSpeed(speed: number): this {
-      if( speed >= 10 )
+      this.maxSpeed = speed;
+
+      if( speed >= 10 && this.minSpeed <= 10) {
         this.fastEthernet.technologyField |= TechnologyField.A10BaseT;
-      if( speed >= 100 )
+        this.fastEthernet.technologyField |= TechnologyField.A10BaseT_FullDuplex;
+      }
+      if( speed >= 100 && this.minSpeed <= 100 ) {
         this.fastEthernet.technologyField |= TechnologyField.A100BaseTX;
-      if( speed >= 1000 )
+        this.fastEthernet.technologyField |= TechnologyField.A100BaseTX_FullDuplex;
+      }
+      if( speed >= 1000 && this.minSpeed <= 1000 ) {
         this.gigaEthernet.technologyField |= AdvancedTechnologyField.A1000BaseT;
+      }
 
       return this;
     }
 
     setMinSpeed(speed: number): this {
+      this.minSpeed = speed;
+
       if( speed > 10 ) {
         this.fastEthernet.technologyField &= ~TechnologyField.A10BaseT;
         this.fastEthernet.technologyField &= ~TechnologyField.A10BaseT_FullDuplex;
