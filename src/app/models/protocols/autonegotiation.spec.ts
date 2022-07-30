@@ -1,14 +1,15 @@
-import { take, delay, bufferCount, switchMap } from "rxjs";
+import { take, delay, bufferCount, switchMap, tap, pipe } from "rxjs";
 import { SchedulerService, SchedulerState } from "src/app/services/scheduler.service";
 import { EthernetInterface } from "../layers/datalink.model";
 import { Link } from "../layers/physical.model";
 import { SwitchHost } from "../node.model";
-import { AutonegotiationMessage, AutoNegotiationProtocol, TechnologyField } from "./autonegotiation.model";
+import { AdvancedTechnologyField, AutonegotiationMessage, AutoNegotiationProtocol, TechnologyField } from "./autonegotiation.model";
 import { SimpleListener } from "./protocols.model";
 
 describe('AutoNegotiation Protocol test', () => {
   let A: SwitchHost;
   let B: SwitchHost;
+  let AB: Link;
 
   let listener: SimpleListener;
 
@@ -16,19 +17,20 @@ describe('AutoNegotiation Protocol test', () => {
     A = new SwitchHost();
     A.name = "A";
     A.addInterface().up();
+    A.addInterface().up();
 
     B = new SwitchHost();
     B.name = "B";
     B.addInterface().up();
+
+    AB = new Link(A.getInterface(0), B.getInterface(0));
 
     listener = new SimpleListener();
     SchedulerService.Instance.Speed = SchedulerState.FASTER;
   });
 
   it( 'On cable connects', (done) => {
-
     B.getInterface(0).addListener(listener);
-    let AB = new Link(A.getInterface(0), B.getInterface(0));
 
     listener.receiveBits$.pipe(
       bufferCount(2),
@@ -42,9 +44,7 @@ describe('AutoNegotiation Protocol test', () => {
   });
 
   it( 'On cable goes UP', (done) => {
-
     B.getInterface(0).addListener(listener);
-    let AB = new Link(A.getInterface(0), B.getInterface(0));
 
     listener.receiveBits$.pipe(
       bufferCount(2),
@@ -65,35 +65,59 @@ describe('AutoNegotiation Protocol test', () => {
 
   });
 
-  it( 'Reconfigure to 100 half-duplex', (done) => {
+  function TOAST(speed: number, duplex: boolean, bits: number) {
+    return pipe(
+      switchMap( _ => {
+        (A.getInterface(0) as EthernetInterface).reconfigure(speed, speed, duplex);
+        return listener.receiveBits$;
+      }),
+      bufferCount(speed >= 1000 ? 2 : 1),
+      take(1),
+      tap( msg => {
+
+        for(let i=0; i<msg.length; i++) {
+          expect(msg[i].payload).toBeInstanceOf(AutonegotiationMessage);
+
+          if( i !== msg.length-1 ) {
+            expect((msg[i].payload as AutonegotiationMessage).code.technologyField).toBe( 0 );
+            expect((msg[i].payload as AutonegotiationMessage).code.nextPage).toBe( true );
+          }
+          else {
+            expect((msg[i].payload as AutonegotiationMessage).code.technologyField).toBe( bits );
+            expect((msg[i].payload as AutonegotiationMessage).code.nextPage).toBe( false );
+          }
+        }
+      })
+    )
+  }
+
+  it( 'Reconfigure to different speed', (done) => {
 
     B.getInterface(0).addListener(listener);
-    let AB = new Link(A.getInterface(0), B.getInterface(0));
 
     listener.receiveBits$.pipe(
       bufferCount(2),
       take(1),
-      delay(100),
-      switchMap( _ => {
-        (A.getInterface(0) as EthernetInterface).reconfigure(100, 100, false);
-        return listener.receiveBits$;
-      }),
-      take(1)
-    ).subscribe( msg => {
-      expect(msg.payload).toBeInstanceOf(AutonegotiationMessage);
-      expect((msg.payload as AutonegotiationMessage).code.nextPage).toBe(false);
 
-      const techno = (msg.payload as AutonegotiationMessage).code.technologyField as TechnologyField;
+      TOAST(10, false, TechnologyField.A10BaseT),
+      TOAST(10, true, TechnologyField.A10BaseT | TechnologyField.A10BaseT_FullDuplex ),
 
-      expect(techno & TechnologyField.A10BaseT).toBe(0);
-      expect(techno & TechnologyField.A100BaseT4).toBe(0);
-      expect(techno & TechnologyField.A100BaseTX).toBe(TechnologyField.A100BaseTX);
+      TOAST(100, false, TechnologyField.A100BaseTX),
+      TOAST(100, true, TechnologyField.A100BaseTX | TechnologyField.A100BaseTX_FullDuplex ),
 
-      expect(techno & TechnologyField.A10BaseT_FullDuplex).toBe(0);
-      expect(techno & TechnologyField.A100BaseTX_FullDuplex).toBe(0);
+      TOAST(1000, false, AdvancedTechnologyField.A1000BaseT | AdvancedTechnologyField.A1000BaseT_HalfDuplex ),
+      TOAST(1000, true, AdvancedTechnologyField.A1000BaseT ),
+
+    ).subscribe( () => {
       done();
-    });
+    })
+  });
 
+  it( 'Auto-Negociate L1 --> none ', () => {
+
+    expect( () => {
+      const l1 = new Link(A.getInterface(1), null, 1000);
+    }).toThrow();
   });
 
 });
