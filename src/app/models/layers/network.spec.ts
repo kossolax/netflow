@@ -168,17 +168,17 @@ describe('Network layer test', () => {
   });
 
   it( 'L3 speed function ', () => {
-    let tmp = 10;
-
-    expect( () => A.getInterface(0).Speed = tmp ).toThrow();
-    expect( A.getInterface(0).Speed ).toBe(0);
 
     let link1 = new Link(A.getInterface(0), B.getInterface(0), 100);
     expect( () => A.getInterface(0).Speed = 42 ).toThrow();
+    expect( () => A.getInterface(0).Speed = 10000000 ).toThrow();
+    expect( () => A.getInterface(0).Speed = -1 ).toThrow();
+    expect( () => A.getInterface(0).Speed = -10 ).toThrow();
 
-    [0, 10, 100, 1000].map( speed => {
+    [10, 100, 1000].map( speed => {
       A.getInterface(0).Speed = speed;
       expect( A.getInterface(0).Speed ).toBe(speed);
     });
+
   });
 });

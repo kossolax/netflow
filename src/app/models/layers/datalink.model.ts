@@ -193,6 +193,8 @@ export class EthernetInterface extends HardwareInterface {
   override set Speed(speed: number) {
     if( speed < this.minSpeed || speed > this.maxSpeed )
       throw new Error(`Speed must be between ${this.minSpeed} and ${this.maxSpeed}`);
+    if( speed % 10 != 0 && speed != 1 )
+      throw new Error("Speed must be a multiple of 10 or 1");
 
     super.Speed = speed;
 
