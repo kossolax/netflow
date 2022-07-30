@@ -6,6 +6,12 @@
       <ejs-menu [items]="menuItems" (select)='select($event)' showItemOnClick="true"></ejs-menu>
     </div>
 
+    <div id="clock">
+      <button class="e-tbar-btn e-tbtn-txt e-control e-btn e-lib" type="button">
+        <span class="e-tbar-btn-text">{{time$ | async}}</span>
+      </button>
+    </div>
+
     <ejs-toolbar>
         <e-items>
           <e-item template='#menu'></e-item>
@@ -15,7 +21,9 @@
           <e-item prefixIcon="slow" [cssClass]="Speed===2 ? 'active' : ''" (click)="Speed=2"></e-item>
           <e-item prefixIcon="play" [cssClass]="Speed===1 ? 'active' : ''" (click)="Speed=1"></e-item>
           <e-item prefixIcon="fast" [cssClass]="Speed===0 ? 'active' : ''" (click)="Speed=0"></e-item>
-          <e-item [text]="time$ | async"></e-item>
+
+          <e-item template='#clock'></e-item>
+
           <e-item prefixIcon="light" [text]="SpeedOfLight + '✖'"></e-item>
           <e-item prefixIcon="trans" [text]="SpeedOfTransmission + '✖'"></e-item>
 
