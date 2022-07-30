@@ -4,6 +4,7 @@ import { catchError, take, timeout, delay } from 'rxjs';
 import { SimpleListener } from '../protocols/protocols.model';
 import { MacAddress } from '../address.model';
 import { SchedulerService, SchedulerState } from 'src/app/services/scheduler.service';
+import { AutonegotiationMessage } from '../protocols/autonegotiation.model';
 
 describe('Datalink layer test', () => {
   let A: SwitchHost;
@@ -87,7 +88,8 @@ describe('Datalink layer test', () => {
     A.getInterface(0).addListener(listener);
 
     listener.receiveBits$.subscribe( msg => {
-      throw new Error("Should not receive bit");
+      if( !(msg.payload instanceof AutonegotiationMessage) )
+        throw new Error("Should not receive bit");
     });
 
     A.receiveTrame$.pipe(
@@ -171,15 +173,14 @@ describe('Datalink layer test', () => {
   });
 
   it( 'L2 speed function ', () => {
-    let tmp = 10;
-
-    expect( () => A.getInterface(0).Speed = tmp ).toThrow();
-    expect( A.getInterface(0).Speed ).toBe(0);
 
     let link1 = new Link(A.getInterface(0), B.getInterface(0), 100);
     expect( () => A.getInterface(0).Speed = 42 ).toThrow();
+    expect( () => A.getInterface(0).Speed = 10000000 ).toThrow();
+    expect( () => A.getInterface(0).Speed = -1 ).toThrow();
+    expect( () => A.getInterface(0).Speed = -10 ).toThrow();
 
-    [0, 10, 100, 1000].map( speed => {
+    [10, 100, 1000].map( speed => {
       A.getInterface(0).Speed = speed;
       expect( A.getInterface(0).Speed ).toBe(speed);
     });
