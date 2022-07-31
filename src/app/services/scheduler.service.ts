@@ -44,7 +44,7 @@ export class SchedulerService {
         break;
       }
       case SchedulerState.SLOWER: {
-        this.transmissionMultiplier = 1 / (10*1000*1000);
+        this.transmissionMultiplier = 1 / (100*1000);
         this.speedOfLightMultiplier = 1 / 10;
         break;
       }
@@ -129,8 +129,11 @@ export class SchedulerService {
   public once(delay: number): Observable<0> {
     return timer(this.getDelay(delay));
   }
-  public repeat(delay: number): Observable<0> {
-    const interval$: BehaviorSubject<number> = new BehaviorSubject<number>(0);
+  public repeat(delay: number, firstDelay: number=-1): Observable<0> {
+    if( firstDelay === -1 )
+      firstDelay = delay;
+
+    const interval$: BehaviorSubject<number> = new BehaviorSubject<number>(this.getDelay(firstDelay));
     this.listener.push({delay: delay, callback: interval$});
 
     return interval$.pipe(
