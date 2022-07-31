@@ -192,7 +192,7 @@ export class AutoNegotiationProtocol implements PhysicalListener {
     this.iface.addListener(this);
   }
 
-  public negociate(minSpeed: number=Number.MIN_SAFE_INTEGER, maxSpeed: number=Number.MAX_SAFE_INTEGER, fullDuplex: boolean=true, acknowledge: boolean=false): void {
+  public negociate(minSpeed: number=Number.MIN_SAFE_INTEGER, maxSpeed: number=Number.MAX_SAFE_INTEGER, fullDuplex: boolean=true): void {
     this.minSpeed = minSpeed;
     this.maxSpeed = maxSpeed;
     this.fullDuplex = fullDuplex;
@@ -206,10 +206,24 @@ export class AutoNegotiationProtocol implements PhysicalListener {
     else
       builder.setHalfDuplex();
 
-    if( acknowledge )
-      builder.acknowledge();
-
     this.iface.Speed = minSpeed;
+    builder.build().map( i => {
+      this.iface.sendBits(new PhysicalMessage(i));
+    });
+  }
+  private acknowledge(speed: number, fullDuplex: boolean): void {
+    let builder = new AutonegotiationMessage.Builder()
+      .setMinSpeed(speed)
+      .setMaxSpeed(speed);
+
+    if( fullDuplex )
+      builder.setFullDuplex();
+    else
+      builder.setHalfDuplex();
+
+    builder.acknowledge();
+
+    this.iface.Speed = speed;
     builder.build().map( i => {
       this.iface.sendBits(new PhysicalMessage(i));
     });
@@ -225,7 +239,7 @@ export class AutoNegotiationProtocol implements PhysicalListener {
         this.setSpeed();
 
         if( message.payload.code.acknowledge === false )
-          this.negociate(this.iface.Speed, this.iface.Speed, this.iface.FullDuplex, true);
+          this.acknowledge(this.iface.Speed, this.iface.FullDuplex);
       }
     }
   }
@@ -297,8 +311,8 @@ export class AutoNegotiationProtocol implements PhysicalListener {
       }
     }
 
-    if( speed == 0 )
-        throw new Error("Autonegotiation failed");
+    if( speed === 0 )
+      throw new Error("Autonegotiation failed");
 
     this.iface.Speed = speed;
     this.iface.FullDuplex = duplex;
