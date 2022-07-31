@@ -56,7 +56,7 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
       }
 
       net.nodes[i.guid] = i;
-      i.getInterfaces().map( j => i.getInterface(j).up() );
+      //i.getInterfaces().map( j => i.getInterface(j).up() );
       index++;
     });
 
@@ -76,6 +76,12 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
     });
     this.scheduler.once(0.5).subscribe( () => {
       nodes[3].send("B", (nodes[0].getInterface(0) as NetworkInterface).getNetAddress());
+    });
+
+    this.scheduler.once(0.1).subscribe( () => {
+      nodes.map( i => {
+        i.getInterfaces().map( j => i.getInterface(j).up() );
+      });
     });
 
 
@@ -124,7 +130,7 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
       takeUntil(this.onDestroy$)
     ).subscribe( data => {
 
-      if( data.delay < 0.1 ) // this packet is too fast, we don't need to show it
+      if( data.delay < 0.01 ) // this packet is too fast, we don't need to show it
         return;
 
       this.animate(

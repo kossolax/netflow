@@ -154,6 +154,12 @@ export class AutonegotiationMessage implements Payload {
       return this;
     }
 
+    acknowledge(): this {
+      this.fastEthernet.acknowledge = true;
+      this.gigaEthernet.acknowledge = true;
+      return this;
+    }
+
 
 
     build(): AutonegotiationMessage[] {
@@ -186,7 +192,7 @@ export class AutoNegotiationProtocol implements PhysicalListener {
     this.iface.addListener(this);
   }
 
-  public negociate(minSpeed: number=Number.MIN_SAFE_INTEGER, maxSpeed: number=Number.MAX_SAFE_INTEGER, fullDuplex: boolean=true) {
+  public negociate(minSpeed: number=Number.MIN_SAFE_INTEGER, maxSpeed: number=Number.MAX_SAFE_INTEGER, fullDuplex: boolean=true, acknowledge: boolean=false): void {
     this.minSpeed = minSpeed;
     this.maxSpeed = maxSpeed;
     this.fullDuplex = fullDuplex;
@@ -200,6 +206,10 @@ export class AutoNegotiationProtocol implements PhysicalListener {
     else
       builder.setHalfDuplex();
 
+    if( acknowledge )
+      builder.acknowledge();
+
+    this.iface.Speed = minSpeed;
     builder.build().map( i => {
       this.iface.sendBits(new PhysicalMessage(i));
     });
@@ -210,9 +220,13 @@ export class AutoNegotiationProtocol implements PhysicalListener {
 
       this.lastReceive = new Date();
       this.neighbourConfig.push(message.payload.code);
-      if( message.payload.code.nextPage === false )
+
+      if( message.payload.code.nextPage === false ) {
         this.setSpeed();
 
+        if( message.payload.code.acknowledge === false )
+          this.negociate(this.iface.Speed, this.iface.Speed, this.iface.FullDuplex, true);
+      }
     }
   }
 
