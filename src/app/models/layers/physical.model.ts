@@ -1,3 +1,4 @@
+import { concatMap, map, Observable, of, Subject, switchMap, tap, timer } from "rxjs";
 import { SchedulerService, SchedulerState } from "src/app/services/scheduler.service";
 import { PhysicalMessage } from "../message.model";
 import { GenericListener, PhysicalListener, PhysicalSender } from "../protocols/protocols.model";
@@ -10,6 +11,7 @@ export abstract class AbstractLink implements PhysicalListener, PhysicalSender {
   public type: string = "cable";
 
   private listener: GenericListener[] = [];
+  private queue: Subject<Observable<number>> = new Subject();
 
   protected iface1: HardwareInterface|null;
   protected iface2: HardwareInterface|null;
@@ -27,6 +29,8 @@ export abstract class AbstractLink implements PhysicalListener, PhysicalSender {
       this.iface1.connectTo(this);
     if( this.iface2 != null )
       this.iface2.connectTo(this);
+
+    this.queue.pipe(concatMap( (action) => action )).subscribe();
   }
   toString(): string {
     return `${this.iface1} <->  ${this.iface2}`;
@@ -61,16 +65,28 @@ export abstract class AbstractLink implements PhysicalListener, PhysicalSender {
       throw new Error("Link is not connected");
 
     const destination = this.iface1 === source ? this.iface2 : this.iface1;
-    const delay = this.getDelay(message.length, source.Speed);
+    this.queue.next(this.enqueue(message, source, destination));
+  }
 
-    this.getListener.map( i => {
-      if( i != this && "sendBits" in i)
-        (i as PhysicalSender).sendBits(message, source, destination, delay);
-    });
+  private enqueue(message: PhysicalMessage, source: HardwareInterface, destination: HardwareInterface): Observable<number> {
+    return of(0).pipe(
+      map( _ => { // pre
+        const propagationDelay = this.getDelay(message.length, source.Speed);
 
-    SchedulerService.Instance.once(delay).subscribe(() => {
-      this.receiveBits(message, source, destination)
-    });
+        this.getListener.map( i => {
+          if( i != this && "sendBits" in i)
+            (i as PhysicalSender).sendBits(message, source, destination, propagationDelay);
+        });
+
+        return propagationDelay;
+      }),
+
+      switchMap( delay => SchedulerService.Instance.once(delay) ),
+
+      tap( _ => { // post
+        this.receiveBits(message, source, destination)
+      })
+    );
   }
 
   public receiveBits(message: PhysicalMessage, source: HardwareInterface, destination: HardwareInterface) {

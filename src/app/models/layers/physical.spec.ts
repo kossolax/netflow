@@ -40,6 +40,31 @@ describe('Physical layer test', () => {
 
   });
 
+  it("L1 queuing", (done) => {
+    SchedulerService.Instance.Speed = SchedulerState.REAL_TIME;
+
+    const l1 = new Link(A, B, 1000);
+    B.addListener(listener);
+
+    const messages: string[] = [];
+    const toSend = 10;
+
+    for(let i=0; i<toSend; i++) {
+      messages.push(`Hello World: ${Math.random()}`);
+      l1.sendBits(new PhysicalMessage(messages[i]), A);
+    }
+
+    listener.receiveBits$.pipe(
+      take(toSend)
+    ).subscribe( msg => {
+      expect(msg.payload).toBe( messages.shift() as string);
+
+      if( messages.length == 0 )
+        done();
+    });
+
+  });
+
   it("L1 -> none", () => {
     const l1 = new Link(A, null, 1000);
     B.addListener(listener);
