@@ -208,7 +208,7 @@ export class RouterHost extends Node<NetworkInterface> implements NetworkListene
     const ip = IPAddress.generateAddress();
     const mac = MacAddress.generateAddress();
 
-    const eth = new EthernetInterface(this, mac);
+    const eth = new EthernetInterface(this, mac, name, 10, 1000, true);
     const iface = new IPInterface(this, name, eth);
     iface.addNetAddress(ip);
     iface.addListener(this);
