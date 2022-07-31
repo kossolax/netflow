@@ -25,12 +25,14 @@ export abstract class AbstractLink implements PhysicalListener, PhysicalSender {
 
     this.length = length;
 
+    this.queue.pipe(
+      concatMap( (action) => action )
+    ).subscribe();
+
     if( this.iface1 != null )
       this.iface1.connectTo(this);
     if( this.iface2 != null )
       this.iface2.connectTo(this);
-
-    this.queue.pipe(concatMap( (action) => action )).subscribe();
   }
   toString(): string {
     return `${this.iface1} <->  ${this.iface2}`;
@@ -68,8 +70,9 @@ export abstract class AbstractLink implements PhysicalListener, PhysicalSender {
     this.queue.next(this.enqueue(message, source, destination));
   }
 
-  private enqueue(message: PhysicalMessage, source: HardwareInterface, destination: HardwareInterface): Observable<number> {
+  private enqueue(message: PhysicalMessage, source: HardwareInterface, destination: HardwareInterface): Observable<0> {
     return of(0).pipe(
+
       map( _ => { // pre
         const propagationDelay = this.getDelay(message.length, source.Speed);
 
@@ -86,6 +89,7 @@ export abstract class AbstractLink implements PhysicalListener, PhysicalSender {
       tap( _ => { // post
         this.receiveBits(message, source, destination)
       })
+
     );
   }
 

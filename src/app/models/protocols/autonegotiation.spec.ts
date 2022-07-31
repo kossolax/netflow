@@ -6,8 +6,6 @@ import { SwitchHost } from "../node.model";
 import { AdvancedTechnologyField, AutonegotiationMessage, TechnologyField } from "./autonegotiation.model";
 import { SimpleListener } from "./protocols.model";
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
-
 describe('AutoNegotiation Protocol test', () => {
   let A: SwitchHost;
   let B: SwitchHost;

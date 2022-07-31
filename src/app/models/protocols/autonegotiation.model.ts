@@ -184,7 +184,6 @@ export class AutoNegotiationProtocol implements PhysicalListener {
   private maxSpeed: number = Number.MAX_SAFE_INTEGER;
   private fullDuplex: boolean = true;
 
-  private lastReceive: Date = new Date();
   private neighbourConfig: LinkCodeWords[] = [];
 
   constructor(iface: HardwareInterface) {
@@ -232,7 +231,6 @@ export class AutoNegotiationProtocol implements PhysicalListener {
   receiveBits(message: PhysicalMessage, from: Interface, to: Interface): void {
     if( message.payload instanceof AutonegotiationMessage ) {
 
-      this.lastReceive = new Date();
       this.neighbourConfig.push(message.payload.code);
 
       if( message.payload.code.nextPage === false ) {
