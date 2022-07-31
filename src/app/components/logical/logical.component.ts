@@ -149,6 +149,12 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
         this.diagram.tool = DiagramTools.Default;
 
     });
+
+    timer(1000, 1000).pipe(
+      takeUntil(this.onDestroy$)
+    ).subscribe( () => {
+
+    });
   }
 
   onClick(e: any): void {
@@ -250,7 +256,7 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
       const progress = (now - start) / delay;
 
       if( progress > 1 ) {
-        this.diagram.removeElements(node);
+        this.diagram.removeNode(node, []);
       }
       else {
         let src = {
