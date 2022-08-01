@@ -185,6 +185,7 @@ export class AutoNegotiationProtocol implements PhysicalListener {
   private fullDuplex: boolean = true;
 
   private neighbourConfig: LinkCodeWords[] = [];
+  private neighbourAcknoledge: LinkCodeWords[] = [];
 
   constructor(iface: HardwareInterface) {
     this.iface = iface;
@@ -222,6 +223,7 @@ export class AutoNegotiationProtocol implements PhysicalListener {
 
     builder.acknowledge();
 
+    this.iface.FullDuplex = false;
     this.iface.Speed = speed;
     builder.build().map( i => {
       this.iface.sendBits(new PhysicalMessage(i));
@@ -231,10 +233,14 @@ export class AutoNegotiationProtocol implements PhysicalListener {
   receiveBits(message: PhysicalMessage, from: Interface, to: Interface): void {
     if( message.payload instanceof AutonegotiationMessage ) {
 
-      this.neighbourConfig.push(message.payload.code);
+      if( message.payload.code.acknowledge )
+        this.neighbourAcknoledge.push(message.payload.code);
+      else
+        this.neighbourConfig.push(message.payload.code);
 
       if( message.payload.code.nextPage === false ) {
-        this.setSpeed();
+
+        this.setSpeed( message.payload.code.acknowledge );
 
         if( message.payload.code.acknowledge === false )
           this.acknowledge(this.iface.Speed, this.iface.FullDuplex);
@@ -242,15 +248,16 @@ export class AutoNegotiationProtocol implements PhysicalListener {
     }
   }
 
-  private setSpeed() {
+  private setSpeed(ack: boolean) {
     let speed = 0;
     let duplex = false;
     let testSpeed = 0;
+    let config = ack ? this.neighbourAcknoledge : this.neighbourConfig;
 
-    for(let page=0; page<this.neighbourConfig.length; page++) {
+    for(let page=0; page<config.length; page++) {
       switch(page) {
         case 0: {
-          let code = this.neighbourConfig[page] as LinkCodeWord_Page0;
+          let code = config[page] as LinkCodeWord_Page0;
 
           testSpeed = 10;
           if( this.minSpeed <= testSpeed && this.maxSpeed >= testSpeed ) {
@@ -283,7 +290,7 @@ export class AutoNegotiationProtocol implements PhysicalListener {
           break;
         }
         case 1: {
-          let code = this.neighbourConfig[page] as LinkCodeWord_Page1;
+          let code = config[page] as LinkCodeWord_Page1;
 
           testSpeed = 1000;
           if( this.minSpeed <= testSpeed && this.maxSpeed >= testSpeed ) {
@@ -315,6 +322,9 @@ export class AutoNegotiationProtocol implements PhysicalListener {
     this.iface.Speed = speed;
     this.iface.FullDuplex = duplex;
 
-    this.neighbourConfig = [];
+    if( ack )
+      this.neighbourAcknoledge = [];
+    else
+      this.neighbourConfig = [];
   }
 }
