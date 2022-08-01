@@ -11,10 +11,13 @@ export abstract class AbstractLink implements PhysicalListener, PhysicalSender {
   public type: string = "cable";
 
   private listener: GenericListener[] = [];
-  private queue: Subject<Observable<number>> = new Subject();
 
   protected iface1: HardwareInterface|null;
+  protected queue1: Subject<Observable<number>> = new Subject();
+
   protected iface2: HardwareInterface|null;
+  protected queue2: Subject<Observable<number>> = new Subject();
+
   protected length: number;
 
   static SPEED_OF_LIGHT: number = 299792458;
@@ -25,7 +28,11 @@ export abstract class AbstractLink implements PhysicalListener, PhysicalSender {
 
     this.length = length;
 
-    this.queue.pipe(
+    this.queue1.pipe(
+      concatMap( (action) => action )
+    ).subscribe();
+
+    this.queue2.pipe(
       concatMap( (action) => action )
     ).subscribe();
 
@@ -66,8 +73,11 @@ export abstract class AbstractLink implements PhysicalListener, PhysicalSender {
     if( this.iface1 == null || this.iface2 == null )
       throw new Error("Link is not connected");
 
-    const destination = this.iface1 === source ? this.iface2 : this.iface1;
-    this.queue.next(this.enqueue(message, source, destination));
+    if( this.iface1 === source )
+      this.queue1.next(this.enqueue(message, source, this.iface2));
+    else
+      this.queue2.next(this.enqueue(message, source, this.iface1));
+
   }
 
   private enqueue(message: PhysicalMessage, source: HardwareInterface, destination: HardwareInterface): Observable<0> {
