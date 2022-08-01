@@ -73,10 +73,12 @@ export abstract class AbstractLink implements PhysicalListener, PhysicalSender {
     if( this.iface1 == null || this.iface2 == null )
       throw new Error("Link is not connected");
 
-    if( this.iface1 === source )
-      this.queue1.next(this.enqueue(message, source, this.iface2));
+    const destination = this.iface1 === source ? this.iface2 : this.iface1;
+
+    if( this.iface1 === source || this.iface1.FullDuplex === false )
+      this.queue1.next(this.enqueue(message, source, destination));
     else
-      this.queue2.next(this.enqueue(message, source, this.iface1));
+      this.queue2.next(this.enqueue(message, source, destination));
 
   }
 
