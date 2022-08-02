@@ -206,6 +206,7 @@ export class AutoNegotiationProtocol implements PhysicalListener {
     else
       builder.setHalfDuplex();
 
+    this.iface.FullDuplex = false;
     this.iface.Speed = minSpeed;
     builder.build().map( i => {
       this.iface.sendBits(new PhysicalMessage(i));
@@ -223,7 +224,7 @@ export class AutoNegotiationProtocol implements PhysicalListener {
 
     builder.acknowledge();
 
-    this.iface.FullDuplex = false;
+    this.iface.FullDuplex = fullDuplex;
     this.iface.Speed = speed;
     builder.build().map( i => {
       this.iface.sendBits(new PhysicalMessage(i));

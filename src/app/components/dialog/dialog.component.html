@@ -9,7 +9,7 @@
           <ng-template #headerTemplate>Physical</ng-template>
           <ng-template #content>cc</ng-template>
         </e-tabitem>
-        <e-tabitem>
+        <e-tabitem *ngIf="true">
           <ng-template #headerTemplate>Configuration</ng-template>
           <ng-template #content>
             <app-dialog-config [node]="node"></app-dialog-config>

@@ -15,6 +15,7 @@ import { TextBoxModule } from '@syncfusion/ej2-angular-inputs';
 import { CheckBoxModule, RadioButtonModule, SwitchModule } from '@syncfusion/ej2-angular-buttons';
 import { DialogComponent } from './components/dialog/dialog.component';
 import { DialogCliComponent } from './components/dialog-cli/dialog-cli.component';
+import { NgTerminalModule } from 'ng-terminal';
 
 const routes: Routes = [
   { path: 'logical', component: LogicalComponent },
@@ -43,7 +44,9 @@ const routes: Routes = [
     DialogModule,
     TextBoxModule,
     SwitchModule,
-    RadioButtonModule
+    RadioButtonModule,
+
+    NgTerminalModule
   ],
   providers: [SnappingService],
   bootstrap: [],
