@@ -1,7 +1,8 @@
 import { AfterViewInit, Component, Input, ViewChild } from '@angular/core';
 import { FunctionsUsingCSI, NgTerminal } from 'ng-terminal';
+import { catchError } from 'rxjs';
 import { RouterHost, SwitchHost } from 'src/app/models/node.model';
-import { Terminal } from 'src/app/models/terminal/terminal.model';
+import { Terminal, TerminalCommand } from 'src/app/models/terminal/terminal.model';
 
 
 
@@ -28,6 +29,9 @@ export class DialogCliComponent implements AfterViewInit {
 
     //...
     this.child.keyEventInput.subscribe(e => {
+      if( this.locked )
+        return;
+
       const ev = e.domEvent as KeyboardEvent;
       const printable = !ev.altKey && !ev.ctrlKey && !ev.metaKey;
       const key = ev.key;
@@ -39,17 +43,17 @@ export class DialogCliComponent implements AfterViewInit {
         if( command.length > 0 ) {
           this.locked = true;
           this.child.write(`\n ${FunctionsUsingCSI.cursorColumn(1)}`);
-          this.terminal.exec(command[0], command.slice(1))
-            .then(() => {
-              console.log('Command completed');
-            })
-            .catch( e => {
-              this.child.write(`${FunctionsUsingCSI.cursorColumn(1)} ${e}\n`);
-            })
-            .finally( () => {
+          this.terminal.exec(command[0], command.slice(1)).subscribe({
+            error: (err: Error) => {
+              this.child.write(`${FunctionsUsingCSI.cursorColumn(1)} ${err}\n`);
               this.child.write(`${FunctionsUsingCSI.cursorColumn(1)} ${this.terminal.Prompt} `);
               this.locked = false;
-            });
+            },
+            complete: () => {
+              this.child.write(`${FunctionsUsingCSI.cursorColumn(1)} ${this.terminal.Prompt} `);
+              this.locked = false;
+            }
+          });
         }
         else {
           this.child.write(`\n ${FunctionsUsingCSI.cursorColumn(1)} ${this.terminal.Prompt} `);

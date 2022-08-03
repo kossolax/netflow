@@ -1,8 +1,9 @@
 import { NgTerminal } from "ng-terminal";
+import { observable, Observable, of, switchMap, tap, throwError, timer } from "rxjs";
 import { IPAddress } from "../address.model";
 import { RouterHost, SwitchHost } from "../node.model";
 
-abstract class TerminalCommand {
+export abstract class TerminalCommand {
   protected terminal: NgTerminal;
   protected node: RouterHost|SwitchHost;
   protected parent: TerminalCommand;
@@ -33,19 +34,19 @@ abstract class TerminalCommand {
     this.subCommands[command.name] = command;
   }
 
-  public exec(command: string, args: string[]): Promise<TerminalCommand|null> {
+  public exec(command: string, args: string[]): Observable<TerminalCommand|null> {
     if( command === 'end' ) {
-      return Promise.resolve(this.parent);
+      return of(this.parent);
     }
     else if( command === 'exit' ) {
       let p = this.parent;
       while( p !== p.parent )
         p = this.parent;
-      return Promise.resolve(p);
+      return of(p);
     }
 
     if( command == this.name )
-      return Promise.resolve(this);
+      return of(this);
 
     if (command in this.subCommands) {
       return this.subCommands[command].exec(command, args);
@@ -73,15 +74,15 @@ class PingCommand extends TerminalCommand {
     this.parent = parent;
   }
 
-  override exec(command: string, args: string[]): Promise<TerminalCommand|null> {
+  override exec(command: string, args: string[]): Observable<TerminalCommand|null> {
     if( args.length < 1 )
       throw new Error(`${this.name} requires a hostname`);
 
     this.node.send("ping", new IPAddress(args[0]));
 
-    return new Promise((resolve, fail) => {
-      setTimeout(resolve, 1000);
-    });
+    return timer(1000).pipe(
+      switchMap(() => of(null))
+    );
   }
 }
 class TraceRouteCommand extends TerminalCommand {
@@ -90,12 +91,12 @@ class TraceRouteCommand extends TerminalCommand {
     this.parent = parent;
   }
 
-  override exec(command: string, args: string[]): Promise<TerminalCommand|null> {
+  override exec(command: string, args: string[]): Observable<TerminalCommand|null> {
     if( args.length < 1 )
       throw new Error(`${this.name} requires a hostname`);
 
     this.node.send("traceroute", new IPAddress(args[0]));
-    return Promise.resolve(null);
+    return of(null);
   }
 }
 class AdminCommand extends TerminalCommand {
@@ -107,13 +108,13 @@ class AdminCommand extends TerminalCommand {
     this.registerCommand(new TraceRouteCommand(this));
   }
 
-  override exec(command: string, args: string[]): Promise<TerminalCommand|null> {
+  override exec(command: string, args: string[]): Observable<TerminalCommand|null> {
     let location = super.exec(command, args);
 
     if( command === this.name )
       console.log(`${this.node.name} is now in admin mode.`);
 
-    return Promise.resolve(location);
+    return location;
   }
 }
 export class Terminal extends TerminalCommand {
@@ -129,26 +130,27 @@ export class Terminal extends TerminalCommand {
     this.registerCommand(new TraceRouteCommand(this));
   }
 
-  public override exec(command: string, args: string[]): Promise<TerminalCommand|null> {
-    let location;
+  public override exec(command: string, args: string[]): Observable<TerminalCommand|null> {
+    let location$;
 
     this.history.push([command, ...args].join(' '));
 
     try {
       if( this.location === this )
-        location = super.exec(command, args)
+        location$ = super.exec(command, args)
       else
-        location = this.location.exec(command, args);
+        location$ = this.location.exec(command, args);
+
+      return location$.pipe(
+        tap( i => {
+          if( i !== null )
+            this.location = i;
+        })
+      );
+
     } catch( e ) {
-      return Promise.reject(e);
+      return throwError( () => e );
     }
-
-    return location.then(location => {
-      if( location )
-        this.location = location;
-
-      return null;
-    });
   }
 
   public override complete(command: string, args: string[]): string[] {
