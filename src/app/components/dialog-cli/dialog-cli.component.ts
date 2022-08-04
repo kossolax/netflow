@@ -22,10 +22,11 @@ export class DialogCliComponent implements AfterViewInit {
     this.terminal = new Terminal(this.node as SwitchHost|RouterHost);
 
     this.terminal.Text$.subscribe( text => {
-      this.child.write(`\n ${FunctionsUsingCSI.cursorColumn(1)} ${text}`);
+      this.child.write(` ${text}`);
+      this.child.write(`\n ${FunctionsUsingCSI.cursorColumn(1)}`);
     });
     this.terminal.Complete$.subscribe( () => {
-      this.child.write(`\n ${FunctionsUsingCSI.cursorColumn(1)} ${this.terminal.Prompt} `);
+      this.child.write(` ${this.terminal.Prompt} `);
     });
 
     this.child.write(`\n ${FunctionsUsingCSI.cursorColumn(1)} ${this.terminal.Prompt} `);
@@ -44,6 +45,7 @@ export class DialogCliComponent implements AfterViewInit {
         this.buffer = [];
 
         if( command.length > 0 ) {
+          this.child.write(`\n ${FunctionsUsingCSI.cursorColumn(1)}`);
           this.terminal.exec(command[0], command.slice(1));
         }
         else {
@@ -62,14 +64,17 @@ export class DialogCliComponent implements AfterViewInit {
         let completions = this.terminal.autocomplete(command[0], command.slice(1));
 
         if( completions.length === 1 ) {
-          this.buffer = completions[0].split('');
-          let rightPart = this.buffer.slice(command[0].length).join('');
 
-          this.child.write(rightPart);
+          if( completions[0] !== command[0] ) {
+            this.buffer = completions[0].split('');
+            let rightPart = this.buffer.slice(command[0].length).join('');
+
+            this.child.write(rightPart);
+          }
         }
         else if ( completions.length > 1 ) {
           this.child.write(`\n ${FunctionsUsingCSI.cursorColumn(1)} ${completions.join(' ')} `);
-          this.child.write(`\n ${FunctionsUsingCSI.cursorColumn(1)} ${this.terminal.Prompt} `);
+          this.child.write(`\n ${FunctionsUsingCSI.cursorColumn(1)} ${this.terminal.Prompt} ${command}`);
         }
 
       }

@@ -110,7 +110,7 @@ class AdminCommand extends TerminalCommand {
 
   override exec(command: string, args: string[]) {
     if( command === this.name ) {
-      this.terminal.write(`${this.Terminal.Node.name} is now in admin mode.\n`);
+      this.terminal.write(`${this.Terminal.Node.name} is now in admin mode.`);
       this.terminal.changeDirectory(this);
     }
     else {
