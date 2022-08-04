@@ -1,11 +1,7 @@
 import { AfterViewInit, Component, Input, ViewChild } from '@angular/core';
 import { FunctionsUsingCSI, NgTerminal } from 'ng-terminal';
-import { catchError } from 'rxjs';
 import { RouterHost, SwitchHost } from 'src/app/models/node.model';
-import { Terminal, TerminalCommand } from 'src/app/models/terminal/terminal.model';
-
-
-
+import { Terminal } from 'src/app/models/terminal/terminal.model';
 
 @Component({
   selector: 'app-dialog-cli',
@@ -17,19 +13,26 @@ export class DialogCliComponent implements AfterViewInit {
   @ViewChild('term', { static: true }) child!: NgTerminal;
   terminal!: Terminal;
   buffer: string[] = [];
-  locked: boolean = false;
 
   @Input() node: SwitchHost|RouterHost|null = null;
 
   constructor() { }
 
   ngAfterViewInit() {
-    this.terminal = new Terminal(this.child, this.node as SwitchHost|RouterHost);
+    this.terminal = new Terminal(this.node as SwitchHost|RouterHost);
+
+    this.terminal.Text$.subscribe( text => {
+      this.child.write(`\n ${FunctionsUsingCSI.cursorColumn(1)} ${text}`);
+    });
+    this.terminal.Complete$.subscribe( () => {
+      this.child.write(`\n ${FunctionsUsingCSI.cursorColumn(1)} ${this.terminal.Prompt} `);
+    });
+
     this.child.write(`\n ${FunctionsUsingCSI.cursorColumn(1)} ${this.terminal.Prompt} `);
 
     //...
     this.child.keyEventInput.subscribe(e => {
-      if( this.locked )
+      if( this.terminal.Locked )
         return;
 
       const ev = e.domEvent as KeyboardEvent;
@@ -41,19 +44,7 @@ export class DialogCliComponent implements AfterViewInit {
         this.buffer = [];
 
         if( command.length > 0 ) {
-          this.locked = true;
-          this.child.write(`\n ${FunctionsUsingCSI.cursorColumn(1)}`);
-          this.terminal.exec(command[0], command.slice(1)).subscribe({
-            error: (err: Error) => {
-              this.child.write(`${FunctionsUsingCSI.cursorColumn(1)} ${err}\n`);
-              this.child.write(`${FunctionsUsingCSI.cursorColumn(1)} ${this.terminal.Prompt} `);
-              this.locked = false;
-            },
-            complete: () => {
-              this.child.write(`${FunctionsUsingCSI.cursorColumn(1)} ${this.terminal.Prompt} `);
-              this.locked = false;
-            }
-          });
+          this.terminal.exec(command[0], command.slice(1));
         }
         else {
           this.child.write(`\n ${FunctionsUsingCSI.cursorColumn(1)} ${this.terminal.Prompt} `);
@@ -68,7 +59,7 @@ export class DialogCliComponent implements AfterViewInit {
       }
       else if( key === 'Tab' || key === '?' ) {
         let command = this.buffer.join('').trim().split(' ').filter(x => x);
-        let completions = this.terminal.complete(command[0], command.slice(1));
+        let completions = this.terminal.autocomplete(command[0], command.slice(1));
 
         if( completions.length === 1 ) {
           this.buffer = completions[0].split('');

@@ -1,30 +1,28 @@
-import { NgTerminal } from "ng-terminal";
-import { observable, Observable, of, switchMap, tap, throwError, timer } from "rxjs";
+import { merge, Observable, startWith, Subject, switchMap, tap, timer } from "rxjs";
 import { IPAddress } from "../address.model";
 import { RouterHost, SwitchHost } from "../node.model";
 
-export abstract class TerminalCommand {
-  protected terminal: NgTerminal;
-  protected node: RouterHost|SwitchHost;
-  protected parent: TerminalCommand;
+abstract class TerminalCommand {
   protected name: string;
-  protected prompt: string;
+  protected terminal: Terminal;
+  protected parent: TerminalCommand;
+  private prompt: string;
+  private complete$: Subject<0> = new Subject();
 
-  get Terminal(): NgTerminal {
-    return this.terminal;
-  }
-  get Node(): RouterHost|SwitchHost {
-    return this.node;
-  }
   get Prompt(): string {
     return this.prompt;
+  }
+  get Terminal(): Terminal {
+    return this.terminal;
+  }
+  get Complete$(): Observable<0> {
+    return this.complete$;
   }
 
   subCommands: { [key: string]: TerminalCommand } = {};
 
-  constructor(terminal: NgTerminal, node: RouterHost|SwitchHost, name: string, prompt: string = "") {
+  constructor(terminal: Terminal, name: string, prompt: string = "") {
     this.terminal = terminal;
-    this.node = node;
     this.name = name;
     this.prompt = prompt;
     this.parent = this;
@@ -34,28 +32,26 @@ export abstract class TerminalCommand {
     this.subCommands[command.name] = command;
   }
 
-  public exec(command: string, args: string[]): Observable<TerminalCommand|null> {
+  public exec(command: string, args: string[]) {
     if( command === 'end' ) {
-      return of(this.parent);
+      this.terminal.changeDirectory(this.parent);
     }
     else if( command === 'exit' ) {
       let p = this.parent;
       while( p !== p.parent )
         p = this.parent;
-      return of(p);
+
+      this.terminal.changeDirectory(p);
     }
-
-    if( command == this.name )
-      return of(this);
-
-    if (command in this.subCommands) {
-      return this.subCommands[command].exec(command, args);
+    else if (command in this.subCommands) {
+      this.subCommands[command].exec(command, args);
     }
-
-    throw new Error(`Command ${command} not found.`);
+    else {
+      throw new Error(`Command ${command} not found.`);
+    }
   }
 
-  public complete(command: string, args: string[]): string[] {
+  public autocomplete(command: string, args: string[]): string[] {
     let commands = Object.keys(this.subCommands);
     commands.push('end');
     commands.push('exit');
@@ -67,101 +63,132 @@ export abstract class TerminalCommand {
     return commands.filter(c => c.startsWith(command));
   }
 
+  protected finalize() {
+    this.parent.complete$.next(0);
+  }
+
 }
 class PingCommand extends TerminalCommand {
   constructor(parent: TerminalCommand) {
-    super(parent.Terminal, parent.Node, 'ping');
+    super(parent.Terminal, 'ping');
     this.parent = parent;
   }
 
-  override exec(command: string, args: string[]): Observable<TerminalCommand|null> {
+  override exec(command: string, args: string[]) {
     if( args.length < 1 )
       throw new Error(`${this.name} requires a hostname`);
 
-    this.node.send("ping", new IPAddress(args[0]));
+    this.Terminal.Node.send("ping", new IPAddress(args[0]));
 
-    return timer(1000).pipe(
-      switchMap(() => of(null))
-    );
+    timer(1000).subscribe(() => {
+      this.finalize();
+    });
   }
 }
 class TraceRouteCommand extends TerminalCommand {
   constructor(parent: TerminalCommand) {
-    super(parent.Terminal, parent.Node, 'traceroute');
+    super(parent.Terminal, 'traceroute');
     this.parent = parent;
   }
 
-  override exec(command: string, args: string[]): Observable<TerminalCommand|null> {
+  override exec(command: string, args: string[]) {
     if( args.length < 1 )
       throw new Error(`${this.name} requires a hostname`);
 
-    this.node.send("traceroute", new IPAddress(args[0]));
-    return of(null);
+    this.Terminal.Node.send("traceroute", new IPAddress(args[0]));
+    this.finalize();
   }
 }
 class AdminCommand extends TerminalCommand {
   constructor(parent: TerminalCommand) {
-    super(parent.Terminal, parent.Node, 'enable', '#');
+    super(parent.Terminal, 'enable', '#');
     this.parent = parent;
 
     this.registerCommand(new PingCommand(this));
     this.registerCommand(new TraceRouteCommand(this));
   }
 
-  override exec(command: string, args: string[]): Observable<TerminalCommand|null> {
-    let location = super.exec(command, args);
-
-    if( command === this.name )
-      console.log(`${this.node.name} is now in admin mode.`);
-
-    return location;
+  override exec(command: string, args: string[]) {
+    if( command === this.name ) {
+      this.terminal.write(`${this.Terminal.Node.name} is now in admin mode.\n`);
+      this.terminal.changeDirectory(this);
+    }
+    else {
+      super.exec(command, args);
+    }
   }
 }
-export class Terminal extends TerminalCommand {
-  private history: string[] = [];
-  private location: TerminalCommand;
-
-  constructor(terminal: NgTerminal, node: RouterHost|SwitchHost) {
-    super(terminal, node, 'root', '$');
-    this.location = this;
+class RootCommand extends TerminalCommand {
+  constructor(terminal: Terminal) {
+    super(terminal, '', '$');
+    this.parent = this;
 
     this.registerCommand(new AdminCommand(this));
     this.registerCommand(new PingCommand(this));
     this.registerCommand(new TraceRouteCommand(this));
   }
+}
 
-  public override exec(command: string, args: string[]): Observable<TerminalCommand|null> {
-    let location$;
+export class Terminal {
+  protected directory$: Subject<TerminalCommand> = new Subject();
+  protected text$: Subject<string> = new Subject();
+  protected complete$: Subject<0> = new Subject();
+  protected locked: boolean = false;
 
+  private history: string[] = [];
+  private location: TerminalCommand;
+  private node: RouterHost | SwitchHost;
+
+  get Text$(): Observable<string> {
+    return this.text$.asObservable();
+  }
+  get Complete$(): Observable<0> {
+    return this.directory$.pipe(
+      startWith(this.location),
+      switchMap( i => {
+        return merge(this.complete$, i.Complete$)
+      }),
+      tap( () => this.locked = false )
+    );
+  }
+
+  get Locked(): boolean {
+    return this.locked;
+  }
+  get Node(): RouterHost|SwitchHost {
+    return this.node;
+  }
+  get Prompt(): string {
+    return `${this.Node.name}${this.location.Prompt}`;
+  }
+
+  constructor(node: RouterHost|SwitchHost) {
+    this.node = node;
+    this.location = new RootCommand(this);
+    this.changeDirectory(this.location);
+  }
+
+  public exec(command: string, args: string[]) {
+    this.locked = true;
     this.history.push([command, ...args].join(' '));
 
     try {
-      if( this.location === this )
-        location$ = super.exec(command, args)
-      else
-        location$ = this.location.exec(command, args);
-
-      return location$.pipe(
-        tap( i => {
-          if( i !== null )
-            this.location = i;
-        })
-      );
-
+      this.location.exec(command, args);
     } catch( e ) {
-      return throwError( () => e );
+      this.text$.next(e as string);
+      this.complete$.next(0);
     }
   }
 
-  public override complete(command: string, args: string[]): string[] {
-    if( this.location === this )
-      return super.complete(command, args);
-    return this.location.complete(command, args);
+  public autocomplete(command: string, args: string[]): string[] {
+    return this.location.autocomplete(command, args);
   }
-
-  override get Prompt(): string {
-    if( this.location === this )
-      return `${this.Node.name}${this.prompt}`;
-    return `${this.Node.name}${this.location.Prompt}`;
+  public changeDirectory(t: TerminalCommand) {
+    this.location = t;
+    this.directory$.next(t);
+    this.complete$.next(0);
+  }
+  public write(text: string) {
+    this.text$.next(text);
   }
 }
