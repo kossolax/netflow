@@ -63,7 +63,7 @@ export class IPv4Message extends NetworkMessage {
     public ttl: number = 30;
     public id: number;
     public protocol: number = 0;
-    public max_size: number = 65536;
+    public max_size: number = 65535;
 
     constructor() {
       this.id = Math.floor(Math.random() * 65535);
@@ -100,6 +100,9 @@ export class IPv4Message extends NetworkMessage {
     public setMaximumSize(size: number): this {
       if( size > 65535 )
         throw new Error("Maximum size is 65535");
+      if( size < 1 )
+        throw new Error("Minimum size is 1");
+
       this.max_size = size;
       return this;
     }
@@ -117,7 +120,7 @@ export class IPv4Message extends NetworkMessage {
         throw new Error("MAC source address is not set");
       if( this.net_src === null )
         throw new Error("Source address is not set");
-      if( this.net_src === null )
+      if( this.net_dst === null )
         throw new Error("Destination address is not set");
 
       const messages = [];
