@@ -162,9 +162,9 @@ export class IPv4Protocol implements NetworkListener {
     this.queue = new Map();
 
     iface.addListener(this);
-    //SchedulerService.Instance.repeat(10).subscribe(() => {
-    //  this.cleanQueue();
-    //});
+    SchedulerService.Instance.repeat(10).subscribe(() => {
+      this.cleanQueue();
+    });
   }
 
   receivePacket(message: NetworkMessage, from: Interface): ActionHandle {
@@ -205,11 +205,14 @@ export class IPv4Protocol implements NetworkListener {
           console.log("FULL PACKET: ", entry.message.length, first_packet.payload);
           this.queue.delete(key);
 
-          const payload = first_packet.payload;
+          const message = new NetworkMessage(first_packet.payload, first_packet.mac_src, first_packet.mac_dst, first_packet.net_src, first_packet.net_dst);
+          this.iface.receivePacket(message);
+
+          return ActionHandle.Stop;
         }
 
 
-        return ActionHandle.Stop;
+        return ActionHandle.Handled;
       }
 
       return ActionHandle.Handled;

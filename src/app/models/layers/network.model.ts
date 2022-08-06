@@ -97,6 +97,8 @@ export abstract class NetworkInterface extends Interface implements DatalinkList
     if( action !== ActionHandle.Continue )
       return action;
 
+    console.log(message);
+
     //throw new Error("IP forwarding is not implemented on NetworkInterface");
     return ActionHandle.Continue;
   }

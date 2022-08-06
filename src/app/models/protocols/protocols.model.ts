@@ -19,6 +19,8 @@ export function handleChain(
   receiver?: Interface,
   delay: number=0
   ): ActionHandle {
+
+  let ret = ActionHandle.Continue;
   let action = ActionHandle.Continue;
 
   for(let i of listeners) {
@@ -27,30 +29,42 @@ export function handleChain(
 
       if( handler in i ) {
         switch( handler ) {
-          case "receiveTrame":
-            action = (i as DatalinkListener).receiveTrame(message as DatalinkMessage, sender);
+          case "receiveTrame": {
+            ret = (i as DatalinkListener).receiveTrame(message as DatalinkMessage, sender);
+            if( ret > action ) action = ret;
             break;
-          case "sendTrame":
+          }
+          case "sendTrame": {
             (i as DatalinkSender).sendTrame(message as DatalinkMessage, sender);
             break;
+          }
 
-          case "receivePacket":
-            action = (i as NetworkListener).receivePacket(message as NetworkMessage, sender);
+
+          case "receivePacket": {
+            ret = (i as NetworkListener).receivePacket(message as NetworkMessage, sender);
+            if( ret > action ) action = ret;
             break;
-          case "sendPacket":
+          }
+          case "sendPacket": {
             (i as NetworkSender).sendPacket(message as NetworkMessage, sender);
             break;
+          }
 
-          case "receiveBits":
+
+          case "receiveBits": {
             if( !receiver )
               throw new Error("receiver is required for receiveBits");
-            action = (i as PhysicalListener).receiveBits(message as NetworkMessage, sender, receiver);
+
+            ret = (i as PhysicalListener).receiveBits(message as NetworkMessage, sender, receiver);
+            if( ret > action ) action = ret;
             break;
-          case "sendBits":
+          }
+          case "sendBits": {
             if( !receiver )
               throw new Error("receiver is required for sendBits");
             (i as PhysicalSender).sendBits(message as NetworkMessage, sender, receiver, delay);
             break;
+          }
         }
       }
 

@@ -75,12 +75,13 @@ export class ArpProtocol implements DatalinkListener {
   enqueueRequest(message: NetworkMessage): void {
     const addr = message.net_dst as NetworkAddress;
 
-    if( this.queue.has(addr) )
+    if( this.queue.has(addr) ) {
       this.queue.get(addr)?.push(message);
-    else
+    }
+    else {
       this.queue.set(addr, [message]);
-
-    this.sendArpRequest(addr);
+      this.sendArpRequest(addr);
+    }
   }
   sendArpRequest(addr: NetworkAddress): void {
     const arp = new ArpMessage.Builder()

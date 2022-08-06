@@ -119,7 +119,6 @@ export abstract class HardwareInterface extends Interface implements PhysicalLis
   receiveTrame(message: DatalinkMessage): ActionHandle {
 
     let action = handleChain("receiveTrame", this.getListener, message, this);
-
     if( action !== ActionHandle.Continue )
       return action;
 

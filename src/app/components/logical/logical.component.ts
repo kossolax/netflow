@@ -1,6 +1,7 @@
 import { AfterViewInit, Component, Host, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { AnnotationConstraints, ConnectorConstraints, DiagramComponent, DiagramConstraints, NodeConstraints, SnapConstraints, ConnectorModel, DiagramTools, ConnectorDrawingTool, MouseEventArgs, Connector, ToolBase, CommandHandler, BasicShape, BasicShapeModel, NodeModel } from '@syncfusion/ej2-angular-diagrams';
 import { Subject, takeUntil, timer } from 'rxjs';
+import { IPAddress } from 'src/app/models/address.model';
 
 import { HardwareInterface, Interface } from 'src/app/models/layers/datalink.model';
 import { NetworkInterface } from 'src/app/models/layers/network.model';
@@ -44,6 +45,8 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
     nodes.push(new SwitchHost("Switch-1", 24));
     nodes.push(new RouterHost("Router-1B", 2));
     nodes.push(new RouterHost("Router-2", 2));
+
+    (nodes[2] as RouterHost).getInterface(0).setNetAddress(new IPAddress("1.2.3.4"));
 
     let index = 0;
     nodes.map( i => {
