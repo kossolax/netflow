@@ -3,7 +3,7 @@ import { DatalinkMessage, NetworkMessage } from "../message.model";
 import { GenericNode } from "../node.model";
 import { ArpProtocol } from "../protocols/arp.model";
 import { IPv4Protocol } from "../protocols/ip.model";
-import { DatalinkListener, NetworkListener, NetworkSender } from "../protocols/protocols.model";
+import { ActionHandle, DatalinkListener, NetworkListener, NetworkSender } from "../protocols/protocols.model";
 import { HardwareInterface, Interface } from "./datalink.model";
 
 
@@ -80,22 +80,25 @@ export abstract class NetworkInterface extends Interface implements DatalinkList
     this.datalink.Speed = speed;
   }
 
-  receiveTrame(message: DatalinkMessage): void {
+  receiveTrame(message: DatalinkMessage): ActionHandle {
     const mac_dst = message.mac_dst as HardwareAddress;
 
     if( mac_dst.equals(this.datalink.getMacAddress()) && mac_dst.isBroadcast == false ) {
       this.receivePacket(message as NetworkMessage);
-      return;
+      return ActionHandle.Handled;
     }
+
+    return ActionHandle.Continue;
   }
 
-  receivePacket(message: NetworkMessage) {
+  receivePacket(message: NetworkMessage): ActionHandle {
     this.getListener.map( i => {
       if( i != this && "receivePacket" in i)
         (i as NetworkListener).receivePacket(message, this);
     });
 
     //throw new Error("IP forwarding is not implemented on NetworkInterface");
+    return ActionHandle.Continue;
   }
 
   sendPacket(message: NetworkMessage) {

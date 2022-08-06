@@ -1,7 +1,7 @@
 import { HardwareInterface, Interface } from "../layers/datalink.model";
 import { AbstractLink, Link } from "../layers/physical.model";
 import { Payload, PhysicalMessage } from "../message.model";
-import { PhysicalListener } from "./protocols.model";
+import { ActionHandle, PhysicalListener } from "./protocols.model";
 
 //
 enum SelectorField {
@@ -231,7 +231,7 @@ export class AutoNegotiationProtocol implements PhysicalListener {
     });
   }
 
-  receiveBits(message: PhysicalMessage, from: Interface, to: Interface): void {
+  receiveBits(message: PhysicalMessage, from: Interface, to: Interface): ActionHandle {
     if( message.payload instanceof AutonegotiationMessage ) {
 
       if( message.payload.code.acknowledge )
@@ -246,7 +246,11 @@ export class AutoNegotiationProtocol implements PhysicalListener {
         if( message.payload.code.acknowledge === false )
           this.acknowledge(this.iface.Speed, this.iface.FullDuplex);
       }
+
+      return ActionHandle.Handled;
     }
+
+    return ActionHandle.Continue;
   }
 
   private setSpeed(ack: boolean) {

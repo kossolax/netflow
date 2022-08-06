@@ -3,7 +3,7 @@ import { HardwareAddress, MacAddress, NetworkAddress } from "../address.model";
 import { HardwareInterface } from "../layers/datalink.model";
 import { NetworkInterface } from "../layers/network.model";
 import { DatalinkMessage, NetworkMessage, Payload } from "../message.model";
-import { DatalinkListener } from "./protocols.model";
+import { ActionHandle, DatalinkListener } from "./protocols.model";
 
 export class ArpMessage implements Payload {
   type: "request"|"reply";
@@ -91,7 +91,7 @@ export class ArpProtocol implements DatalinkListener {
     this.interface.getInterface(0).sendTrame(message);
   }
 
-  receiveTrame(message: DatalinkMessage): void {
+  receiveTrame(message: DatalinkMessage): ActionHandle {
     if( message.payload instanceof ArpMessage ) {
       const arp = message.payload as ArpMessage;
 
@@ -116,7 +116,11 @@ export class ArpProtocol implements DatalinkListener {
           this.queue.delete(arp.request);
         }
       }
+
+      return ActionHandle.Handled;
     }
+
+    return ActionHandle.Continue;
   }
 
   private cleanARPTable() {

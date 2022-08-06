@@ -1,8 +1,9 @@
+import { Action } from "rxjs/internal/scheduler/Action";
 import { HardwareAddress, IPAddress } from "../address.model";
 import { Interface } from "../layers/datalink.model";
 import { NetworkInterface } from "../layers/network.model";
 import { NetworkMessage, Payload } from "../message.model";
-import { NetworkListener } from "./protocols.model";
+import { ActionHandle, NetworkListener } from "./protocols.model";
 
 export class IPv4Message extends NetworkMessage {
 
@@ -137,12 +138,16 @@ export class IPv4Protocol implements NetworkListener {
     iface.addListener(this);
   }
 
-  receivePacket(message: NetworkMessage, from: Interface): void {
+  receivePacket(message: NetworkMessage, from: Interface): ActionHandle {
     console.log(message);
 
     if( message instanceof IPv4Message ) {
       console.log("IPv4: " + message.payload);
+
+      return ActionHandle.Handled;
     }
+
+    return ActionHandle.Continue;
   }
 
 }

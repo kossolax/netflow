@@ -2,8 +2,9 @@ import { HardwareAddress, MacAddress } from "../address.model";
 import { Link } from "./physical.model";
 import { GenericNode } from "../node.model";
 import { PhysicalMessage, DatalinkMessage } from "../message.model";
-import { DatalinkListener, DatalinkSender, GenericListener, PhysicalListener } from "../protocols/protocols.model";
+import { ActionHandle, DatalinkListener, DatalinkSender, GenericListener, PhysicalListener } from "../protocols/protocols.model";
 import { AutoNegotiationProtocol } from "../protocols/autonegotiation.model";
+import { Action } from "rxjs/internal/scheduler/Action";
 
 export abstract class Interface {
   protected host: GenericNode;
@@ -102,9 +103,9 @@ export abstract class HardwareInterface extends Interface implements PhysicalLis
   }
 
 
-  receiveBits(message: PhysicalMessage, source: HardwareInterface, destination: HardwareInterface): void {
+  receiveBits(message: PhysicalMessage, source: HardwareInterface, destination: HardwareInterface): ActionHandle {
     if( !this.isActive() )
-      return; // TODO: Throw  error.
+      return ActionHandle.Stop; // TODO: Throw  error.
     //      throw new Error("Interface is down");
 
     this.getListener.map( i => {
@@ -114,12 +115,16 @@ export abstract class HardwareInterface extends Interface implements PhysicalLis
 
     if( message instanceof DatalinkMessage )
       this.receiveTrame(message);
+
+    return ActionHandle.Continue;
   }
-  receiveTrame(message: DatalinkMessage): void {
+  receiveTrame(message: DatalinkMessage): ActionHandle {
     this.getListener.map( i => {
       if( i != this && "receiveTrame" in i)
         (i as DatalinkListener).receiveTrame(message, this);
     });
+
+    return ActionHandle.Continue;
   }
   sendTrame(message: DatalinkMessage): void {
     if( !this.isActive() )

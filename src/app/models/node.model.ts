@@ -4,7 +4,7 @@ import { Address, MacAddress, IPAddress, NetworkAddress, HardwareAddress } from 
 import { EthernetInterface, HardwareInterface, Interface } from "./layers/datalink.model";
 import { IPInterface, NetworkInterface } from "./layers/network.model";
 import { DatalinkMessage, NetworkMessage } from "./message.model";
-import { DatalinkListener, NetworkListener } from "./protocols/protocols.model";
+import { ActionHandle, DatalinkListener, NetworkListener } from "./protocols/protocols.model";
 
 export abstract class GenericNode {
   public guid: string = Math.random().toString(36).substring(2, 9);
@@ -129,7 +129,7 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
   }
 
   // TODO: Make this private.
-  receiveTrame(message: DatalinkMessage, from: HardwareInterface): void {
+  receiveTrame(message: DatalinkMessage, from: HardwareInterface): ActionHandle {
     const src = message.mac_src as HardwareAddress;
     const dst = message.mac_dst as HardwareAddress;
 
@@ -158,9 +158,11 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
         if( i.iface !== from )
           i.iface.sendTrame(message);
       });
+
     }
 
     this.receiveTrame$.next(message);
+    return ActionHandle.Continue;
   }
 
   cleanARPTable(): void {
@@ -255,8 +257,9 @@ export class RouterHost extends Node<NetworkInterface> implements NetworkListene
     }
   }
 
-  receivePacket(message: NetworkMessage, from: Interface): void {
+  receivePacket(message: NetworkMessage, from: Interface): ActionHandle {
     this.receivePacket$.next(message);
+    return ActionHandle.Continue;
   }
 }
 export class ServerHost extends RouterHost {
