@@ -1,6 +1,6 @@
 import { Action } from "rxjs/internal/scheduler/Action";
 import { SchedulerService } from "src/app/services/scheduler.service";
-import { HardwareAddress, IPAddress, NetworkAddress } from "../address.model";
+import { HardwareAddress, IPAddress, MacAddress, NetworkAddress } from "../address.model";
 import { Interface } from "../layers/datalink.model";
 import { NetworkInterface } from "../layers/network.model";
 import { NetworkMessage, Payload } from "../message.model";
@@ -171,12 +171,14 @@ export class IPv4Protocol implements NetworkListener {
     if( message instanceof IPv4Message ) {
 
       // this packet was not fragmented
-      if( message.fragment_offset === 0 && message.flags.more_fragments === false )
+      if( message.fragment_offset === 0 && message.flags.more_fragments === false ) {
         return ActionHandle.Continue;
+      }
 
       // this packet is fragmented, but we are not the receiver.
-      if( message.net_dst && this.iface.hasNetAddress(message.net_dst) === false )
+      if( message.net_dst && this.iface.hasNetAddress(message.net_dst) === false ) {
         return ActionHandle.Continue;
+      }
 
       // this packet is fragmented, and we are the receiver, we need to buffer it.
       const time = SchedulerService.Instance.getDeltaTime();
@@ -185,7 +187,7 @@ export class IPv4Protocol implements NetworkListener {
       const entry = this.queue.get(key);
       if( !entry ) {
         this.queue.set(key, {message: [message], lastReceive: time});
-        return ActionHandle.Handled;
+        return ActionHandle.Stop;
       }
       else {
         entry.message.push(message);
@@ -202,11 +204,24 @@ export class IPv4Protocol implements NetworkListener {
 
 
         if( last_packet.flags.more_fragments === false && total_recevied_length >= total_size ) {
-          console.log("FULL PACKET: ", entry.message.length, first_packet.payload);
           this.queue.delete(key);
 
-          const message = new NetworkMessage(first_packet.payload, first_packet.mac_src, first_packet.mac_dst, first_packet.net_src, first_packet.net_dst);
-          this.iface.receivePacket(message);
+          const msg = new IPv4Message.Builder()
+            .setPayload(first_packet.payload)
+            .setMacSource(message.mac_src as HardwareAddress)
+            .setMacDestination(message.mac_dst as HardwareAddress)
+            .setNetSource(message.net_src as IPAddress)
+            .setNetDestination(message.net_dst as IPAddress)
+            .setTTL(message.ttl)
+            .setIdentification(message.identification)
+            .setProtocol(message.protocol)
+            .setMaximumSize(total_recevied_length)
+            .build();
+
+          if( msg.length != 1 )
+            throw new Error("Invalid message length");
+
+          this.iface.receivePacket(msg[0]);
 
           return ActionHandle.Stop;
         }
