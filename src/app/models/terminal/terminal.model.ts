@@ -1,6 +1,8 @@
 import { merge, Observable, startWith, Subject, switchMap, tap, timer } from "rxjs";
 import { IPAddress } from "../address.model";
+import { NetworkInterface } from "../layers/network.model";
 import { RouterHost, SwitchHost } from "../node.model";
+import { IPv4Message } from "../protocols/ip.model";
 
 abstract class TerminalCommand {
   protected name: string;
@@ -78,7 +80,17 @@ class PingCommand extends TerminalCommand {
     if( args.length < 1 )
       throw new Error(`${this.name} requires a hostname`);
 
-    this.Terminal.Node.send("ping", new IPAddress(args[0]));
+    const nethost = this.terminal.Node as RouterHost;
+
+    const icmp = new IPv4Message.Builder()
+      .setPayload("1234567")
+      .setMacSource(nethost.getInterface(0).getMacAddress())
+      .setNetSource(nethost.getInterface(0).getNetAddress() as IPAddress)
+      .setNetDestination(new IPAddress(args[0]))
+      .setMaximumSize(5)
+      .build();
+
+    icmp.map(msg => nethost.send(msg) );
 
     timer(1000).subscribe(() => {
       this.finalize();
