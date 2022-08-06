@@ -10,7 +10,7 @@ export class ArpMessage implements Payload {
   request: NetworkAddress;
   response?: HardwareAddress|null;
 
-  constructor(type: "request"|"reply", request: NetworkAddress) {
+  private constructor(type: "request"|"reply", request: NetworkAddress) {
     this.type = type;
     this.request = request;
   }
@@ -20,6 +20,35 @@ export class ArpMessage implements Payload {
   }
   toString(): string {
     return "ARP" + this.type;
+  }
+
+  static Builder = class {
+    private type: "request"|"reply" = "request";
+    private net: NetworkAddress|null = null;
+    private mac: HardwareAddress|null = null;
+
+    public SetNetworkAddress(net: NetworkAddress): this {
+      this.type = "request";
+      this.net = net;
+      return this;
+    }
+    public SetHardwareAddress(net: HardwareAddress): this {
+      this.type = "reply";
+      this.mac = net;
+      return this;
+    }
+
+
+    build(): ArpMessage {
+      if( this.net === null )
+        throw new Error("No request data specified");
+
+      const message = new ArpMessage(this.type, this.net);
+
+      if( this.type === "reply" )
+        message.response = this.mac;
+      return message;
+    }
   }
 }
 
@@ -54,7 +83,9 @@ export class ArpProtocol implements DatalinkListener {
     this.sendArpRequest(addr);
   }
   sendArpRequest(addr: NetworkAddress): void {
-    const arp = new ArpMessage("request", addr);
+    const arp = new ArpMessage.Builder()
+      .SetNetworkAddress(addr)
+      .build();
 
     const message: DatalinkMessage = new DatalinkMessage(arp, this.interface.getMacAddress(), MacAddress.generateBroadcast());
     this.interface.getInterface(0).sendTrame(message);
@@ -65,8 +96,10 @@ export class ArpProtocol implements DatalinkListener {
       const arp = message.payload as ArpMessage;
 
       if( arp.type == "request" && this.interface.hasNetAddress(arp.request) ) {
-        const reply = new ArpMessage("reply", arp.request);
-        reply.response = this.interface.getMacAddress();
+        const reply = new ArpMessage.Builder()
+          .SetNetworkAddress(arp.request)
+          .SetHardwareAddress(this.interface.getMacAddress())
+          .build();
 
         const replyMessage: DatalinkMessage = new DatalinkMessage(reply, this.interface.getMacAddress(), message.mac_src);
 

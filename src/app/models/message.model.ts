@@ -7,7 +7,7 @@ export interface Payload {
 export abstract class Message {
   payload: Payload|string;
 
-  constructor(payload: any) {
+  constructor(payload: Payload|string) {
     this.payload = payload;
   }
 
@@ -27,7 +27,7 @@ export class DatalinkMessage extends PhysicalMessage {
   mac_src: HardwareAddress;
   mac_dst: HardwareAddress|null;
 
-  constructor(payload: any,
+  constructor(payload: Payload|string,
     mac_src: HardwareAddress, mac_dst: HardwareAddress|null) {
     super(payload);
     this.mac_src = mac_src;
@@ -43,7 +43,7 @@ export class NetworkMessage extends DatalinkMessage {
   net_src: NetworkAddress;
   net_dst: NetworkAddress|null;
 
-  constructor(payload: any,
+  constructor(payload: Payload|string,
     mac_src: HardwareAddress, mac_dst: HardwareAddress|null,
     net_src: NetworkAddress, net_dst: NetworkAddress|null) {
     super(payload, mac_src, mac_dst);
