@@ -2,6 +2,7 @@ import { HardwareAddress, NetworkAddress } from "../address.model";
 import { DatalinkMessage, NetworkMessage } from "../message.model";
 import { GenericNode } from "../node.model";
 import { ArpProtocol } from "../protocols/arp.model";
+import { IPv4Protocol } from "../protocols/ip.model";
 import { DatalinkListener, NetworkListener, NetworkSender } from "../protocols/protocols.model";
 import { HardwareInterface, Interface } from "./datalink.model";
 
@@ -129,8 +130,12 @@ export abstract class NetworkInterface extends Interface implements DatalinkList
 
 
 export class IPInterface extends NetworkInterface {
+
+  private protocols: IPv4Protocol;
+
   constructor(node: GenericNode, name: string, datalink: HardwareInterface) {
     super(node, "ethip", datalink);
+    this.protocols = new IPv4Protocol(this);
   }
 }
 

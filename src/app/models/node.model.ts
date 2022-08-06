@@ -62,7 +62,7 @@ export abstract class Node<T extends Interface> extends GenericNode {
       node.addInterface(key);
   }
 
-  abstract send(message: string, dst: Address): void;
+  abstract send(message: string, dst?: Address): void;
 }
 
 export class SwitchHost extends Node<HardwareInterface> implements DatalinkListener {
@@ -104,16 +104,26 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
     return clone;
   }
 
-  send(message: string, dst: HardwareAddress): void {
-    const src = this.getInterface(0).getMacAddress();
+  send(message: string|DatalinkMessage, dst?: HardwareAddress): void {
 
-    const msg = new DatalinkMessage(
-      message,
-      src, dst
-    );
+    if( message instanceof DatalinkMessage ) {
+      for( const name in this.interfaces ) {
+        this.interfaces[name].sendTrame(message);
+      }
+    }
+    else {
+      if( dst === undefined )
+        throw new Error("Destination address is undefined");
+      const src = this.getInterface(0).getMacAddress();
 
-    for( const name in this.interfaces ) {
-      this.interfaces[name].sendTrame(msg);
+      const msg = new DatalinkMessage(
+        message,
+        src, dst
+      );
+
+      for( const name in this.interfaces ) {
+        this.interfaces[name].sendTrame(msg);
+      }
     }
 
   }
@@ -218,18 +228,30 @@ export class RouterHost extends Node<NetworkInterface> implements NetworkListene
     return iface;
   }
 
-  send(message: string, net_dst: NetworkAddress): void {
-    const mac_src = this.getInterface(0).getMacAddress();
-    const net_src = this.getInterface(0).getNetAddress();
+  send(message: string|NetworkMessage, net_dst?: NetworkAddress): void {
 
-    const msg = new NetworkMessage(
-      message,
-      mac_src, null,
-      net_src, net_dst
-    );
+    if( message instanceof NetworkMessage ) {
+      for( const name in this.interfaces ) {
+        this.interfaces[name].sendPacket(message);
+      }
+    }
+    else {
 
-    for( const name in this.interfaces ) {
-      this.interfaces[name].sendPacket(msg);
+      if( net_dst === undefined )
+        throw new Error("No destination specified");
+
+      const mac_src = this.getInterface(0).getMacAddress();
+      const net_src = this.getInterface(0).getNetAddress();
+
+      const msg = new NetworkMessage(
+        message,
+        mac_src, null,
+        net_src, net_dst
+      );
+
+      for( const name in this.interfaces ) {
+        this.interfaces[name].sendPacket(msg);
+      }
     }
   }
 
