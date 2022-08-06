@@ -2,7 +2,7 @@ import { HardwareAddress, NetworkAddress } from "../address.model";
 import { DatalinkMessage, NetworkMessage } from "../message.model";
 import { GenericNode } from "../node.model";
 import { ArpProtocol } from "../protocols/arp.model";
-import { IPv4Protocol } from "../protocols/ip.model";
+import { IPv4Protocol } from "../protocols/ipv4.model";
 import { ActionHandle, DatalinkListener, handleChain, NetworkListener, NetworkSender } from "../protocols/protocols.model";
 import { HardwareInterface, Interface } from "./datalink.model";
 

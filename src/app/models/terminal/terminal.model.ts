@@ -2,7 +2,7 @@ import { merge, Observable, startWith, Subject, switchMap, tap, timer } from "rx
 import { IPAddress } from "../address.model";
 import { NetworkInterface } from "../layers/network.model";
 import { RouterHost, SwitchHost } from "../node.model";
-import { IPv4Message } from "../protocols/ip.model";
+import { IPv4Message } from "../protocols/ipv4.model";
 
 abstract class TerminalCommand {
   protected name: string;
