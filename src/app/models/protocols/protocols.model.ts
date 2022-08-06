@@ -10,13 +10,64 @@ export enum ActionHandle {
   Stop      // Immediately stop the hook chain and handle the original
 }
 
+
+export function handleChain(
+  handler: "receiveBits"|"sendBits"|"receiveTrame"|"sendTrame"|"receivePacket"|"sendPacket",
+  listeners: GenericListener[],
+  message: Message,
+  sender: Interface,
+  receiver?: Interface,
+  delay: number=0
+  ): ActionHandle {
+  let action = ActionHandle.Continue;
+
+  for(let i of listeners) {
+    if( i === sender)
+      continue;
+
+      if( handler in i ) {
+        switch( handler ) {
+          case "receiveTrame":
+            action = (i as DatalinkListener).receiveTrame(message as DatalinkMessage, sender);
+            break;
+          case "sendTrame":
+            (i as DatalinkSender).sendTrame(message as DatalinkMessage, sender);
+            break;
+
+          case "receivePacket":
+            action = (i as NetworkListener).receivePacket(message as NetworkMessage, sender);
+            break;
+          case "sendPacket":
+            (i as NetworkSender).sendPacket(message as NetworkMessage, sender);
+            break;
+
+          case "receiveBits":
+            if( !receiver )
+              throw new Error("receiver is required for receiveBits");
+            action = (i as PhysicalListener).receiveBits(message as NetworkMessage, sender, receiver);
+            break;
+          case "sendBits":
+            if( !receiver )
+              throw new Error("receiver is required for sendBits");
+            (i as PhysicalSender).sendBits(message as NetworkMessage, sender, receiver, delay);
+            break;
+        }
+      }
+
+      if( action === ActionHandle.Stop )
+        break;
+  }
+
+  return action;
+}
+
 export abstract class GenericListener {
   toString(): string {
     return this.constructor.name.toString();
   }
-}
-export interface Listener<T> extends GenericListener {
 
+}
+export interface Listener<T extends Interface|Message|Link> extends GenericListener {
 }
 export interface PhysicalListener extends Listener<PhysicalMessage> {
   receiveBits(message: PhysicalMessage, from: Interface, to: Interface): ActionHandle;

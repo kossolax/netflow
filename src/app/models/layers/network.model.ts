@@ -3,7 +3,7 @@ import { DatalinkMessage, NetworkMessage } from "../message.model";
 import { GenericNode } from "../node.model";
 import { ArpProtocol } from "../protocols/arp.model";
 import { IPv4Protocol } from "../protocols/ip.model";
-import { ActionHandle, DatalinkListener, NetworkListener, NetworkSender } from "../protocols/protocols.model";
+import { ActionHandle, DatalinkListener, handleChain, NetworkListener, NetworkSender } from "../protocols/protocols.model";
 import { HardwareInterface, Interface } from "./datalink.model";
 
 
@@ -92,10 +92,10 @@ export abstract class NetworkInterface extends Interface implements DatalinkList
   }
 
   receivePacket(message: NetworkMessage): ActionHandle {
-    this.getListener.map( i => {
-      if( i != this && "receivePacket" in i)
-        (i as NetworkListener).receivePacket(message, this);
-    });
+    let action = handleChain("receivePacket", this.getListener, message, this);
+
+    if( action !== ActionHandle.Continue )
+      return action;
 
     //throw new Error("IP forwarding is not implemented on NetworkInterface");
     return ActionHandle.Continue;
@@ -105,10 +105,10 @@ export abstract class NetworkInterface extends Interface implements DatalinkList
     if( !this.isActive() )
       throw new Error("Interface is down");
 
-    this.getListener.map( i => {
-      if( i != this && "sendPacket" in i)
-        (i as NetworkSender).sendPacket(message, this);
-    });
+
+    let action = handleChain("sendPacket", this.getListener, message, this);
+    if( action !== ActionHandle.Continue )
+      return;
 
     const loopback = this.addresses.filter( i => i.addr.equals(message.net_dst) );
     if( loopback.length > 0 ) {

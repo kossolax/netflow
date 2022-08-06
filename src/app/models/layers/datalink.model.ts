@@ -2,7 +2,7 @@ import { HardwareAddress, MacAddress } from "../address.model";
 import { Link } from "./physical.model";
 import { GenericNode } from "../node.model";
 import { PhysicalMessage, DatalinkMessage } from "../message.model";
-import { ActionHandle, DatalinkListener, DatalinkSender, GenericListener, PhysicalListener } from "../protocols/protocols.model";
+import { ActionHandle, DatalinkListener, DatalinkSender, GenericListener, handleChain, PhysicalListener } from "../protocols/protocols.model";
 import { AutoNegotiationProtocol } from "../protocols/autonegotiation.model";
 import { Action } from "rxjs/internal/scheduler/Action";
 
@@ -105,13 +105,11 @@ export abstract class HardwareInterface extends Interface implements PhysicalLis
 
   receiveBits(message: PhysicalMessage, source: HardwareInterface, destination: HardwareInterface): ActionHandle {
     if( !this.isActive() )
-      return ActionHandle.Stop; // TODO: Throw  error.
-    //      throw new Error("Interface is down");
+      return ActionHandle.Stop;
 
-    this.getListener.map( i => {
-      if( i != this && "receiveBits" in i)
-        (i as PhysicalListener).receiveBits(message, source, this);
-    });
+    let action = handleChain("receiveBits", this.getListener, message, source, this);
+    if( action !== ActionHandle.Continue )
+      return action;
 
     if( message instanceof DatalinkMessage )
       this.receiveTrame(message);
@@ -119,10 +117,11 @@ export abstract class HardwareInterface extends Interface implements PhysicalLis
     return ActionHandle.Continue;
   }
   receiveTrame(message: DatalinkMessage): ActionHandle {
-    this.getListener.map( i => {
-      if( i != this && "receiveTrame" in i)
-        (i as DatalinkListener).receiveTrame(message, this);
-    });
+
+    let action = handleChain("receiveTrame", this.getListener, message, this);
+
+    if( action !== ActionHandle.Continue )
+      return action;
 
     return ActionHandle.Continue;
   }
@@ -130,10 +129,9 @@ export abstract class HardwareInterface extends Interface implements PhysicalLis
     if( !this.isActive() )
       throw new Error("Interface is down");
 
-    this.getListener.map( i => {
-      if( i != this && "sendTrame" in i ) // prevent loop between L2 and L3
-        (i as DatalinkSender).sendTrame(message, this);
-    });
+    let action = handleChain("sendTrame", this.getListener, message, this);
+    if( action !== ActionHandle.Continue )
+      return;
 
     const loopback = this.address.equals(message.mac_dst);
     if( loopback ) {

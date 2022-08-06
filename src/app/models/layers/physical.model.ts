@@ -1,7 +1,7 @@
 import { concatMap, map, Observable, of, Subject, switchMap, tap, timer } from "rxjs";
 import { SchedulerService, SchedulerState } from "src/app/services/scheduler.service";
 import { PhysicalMessage } from "../message.model";
-import { ActionHandle, GenericListener, PhysicalListener, PhysicalSender } from "../protocols/protocols.model";
+import { ActionHandle, GenericListener, handleChain, PhysicalListener, PhysicalSender } from "../protocols/protocols.model";
 import { HardwareInterface, Interface } from "./datalink.model";
 import { NetworkInterface } from "./network.model";
 
@@ -88,10 +88,7 @@ export abstract class AbstractLink implements PhysicalListener, PhysicalSender {
       map( _ => { // pre
         const propagationDelay = this.getDelay(message.length, source.Speed);
 
-        this.getListener.map( i => {
-          if( i != this && "sendBits" in i)
-            (i as PhysicalSender).sendBits(message, source, destination, propagationDelay);
-        });
+        handleChain("sendBits", this.getListener, message, source, destination, propagationDelay);
 
         return propagationDelay;
       }),
@@ -106,11 +103,7 @@ export abstract class AbstractLink implements PhysicalListener, PhysicalSender {
   }
 
   public receiveBits(message: PhysicalMessage, source: HardwareInterface, destination: HardwareInterface): ActionHandle {
-
-    this.getListener.map( i => {
-      if( i != this && "receiveBits" in i)
-        (i as PhysicalListener).receiveBits(message, source, destination);
-    });
+    handleChain("receiveBits", this.getListener, message, source, destination);
 
     // send to L2
     destination.receiveBits(message, source, destination);
