@@ -1,5 +1,6 @@
 import { Action } from "rxjs/internal/scheduler/Action";
-import { HardwareAddress, IPAddress } from "../address.model";
+import { SchedulerService } from "src/app/services/scheduler.service";
+import { HardwareAddress, IPAddress, NetworkAddress } from "../address.model";
 import { Interface } from "../layers/datalink.model";
 import { NetworkInterface } from "../layers/network.model";
 import { NetworkMessage, Payload } from "../message.model";
@@ -14,9 +15,9 @@ export class IPv4Message extends NetworkMessage {
 
   public identification: number = 0;
   public flags = {
-    reserved: 0,
-    dont_fragment: 0,
-    more_fragments: 0
+    reserved: false,
+    dont_fragment: false,
+    more_fragments: false
   };
   public fragment_offset: number = 0;
 
@@ -46,7 +47,7 @@ export class IPv4Message extends NetworkMessage {
     //    sum = Math.imul(31, sum) + data.charCodeAt(i) | 0;
 
     sum = Math.imul(31, sum) + (this.version + this.header_length + this.TOS + this.total_length);
-    sum = Math.imul(31, sum) + (this.identification + this.flags.reserved + this.flags.dont_fragment + this.flags.more_fragments + this.fragment_offset);
+    sum = Math.imul(31, sum) + (this.identification + (this.flags.reserved ? 1: 0) + (this.flags.dont_fragment ? 1 : 0) + (this.flags.more_fragments ? 1 : 0) + this.fragment_offset);
     sum = Math.imul(31, sum) + (this.ttl + this.protocol); // do not include "checksum" header in the checksum
 
     return sum;
@@ -60,9 +61,13 @@ export class IPv4Message extends NetworkMessage {
     public net_dst: IPAddress|null = null;
     public mac_dst: HardwareAddress|null = null;
     public ttl: number = 30;
-    public id: number = 0;
+    public id: number;
     public protocol: number = 0;
-    public max_size: number = 65535;
+    public max_size: number = 65536;
+
+    constructor() {
+      this.id = Math.floor(Math.random() * 65535);
+    }
 
     public setNetSource(addr: IPAddress): this {
       this.net_src = addr;
@@ -114,40 +119,118 @@ export class IPv4Message extends NetworkMessage {
         throw new Error("Source address is not set");
       if( this.net_src === null )
         throw new Error("Destination address is not set");
-      if( this.payload.length >= this.max_size )
-        throw new Error("Fragmentation is not supported, yet.");
 
-      const message = new IPv4Message(this.payload, this.mac_src, this.mac_dst, this.net_src, this.net_dst);
-      message.ttl = this.ttl;
-      message.identification = this.id;
-      message.protocol = this.protocol;
-      message.header_checksum = message.checksum();
+      const messages = [];
 
-      return [message];
+      let fragment = 0;
+      do {
+
+        // payload doesn't support splicing.
+        // so we put the payload on the first message, the others are left empty
+        let payload: string|Payload = "";
+        if( fragment === 0 )
+          payload = this.payload;
+
+        const message = new IPv4Message( payload, this.mac_src, this.mac_dst, this.net_src, this.net_dst);
+
+        message.ttl = this.ttl;
+        message.identification = this.id;
+        message.protocol = this.protocol;
+        message.header_checksum = message.checksum();
+        message.fragment_offset = fragment;
+        message.total_length = Math.min(this.max_size, this.payload.length - fragment);
+
+        if( fragment + this.max_size < this.payload.length )
+          message.flags.more_fragments = true;
+
+        messages.push(message);
+        fragment += this.max_size;
+      } while( fragment < this.payload.length )
+
+      return messages;
     }
   }
 }
 
 export class IPv4Protocol implements NetworkListener {
 
+  private queue: Map<string, {message: IPv4Message[], lastReceive: number}>;
   private iface: NetworkInterface;
 
   constructor(iface: NetworkInterface) {
     this.iface = iface;
+    this.queue = new Map();
 
     iface.addListener(this);
+    //SchedulerService.Instance.repeat(10).subscribe(() => {
+    //  this.cleanQueue();
+    //});
   }
 
   receivePacket(message: NetworkMessage, from: Interface): ActionHandle {
-    console.log(message);
-
     if( message instanceof IPv4Message ) {
-      console.log("IPv4: " + message.payload);
+
+      // this packet was not fragmented
+      if( message.fragment_offset === 0 && message.flags.more_fragments === false )
+        return ActionHandle.Continue;
+
+      // this packet is fragmented, but we are not the receiver.
+      if( message.net_dst && this.iface.hasNetAddress(message.net_dst) === false )
+        return ActionHandle.Continue;
+
+      // this packet is fragmented, and we are the receiver, we need to buffer it.
+      const time = SchedulerService.Instance.getDeltaTime();
+      const key = this.generateUniqueKey(message);
+
+      const entry = this.queue.get(key);
+      if( !entry ) {
+        this.queue.set(key, {message: [message], lastReceive: time});
+        return ActionHandle.Handled;
+      }
+      else {
+        entry.message.push(message);
+        entry.lastReceive = time;
+        this.queue.set(key, entry);
+
+        entry.message.sort( (a, b) => a.fragment_offset - b.fragment_offset );
+
+        let total_recevied_length = entry.message.reduce( (sum, i) => sum + i.total_length, 0 );
+
+        let first_packet = entry.message[0];
+        let last_packet = entry.message[entry.message.length - 1];
+        let total_size = last_packet.fragment_offset + last_packet.total_length;
+
+
+        if( last_packet.flags.more_fragments === false && total_recevied_length >= total_size ) {
+          console.log("FULL PACKET: ", entry.message.length, first_packet.payload);
+          this.queue.delete(key);
+
+          const payload = first_packet.payload;
+        }
+
+
+        return ActionHandle.Stop;
+      }
 
       return ActionHandle.Handled;
     }
 
     return ActionHandle.Continue;
+  }
+
+  private cleanQueue() {
+    const cleanDelay = SchedulerService.Instance.getDelay(60 * 5);
+
+    this.queue.forEach( (value, key) => {
+      const timeSinceLastSeen = SchedulerService.Instance.getDeltaTime() - value.lastReceive;
+
+      if( timeSinceLastSeen > cleanDelay )
+        this.queue.delete(key);
+    } );
+  }
+
+  private generateUniqueKey(message: IPv4Message): string {
+    return `${message.net_src.toString()}_${message.identification}`;
   }
 
 }
