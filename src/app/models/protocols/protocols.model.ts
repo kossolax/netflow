@@ -27,49 +27,49 @@ export function handleChain(
     if( i === sender)
       continue;
 
-      if( handler in i ) {
-        switch( handler ) {
-          case "receiveTrame": {
-            ret = (i as DatalinkListener).receiveTrame(message as DatalinkMessage, sender);
-            if( ret > action ) action = ret;
-            break;
-          }
-          case "sendTrame": {
-            (i as DatalinkSender).sendTrame(message as DatalinkMessage, sender);
-            break;
-          }
+    if( handler in i ) {
+      switch( handler ) {
+        case "receiveTrame": {
+          ret = (i as DatalinkListener).receiveTrame(message as DatalinkMessage, sender);
+          if( ret > action ) action = ret;
+          break;
+        }
+        case "sendTrame": {
+          (i as DatalinkSender).sendTrame(message as DatalinkMessage, sender);
+          break;
+        }
 
 
-          case "receivePacket": {
-            ret = (i as NetworkListener).receivePacket(message as NetworkMessage, sender);
-            if( ret > action ) action = ret;
-            break;
-          }
-          case "sendPacket": {
-            (i as NetworkSender).sendPacket(message as NetworkMessage, sender);
-            break;
-          }
+        case "receivePacket": {
+          ret = (i as NetworkListener).receivePacket(message as NetworkMessage, sender);
+          if( ret > action ) action = ret;
+          break;
+        }
+        case "sendPacket": {
+          (i as NetworkSender).sendPacket(message as NetworkMessage, sender);
+          break;
+        }
 
 
-          case "receiveBits": {
-            if( !receiver )
-              throw new Error("receiver is required for receiveBits");
+        case "receiveBits": {
+          if( !receiver )
+            throw new Error("receiver is required for receiveBits");
 
-            ret = (i as PhysicalListener).receiveBits(message as NetworkMessage, sender, receiver);
-            if( ret > action ) action = ret;
-            break;
-          }
-          case "sendBits": {
-            if( !receiver )
-              throw new Error("receiver is required for sendBits");
-            (i as PhysicalSender).sendBits(message as NetworkMessage, sender, receiver, delay);
-            break;
-          }
+          ret = (i as PhysicalListener).receiveBits(message as NetworkMessage, sender, receiver);
+          if( ret > action ) action = ret;
+          break;
+        }
+        case "sendBits": {
+          if( !receiver )
+            throw new Error("receiver is required for sendBits");
+          (i as PhysicalSender).sendBits(message as NetworkMessage, sender, receiver, delay);
+          break;
         }
       }
+    }
 
-      if( action === ActionHandle.Stop )
-        break;
+    if( action === ActionHandle.Stop )
+      break;
   }
 
   return action;

@@ -2,6 +2,7 @@ import { merge, Observable, startWith, Subject, switchMap, tap, timer } from "rx
 import { IPAddress } from "../address.model";
 import { NetworkInterface } from "../layers/network.model";
 import { RouterHost, SwitchHost } from "../node.model";
+import { ICMPMessage, ICMPType } from "../protocols/icmp.model";
 import { IPv4Message } from "../protocols/ipv4.model";
 
 abstract class TerminalCommand {
@@ -82,12 +83,11 @@ class PingCommand extends TerminalCommand {
 
     const nethost = this.terminal.Node as RouterHost;
 
-    const icmp = new IPv4Message.Builder()
-      .setPayload("1234567")
+    const icmp = new ICMPMessage.Builder()
       .setMacSource(nethost.getInterface(0).getMacAddress())
       .setNetSource(nethost.getInterface(0).getNetAddress() as IPAddress)
       .setNetDestination(new IPAddress(args[0]))
-      .setMaximumSize(5)
+      .setType(ICMPType.EchoRequest)
       .build();
 
     icmp.map(msg => nethost.send(msg) );

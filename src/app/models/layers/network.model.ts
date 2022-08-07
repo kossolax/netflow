@@ -2,6 +2,7 @@ import { HardwareAddress, NetworkAddress } from "../address.model";
 import { DatalinkMessage, NetworkMessage } from "../message.model";
 import { GenericNode } from "../node.model";
 import { ArpProtocol } from "../protocols/arp.model";
+import { ICMPProtocol } from "../protocols/icmp.model";
 import { IPv4Protocol } from "../protocols/ipv4.model";
 import { ActionHandle, DatalinkListener, handleChain, NetworkListener, NetworkSender } from "../protocols/protocols.model";
 import { HardwareInterface, Interface } from "./datalink.model";
@@ -83,7 +84,7 @@ export abstract class NetworkInterface extends Interface implements DatalinkList
   receiveTrame(message: DatalinkMessage): ActionHandle {
     const mac_dst = message.mac_dst as HardwareAddress;
 
-    if( mac_dst.equals(this.datalink.getMacAddress()) && mac_dst.isBroadcast == false ) {
+    if( message instanceof NetworkMessage && mac_dst.equals(this.datalink.getMacAddress()) && mac_dst.isBroadcast == false ) {
       this.receivePacket(message as NetworkMessage);
       return ActionHandle.Handled;
     }
@@ -93,7 +94,6 @@ export abstract class NetworkInterface extends Interface implements DatalinkList
 
   receivePacket(message: NetworkMessage): ActionHandle {
     let action = handleChain("receivePacket", this.getListener, message, this);
-
     if( action !== ActionHandle.Continue )
       return action;
 
@@ -134,11 +134,13 @@ export abstract class NetworkInterface extends Interface implements DatalinkList
 
 export class IPInterface extends NetworkInterface {
 
-  private protocols: IPv4Protocol;
+  private protocols1: IPv4Protocol;
+  private protocols2: ICMPProtocol;
 
   constructor(node: GenericNode, name: string, datalink: HardwareInterface) {
     super(node, "ethip", datalink);
-    this.protocols = new IPv4Protocol(this);
+    this.protocols1 = new IPv4Protocol(this);
+    this.protocols2 = new ICMPProtocol(this);
   }
 }
 

@@ -9,6 +9,7 @@ import { AbstractLink, Link } from 'src/app/models/layers/physical.model';
 import { PhysicalMessage } from 'src/app/models/message.model';
 import { Network } from 'src/app/models/network.model';
 import { GenericNode, RouterHost, SwitchHost } from 'src/app/models/node.model';
+import { ICMPMessage, ICMPType } from 'src/app/models/protocols/icmp.model';
 import { LinkLayerSpy } from 'src/app/models/protocols/protocols.model';
 import { NetworkService } from 'src/app/services/network.service';
 import { SchedulerService } from 'src/app/services/scheduler.service';
@@ -74,8 +75,15 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
     this.scheduler.repeat(1).pipe(
       takeUntil(this.onDestroy$)
     ).subscribe( () => {
-      console.log("hi");
-      nodes[0].send("A", (nodes[2].getInterface(0) as NetworkInterface).getNetAddress());
+
+      const icmp = new ICMPMessage.Builder()
+        .setMacSource((nodes[0] as RouterHost).getInterface(0).getMacAddress())
+        .setNetSource((nodes[0] as RouterHost).getInterface(0).getNetAddress() as IPAddress)
+        .setNetDestination((nodes[2] as RouterHost).getInterface(0).getNetAddress() as IPAddress)
+        .setType(ICMPType.EchoRequest)
+        .build();
+
+      icmp.map( i => nodes[0].send(i) );
     });
     this.scheduler.once(0.5).subscribe( () => {
       nodes[3].send("B", (nodes[0].getInterface(0) as NetworkInterface).getNetAddress());

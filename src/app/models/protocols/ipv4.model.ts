@@ -1,6 +1,5 @@
-import { Action } from "rxjs/internal/scheduler/Action";
 import { SchedulerService } from "src/app/services/scheduler.service";
-import { HardwareAddress, IPAddress, MacAddress, NetworkAddress } from "../address.model";
+import { HardwareAddress, IPAddress } from "../address.model";
 import { Interface } from "../layers/datalink.model";
 import { NetworkInterface } from "../layers/network.model";
 import { NetworkMessage, Payload } from "../message.model";
@@ -25,17 +24,24 @@ export class IPv4Message extends NetworkMessage {
   public protocol: number = 0;
   public header_checksum: number = 0;
 
-  private constructor(payload: Payload|string,
+
+
+  protected constructor(payload: Payload|string,
     mac_src: HardwareAddress, mac_dst: HardwareAddress|null,
     net_src: IPAddress, net_dst: IPAddress|null) {
     super(payload, mac_src, mac_dst, net_src, net_dst);
   }
 
   override get length(): number {
-    return super.length + 16;
+    return super.length + 16 + this.payload.length;
   }
 
   override toString(): string {
+    switch(this.protocol) {
+      case 1:
+        return this.payload.toString();
+    }
+
     return "IPv4";
   }
 
@@ -53,6 +59,17 @@ export class IPv4Message extends NetworkMessage {
     return sum;
   }
 
+  public IsFragmented(): boolean {
+    if( this.fragment_offset === 0 && this.flags.more_fragments === false )
+      return false;
+    return true;
+  }
+  public IsReadyAtEndPoint(iface: NetworkInterface): boolean {
+    if( this.IsFragmented() === false && this.net_dst && iface.hasNetAddress(this.net_dst) )
+      return true;
+    return false;
+  }
+
 
   static Builder = class {
     public payload: Payload|string = "";
@@ -63,6 +80,7 @@ export class IPv4Message extends NetworkMessage {
     public ttl: number = 30;
     public id: number;
     public protocol: number = 0;
+    public service: number = 0;
     public max_size: number = 65535;
 
     constructor() {
@@ -114,6 +132,10 @@ export class IPv4Message extends NetworkMessage {
       this.protocol = id;
       return this;
     }
+    public setservice(service: number): this {
+      this.service = service;
+      return this;
+    }
 
     build(): IPv4Message[] {
       if( this.mac_src === null )
@@ -142,6 +164,7 @@ export class IPv4Message extends NetworkMessage {
         message.header_checksum = message.checksum();
         message.fragment_offset = fragment;
         message.total_length = Math.min(this.max_size, this.payload.length - fragment);
+        message.TOS = this.service;
 
         if( fragment + this.max_size < this.payload.length )
           message.flags.more_fragments = true;
@@ -174,7 +197,7 @@ export class IPv4Protocol implements NetworkListener {
     if( message instanceof IPv4Message ) {
 
       // this packet was not fragmented
-      if( message.fragment_offset === 0 && message.flags.more_fragments === false ) {
+      if( message.IsFragmented() === false ) {
         return ActionHandle.Continue;
       }
 
