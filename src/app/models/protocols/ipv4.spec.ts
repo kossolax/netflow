@@ -6,7 +6,7 @@ import { RouterHost } from "../node.model";
 import { IPv4Message } from "./ipv4.model";
 import { SimpleListener } from "./protocols.model";
 
-describe('AutoNegotiation Protocol test', () => {
+describe('IPv4 protocol', () => {
   let A: RouterHost;
   let B: RouterHost;
   let C: RouterHost;
