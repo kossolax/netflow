@@ -1,4 +1,6 @@
-import { IPAddress } from "../address.model";
+import { map, Observable, of, race, Subject, take, tap, timer } from "rxjs";
+import { SchedulerService } from "src/app/services/scheduler.service";
+import { Address, IPAddress } from "../address.model";
 import { Interface } from "../layers/datalink.model";
 import { NetworkInterface } from "../layers/network.model";
 import { Message, NetworkMessage, Payload } from "../message.model";
@@ -105,9 +107,33 @@ export class ICMPMessage extends Message {
 export class ICMPProtocol implements NetworkListener {
   private iface: NetworkInterface;
 
+  private queue: Map<number, Subject<IPv4Message>>;
+
   constructor(iface: NetworkInterface) {
     this.iface = iface;
     iface.addListener(this);
+
+    this.queue = new Map<number, Subject<IPv4Message>>();
+  }
+
+  public sendIcmpRequest(destination: IPAddress, timeout: number=20): Observable<IPv4Message|null> {
+    const request = new ICMPMessage.Builder()
+      .setType(ICMPType.EchoRequest)
+      .setCode(0)
+      .setMacSource(this.iface.getMacAddress())
+      .setNetSource(this.iface.getNetAddress() as IPAddress)
+      .setNetDestination(destination)
+      .build()[0];
+
+    const subject = new Subject<IPv4Message>();
+
+    this.queue.set(request.identification, subject);
+    this.iface.sendPacket(request);
+
+    let timeout$ = SchedulerService.Instance.once(timeout).pipe(map(() => null));
+    return race(subject, timeout$).pipe(
+      tap(() => this.queue.delete(request.identification))
+    )
   }
 
   receivePacket(message: NetworkMessage, from: Interface): ActionHandle {
@@ -128,6 +154,13 @@ export class ICMPProtocol implements NetworkListener {
         this.iface.sendPacket(reply);
 
         return ActionHandle.Handled;
+      }
+
+      if( icmp.type === ICMPType.EchoReply ) {
+        if( this.queue.has(message.identification) ) {
+          this.queue.get(message.identification)?.next(message);
+          return ActionHandle.Handled;
+        }
       }
 
     }

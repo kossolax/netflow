@@ -1,9 +1,10 @@
-import { HardwareAddress, NetworkAddress } from "../address.model";
+import { Observable } from "rxjs";
+import { HardwareAddress, IPAddress, NetworkAddress } from "../address.model";
 import { DatalinkMessage, NetworkMessage } from "../message.model";
 import { GenericNode } from "../node.model";
 import { ArpProtocol } from "../protocols/arp.model";
 import { ICMPProtocol } from "../protocols/icmp.model";
-import { IPv4Protocol } from "../protocols/ipv4.model";
+import { IPv4Message, IPv4Protocol } from "../protocols/ipv4.model";
 import { ActionHandle, DatalinkListener, handleChain, NetworkListener, NetworkSender } from "../protocols/protocols.model";
 import { HardwareInterface, Interface } from "./datalink.model";
 
@@ -141,6 +142,10 @@ export class IPInterface extends NetworkInterface {
     super(node, "ethip", datalink);
     this.protocols1 = new IPv4Protocol(this);
     this.protocols2 = new ICMPProtocol(this);
+  }
+
+  public sendIcmpRequest(destination: IPAddress, timeout: number=20): Observable<IPv4Message|null> {
+    return this.protocols2.sendIcmpRequest(destination, timeout);
   }
 }
 
