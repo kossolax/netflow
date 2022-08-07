@@ -79,6 +79,11 @@ describe('ICMP protocol', () => {
 
     expect( () => {
       msg.setType(ICMPType.DestinationUnreachable);
+      msg.setCode(3);
+    }).not.toThrow();
+
+    expect( () => {
+      msg.setType(ICMPType.DestinationUnreachable);
       msg.setCode(16);
     }).toThrow();
 
