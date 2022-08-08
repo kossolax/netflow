@@ -39,14 +39,13 @@ export class DatalinkMessage extends PhysicalMessage {
   }
 
 }
-export class NetworkMessage extends DatalinkMessage {
+export class NetworkMessage extends Message {
   net_src: NetworkAddress;
   net_dst: NetworkAddress|null;
 
   constructor(payload: Payload|string,
-    mac_src: HardwareAddress, mac_dst: HardwareAddress|null,
     net_src: NetworkAddress, net_dst: NetworkAddress|null) {
-    super(payload, mac_src, mac_dst);
+    super(payload);
     this.net_src = net_src;
     this.net_dst = net_dst;
   }

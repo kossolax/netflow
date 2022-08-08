@@ -1,10 +1,9 @@
 import { HardwareAddress, MacAddress } from "../address.model";
 import { Link } from "./physical.model";
 import { GenericNode } from "../node.model";
-import { PhysicalMessage, DatalinkMessage } from "../message.model";
+import { PhysicalMessage, DatalinkMessage, NetworkMessage } from "../message.model";
 import { ActionHandle, DatalinkListener, DatalinkSender, GenericListener, handleChain, PhysicalListener } from "../protocols/protocols.model";
 import { AutoNegotiationProtocol } from "../protocols/autonegotiation.model";
-import { Action } from "rxjs/internal/scheduler/Action";
 
 export abstract class Interface {
   protected host: GenericNode;
@@ -111,8 +110,9 @@ export abstract class HardwareInterface extends Interface implements PhysicalLis
     if( action !== ActionHandle.Continue )
       return action;
 
-    if( message instanceof DatalinkMessage )
-      this.receiveTrame(message);
+
+    if( message.payload instanceof DatalinkMessage )
+      this.receiveTrame(message.payload as DatalinkMessage);
 
     return ActionHandle.Continue;
   }
@@ -124,7 +124,8 @@ export abstract class HardwareInterface extends Interface implements PhysicalLis
 
     return ActionHandle.Continue;
   }
-  sendTrame(message: DatalinkMessage): void {
+
+  sendTrame(message: DatalinkMessage) {
     if( !this.isActive() )
       throw new Error("Interface is down");
 
@@ -138,9 +139,10 @@ export abstract class HardwareInterface extends Interface implements PhysicalLis
       return;
     }
 
-    this.Link?.sendBits(message, this);
+    this.sendBits(new PhysicalMessage(message));
   }
-  sendBits(message: PhysicalMessage): void {
+
+  sendBits(message: PhysicalMessage) {
     this.Link?.sendBits(message, this);
   }
 }
@@ -157,7 +159,7 @@ export class EthernetInterface extends HardwareInterface {
     this.Speed = maxSpeed;
     this.fullDuplexCapable = fullDuplexCapable;
     if( autonegotiate )
-      this.discovery = new AutoNegotiationProtocol(this);
+      this.discovery = new AutoNegotiationProtocol(this, this.Link);
   }
 
   reconfigure(minSpeed: number, maxSpeed: number, fullDuplexCapable: boolean): void {
@@ -171,6 +173,7 @@ export class EthernetInterface extends HardwareInterface {
   override connectTo(link: Link): void {
     super.connectTo(link);
 
+    this.discovery?.setLink(link);
     this.discovery?.negociate(this.minSpeed, this.maxSpeed, this.fullDuplexCapable);
   }
   override up() {

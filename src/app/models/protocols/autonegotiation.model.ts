@@ -179,6 +179,7 @@ export class AutonegotiationMessage implements Payload {
 
 export class AutoNegotiationProtocol implements PhysicalListener {
   private iface: HardwareInterface;
+  private link: Link|null;
 
   private minSpeed: number = Number.MIN_SAFE_INTEGER;
   private maxSpeed: number = Number.MAX_SAFE_INTEGER;
@@ -187,9 +188,15 @@ export class AutoNegotiationProtocol implements PhysicalListener {
   private neighbourConfig: LinkCodeWords[] = [];
   private neighbourAcknoledge: LinkCodeWords[] = [];
 
-  constructor(iface: HardwareInterface) {
+  constructor(iface: HardwareInterface, link: Link|null) {
     this.iface = iface;
     this.iface.addListener(this);
+
+    this.link = link;
+  }
+
+  public setLink(link: Link): void {
+    this.link = link;
   }
 
   public negociate(minSpeed: number=Number.MIN_SAFE_INTEGER, maxSpeed: number=Number.MAX_SAFE_INTEGER, fullDuplex: boolean=true): void {
@@ -209,7 +216,7 @@ export class AutoNegotiationProtocol implements PhysicalListener {
     this.iface.FullDuplex = false;
     this.iface.Speed = minSpeed;
     builder.build().map( i => {
-      this.iface.sendBits(new PhysicalMessage(i));
+      this.link?.sendBits(new PhysicalMessage(i), this.iface);
     });
   }
   private acknowledge(speed: number, fullDuplex: boolean): void {
@@ -227,7 +234,7 @@ export class AutoNegotiationProtocol implements PhysicalListener {
     this.iface.FullDuplex = fullDuplex;
     this.iface.Speed = speed;
     builder.build().map( i => {
-      this.iface.sendBits(new PhysicalMessage(i));
+      this.link?.sendBits(new PhysicalMessage(i), this.iface);
     });
   }
 

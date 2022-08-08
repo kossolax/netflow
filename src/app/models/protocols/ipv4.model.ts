@@ -1,12 +1,11 @@
 import { SchedulerService } from "src/app/services/scheduler.service";
-import { HardwareAddress, IPAddress } from "../address.model";
+import { IPAddress } from "../address.model";
 import { Interface } from "../layers/datalink.model";
 import { NetworkInterface } from "../layers/network.model";
 import { NetworkMessage, Payload } from "../message.model";
 import { ActionHandle, NetworkListener } from "./protocols.model";
 
 export class IPv4Message extends NetworkMessage {
-
   public version: number = 4;
   public header_length: number = 5;
   public TOS: number = 0;
@@ -27,9 +26,8 @@ export class IPv4Message extends NetworkMessage {
 
 
   protected constructor(payload: Payload|string,
-    mac_src: HardwareAddress, mac_dst: HardwareAddress|null,
     net_src: IPAddress, net_dst: IPAddress|null) {
-    super(payload, mac_src, mac_dst, net_src, net_dst);
+    super(payload, net_src, net_dst);
   }
 
   override get length(): number {
@@ -37,11 +35,6 @@ export class IPv4Message extends NetworkMessage {
   }
 
   override toString(): string {
-    switch(this.protocol) {
-      case 1:
-        return this.payload.toString();
-    }
-
     return "IPv4";
   }
 
@@ -74,9 +67,7 @@ export class IPv4Message extends NetworkMessage {
   static Builder = class {
     public payload: Payload|string = "";
     public net_src: IPAddress|null = null;
-    public mac_src: HardwareAddress|null = null;
     public net_dst: IPAddress|null = null;
-    public mac_dst: HardwareAddress|null = null;
     public ttl: number = 30;
     public id: number;
     public protocol: number = 0;
@@ -91,16 +82,8 @@ export class IPv4Message extends NetworkMessage {
       this.net_src = addr;
       return this;
     }
-    public setMacSource(addr: HardwareAddress): this {
-      this.mac_src = addr;
-      return this;
-    }
     public setNetDestination(addr: IPAddress): this {
       this.net_dst = addr;
-      return this;
-    }
-    public setMacDestination(addr: HardwareAddress): this {
-      this.mac_dst = addr;
       return this;
     }
     public setPayload(payload: Payload|string): this {
@@ -138,8 +121,6 @@ export class IPv4Message extends NetworkMessage {
     }
 
     build(): IPv4Message[] {
-      if( this.mac_src === null )
-        throw new Error("MAC source address is not set");
       if( this.net_src === null )
         throw new Error("Source address is not set");
       if( this.net_dst === null )
@@ -156,7 +137,7 @@ export class IPv4Message extends NetworkMessage {
         if( fragment === 0 )
           payload = this.payload;
 
-        const message = new IPv4Message( payload, this.mac_src, this.mac_dst, this.net_src, this.net_dst);
+        const message = new IPv4Message( payload, this.net_src, this.net_dst );
 
         message.ttl = this.ttl;
         message.identification = this.id;
@@ -234,8 +215,6 @@ export class IPv4Protocol implements NetworkListener {
 
           const msg = new IPv4Message.Builder()
             .setPayload(first_packet.payload)
-            .setMacSource(message.mac_src as HardwareAddress)
-            .setMacDestination(message.mac_dst as HardwareAddress)
             .setNetSource(message.net_src as IPAddress)
             .setNetDestination(message.net_dst as IPAddress)
             .setTTL(message.ttl)

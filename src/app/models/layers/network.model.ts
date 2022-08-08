@@ -85,8 +85,11 @@ export abstract class NetworkInterface extends Interface implements DatalinkList
   receiveTrame(message: DatalinkMessage): ActionHandle {
     const mac_dst = message.mac_dst as HardwareAddress;
 
-    if( message instanceof NetworkMessage && mac_dst.equals(this.datalink.getMacAddress()) && mac_dst.isBroadcast == false ) {
-      this.receivePacket(message as NetworkMessage);
+    if( mac_dst.equals(this.datalink.getMacAddress()) && mac_dst.isBroadcast == false ) {
+
+      if( message.payload instanceof NetworkMessage)
+        this.receivePacket(message.payload as NetworkMessage);
+
       return ActionHandle.Handled;
     }
 
@@ -113,20 +116,13 @@ export abstract class NetworkInterface extends Interface implements DatalinkList
 
     const loopback = this.addresses.filter( i => i.addr.equals(message.net_dst) );
     if( loopback.length > 0 ) {
-      message.mac_dst = this.getMacAddress();
       this.receivePacket(message);
       return;
     }
 
-    if( message.mac_dst === null && message.net_dst !== null ) {
-      message.mac_dst = this.discovery.getMapping(message.net_dst) || null;
-
-      if( message.mac_dst === null ) {
-        this.discovery.enqueueRequest(message);
-        return;
-      }
-    }
-
+    this.discovery.enqueueRequest(message);
+  }
+  sendTrame(message: DatalinkMessage) {
     this.datalink.sendTrame(message);
   }
 

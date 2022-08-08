@@ -111,8 +111,9 @@ export class ArpProtocol implements DatalinkListener {
 
         if( this.queue.has(arp.request) ) {
           this.queue.get(arp.request)?.map( i => {
-            i.mac_dst = arp.response as HardwareAddress;
-            this.interface.sendPacket(i);
+
+            const message = new DatalinkMessage(i, this.interface.getMacAddress(), arp.response!);
+            this.interface.sendTrame(message);
           });
           this.queue.delete(arp.request);
         }

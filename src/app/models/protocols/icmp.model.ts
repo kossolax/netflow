@@ -1,9 +1,9 @@
-import { map, Observable, of, race, Subject, take, tap, timer } from "rxjs";
+import { map, Observable, race, Subject, tap } from "rxjs";
 import { SchedulerService } from "src/app/services/scheduler.service";
-import { Address, IPAddress } from "../address.model";
+import { IPAddress } from "../address.model";
 import { Interface } from "../layers/datalink.model";
 import { NetworkInterface } from "../layers/network.model";
-import { Message, NetworkMessage, Payload } from "../message.model";
+import { NetworkMessage, Payload } from "../message.model";
 import { IPv4Message } from "./ipv4.model";
 import { ActionHandle, NetworkListener } from "./protocols.model";
 
@@ -14,13 +14,14 @@ export enum ICMPType {
   TimeExceeded = 11,
 }
 
-export class ICMPMessage extends Message {
+export class ICMPMessage extends IPv4Message {
   public type: ICMPType = ICMPType.EchoRequest;
   public code: number = 0;
-  public header_checksum: number = 0;
 
-  protected constructor(payload: Payload|string, type: ICMPType, code: number) {
-    super(payload);
+  protected constructor(payload: Payload|string,
+    src: IPAddress, dst: IPAddress,
+    type: ICMPType, code: number) {
+    super(payload, src, dst);
     this.type = type;
     this.code = code;
   }
@@ -39,7 +40,7 @@ export class ICMPMessage extends Message {
     return "ICMP";
   }
 
-  public checksum(): number {
+  public override checksum(): number {
     let sum = 0;
 
     sum = Math.imul(31, sum) + (this.type + this.code);
@@ -48,7 +49,7 @@ export class ICMPMessage extends Message {
   }
 
 
-  static Builder = class extends (IPv4Message.Builder) {
+  static override Builder = class extends (IPv4Message.Builder) {
     public type: ICMPType = ICMPType.EchoReply;
     public code: number = 0;
 
@@ -85,19 +86,17 @@ export class ICMPMessage extends Message {
     }
 
     public override build(): IPv4Message[] {
-      let message = new ICMPMessage(this.payload, this.type, this.code);
+      if( this.net_src === null )
+        throw new Error("No source address specified");
+      if( this.net_dst === null )
+        throw new Error("No destination address specified");
+
+      let message = new ICMPMessage(this.payload, this.net_src, this.net_dst, this.type, this.code);
       message.header_checksum = message.checksum();
+      message.protocol = 1;
+      message.TOS = 0;
 
-      this.setPayload(message);
-      this.setProtocol(1);
-      this.setservice(0);
-
-      const IP = super.build();
-
-      if( IP.length !== 1 )
-        throw new Error("Invalid IP header length");
-
-      return IP;
+      return [message];
     }
 
 
@@ -120,7 +119,6 @@ export class ICMPProtocol implements NetworkListener {
     const request = new ICMPMessage.Builder()
       .setType(ICMPType.EchoRequest)
       .setCode(0)
-      .setMacSource(this.iface.getMacAddress())
       .setNetSource(this.iface.getNetAddress() as IPAddress)
       .setNetDestination(destination)
       .build()[0];
@@ -138,14 +136,12 @@ export class ICMPProtocol implements NetworkListener {
 
   receivePacket(message: NetworkMessage, from: Interface): ActionHandle {
 
-    if( message instanceof IPv4Message && message.IsReadyAtEndPoint(this.iface) ) {
-      const icmp = message.payload as ICMPMessage;
+    if( message instanceof ICMPMessage && message.IsReadyAtEndPoint(this.iface) ) {
 
-      if( icmp.type === ICMPType.EchoRequest ) {
+      if( message.type === ICMPType.EchoRequest ) {
         const reply = new ICMPMessage.Builder()
           .setType(ICMPType.EchoReply)
           .setCode(0)
-          .setMacSource((from as NetworkInterface).getMacAddress())
           .setNetSource(message.net_dst as IPAddress)
           .setNetDestination(message.net_src as IPAddress)
           .setIdentification(message.identification)
@@ -156,7 +152,7 @@ export class ICMPProtocol implements NetworkListener {
         return ActionHandle.Handled;
       }
 
-      if( icmp.type === ICMPType.EchoReply ) {
+      if( message.type === ICMPType.EchoReply ) {
         if( this.queue.has(message.identification) ) {
           this.queue.get(message.identification)?.next(message);
           return ActionHandle.Handled;

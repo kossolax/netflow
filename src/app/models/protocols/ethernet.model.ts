@@ -1,11 +1,9 @@
-import { HardwareAddress, IPAddress, MacAddress } from "../address.model";
+import { HardwareAddress, MacAddress } from "../address.model";
 import { HardwareInterface, Interface } from "../layers/datalink.model";
-import { DatalinkMessage, NetworkMessage, Payload } from "../message.model";
-import { ActionHandle, DatalinkListener, NetworkListener } from "./protocols.model";
+import { DatalinkMessage, Message, Payload } from "../message.model";
+import { ActionHandle, DatalinkListener } from "./protocols.model";
 
-export class EthernetMessage extends DatalinkMessage {
-
-  public vlan: number = 0;
+export class EthernetMessage extends DatalinkMessage  {
   public header_checksum: number = 0;
 
   protected constructor(payload: Payload|string,
@@ -23,9 +21,6 @@ export class EthernetMessage extends DatalinkMessage {
 
   public checksum(): number {
     let sum = 0;
-
-    sum = Math.imul(31, sum) + (this.vlan);
-
     return sum;
   }
   public IsReadyAtEndPoint(iface: HardwareInterface): boolean {
@@ -39,7 +34,6 @@ export class EthernetMessage extends DatalinkMessage {
     public payload: Payload|string = "";
     public mac_src: MacAddress|null = null;
     public mac_dst: MacAddress|null = null;
-    public vlan: number = 0;
 
     constructor() {
     }
@@ -50,10 +44,6 @@ export class EthernetMessage extends DatalinkMessage {
     }
     public setMacDestination(addr: MacAddress): this {
       this.mac_dst = addr;
-      return this;
-    }
-    public setVlan(vlan: number): this {
-      this.vlan = vlan;
       return this;
     }
     public setPayload(payload: Payload|string): this {
@@ -68,7 +58,36 @@ export class EthernetMessage extends DatalinkMessage {
         throw new Error("MAC destination address is not set");
 
       const message = new EthernetMessage(this.payload, this.mac_src, this.mac_dst);
-      message.vlan = this.vlan;
+      message.header_checksum = message.checksum();
+
+      return message;
+    }
+  }
+}
+export class Dot1QMessage extends EthernetMessage {
+  public vlan_id: number = 0;
+
+  protected constructor(payload: Payload|string,
+    mac_src: HardwareAddress, mac_dst: HardwareAddress|null) {
+    super(payload, mac_src, mac_dst);
+  }
+
+  static override Builder = class extends (EthernetMessage.Builder) {
+    public vlan_id: number = 0;
+
+    public setVlan(vlan_id: number): this {
+      this.vlan_id = vlan_id;
+      return this;
+    }
+
+    override build(): Dot1QMessage {
+      if( this.mac_src === null )
+        throw new Error("MAC source address is not set");
+      if( this.mac_dst === null )
+        throw new Error("MAC destination address is not set");
+
+      const message = new Dot1QMessage(this.payload, this.mac_src, this.mac_dst);
+      message.vlan_id = this.vlan_id;
       message.header_checksum = message.checksum();
 
       return message;

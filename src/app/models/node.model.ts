@@ -3,7 +3,7 @@ import { SchedulerService } from "../services/scheduler.service";
 import { Address, MacAddress, IPAddress, NetworkAddress, HardwareAddress } from "./address.model";
 import { EthernetInterface, HardwareInterface, Interface } from "./layers/datalink.model";
 import { IPInterface, NetworkInterface } from "./layers/network.model";
-import { DatalinkMessage, NetworkMessage } from "./message.model";
+import { DatalinkMessage, Message, NetworkMessage } from "./message.model";
 import { ActionHandle, DatalinkListener, NetworkListener } from "./protocols/protocols.model";
 
 export abstract class GenericNode {
@@ -242,12 +242,10 @@ export class RouterHost extends Node<NetworkInterface> implements NetworkListene
       if( net_dst === undefined )
         throw new Error("No destination specified");
 
-      const mac_src = this.getInterface(0).getMacAddress();
       const net_src = this.getInterface(0).getNetAddress();
 
       const msg = new NetworkMessage(
         message,
-        mac_src, null,
         net_src, net_dst
       );
 

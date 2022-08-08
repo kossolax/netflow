@@ -1,7 +1,7 @@
 import { Subject, zip } from "rxjs";
 import { HardwareInterface, Interface } from "../layers/datalink.model";
 import { NetworkInterface } from "../layers/network.model";
-import { Link } from "../layers/physical.model";
+import { AbstractLink, Link } from "../layers/physical.model";
 import { DatalinkMessage, NetworkMessage, PhysicalMessage, Message } from "../message.model";
 
 export enum ActionHandle {
@@ -35,7 +35,8 @@ export function handleChain(
           break;
         }
         case "sendTrame": {
-          (i as DatalinkSender).sendTrame(message as DatalinkMessage, sender);
+          if( i instanceof HardwareInterface )
+            (i as DatalinkSender).sendTrame(message as DatalinkMessage, sender);
           break;
         }
 
@@ -46,7 +47,8 @@ export function handleChain(
           break;
         }
         case "sendPacket": {
-          (i as NetworkSender).sendPacket(message as NetworkMessage, sender);
+          if( i instanceof NetworkInterface )
+            (i as NetworkSender).sendPacket(message as NetworkMessage, sender);
           break;
         }
 
@@ -55,14 +57,15 @@ export function handleChain(
           if( !receiver )
             throw new Error("receiver is required for receiveBits");
 
-          ret = (i as PhysicalListener).receiveBits(message as NetworkMessage, sender, receiver);
+            ret = (i as PhysicalListener).receiveBits(message as NetworkMessage, sender, receiver);
           if( ret > action ) action = ret;
           break;
         }
         case "sendBits": {
           if( !receiver )
             throw new Error("receiver is required for sendBits");
-          (i as PhysicalSender).sendBits(message as NetworkMessage, sender, receiver, delay);
+          if( i instanceof AbstractLink )
+            (i as PhysicalSender).sendBits(message as NetworkMessage, sender, receiver, delay);
           break;
         }
       }
