@@ -37,10 +37,10 @@ describe('AutoNegotiation Protocol test', () => {
       bufferCount(2),
       take(1),
     ).subscribe( msg => {
-      expect(msg[0][0].payload).toBeInstanceOf(AutonegotiationMessage);
-      expect(msg[0][1].payload).toBeInstanceOf(AutonegotiationMessage);
-      expect(msg[1][0].payload).toBeInstanceOf(AutonegotiationMessage);
-      expect(msg[1][1].payload).toBeInstanceOf(AutonegotiationMessage);
+      expect(msg[0][0]).toBeInstanceOf(AutonegotiationMessage);
+      expect(msg[0][1]).toBeInstanceOf(AutonegotiationMessage);
+      expect(msg[1][0]).toBeInstanceOf(AutonegotiationMessage);
+      expect(msg[1][1]).toBeInstanceOf(AutonegotiationMessage);
       done();
     });
   });
@@ -60,8 +60,8 @@ describe('AutoNegotiation Protocol test', () => {
       bufferCount(2),
       take(1),
     ).subscribe( msg => {
-      expect(msg[0].payload).toBeInstanceOf(AutonegotiationMessage);
-      expect(msg[1].payload).toBeInstanceOf(AutonegotiationMessage);
+      expect(msg[0]).toBeInstanceOf(AutonegotiationMessage);
+      expect(msg[1]).toBeInstanceOf(AutonegotiationMessage);
       done();
     });
   });
@@ -76,23 +76,23 @@ describe('AutoNegotiation Protocol test', () => {
       bufferCount(speed >= 1000 ? 2 : 1),
       bufferCount(2),
       map( msg => {
-        if( (msg[0][0].payload as AutonegotiationMessage).code.acknowledge )
+        if( (msg[0][0] as AutonegotiationMessage).payload.acknowledge )
           return msg[1];
         return msg[0];
       }),
       take(1),
       tap( msg => {
         for(let i=0; i<msg.length; i++) {
-          expect(msg[i].payload).toBeInstanceOf(AutonegotiationMessage);
-          expect((msg[i].payload as AutonegotiationMessage).code.acknowledge).toBeFalse();
+          expect(msg[i]).toBeInstanceOf(AutonegotiationMessage);
+          expect((msg[i] as AutonegotiationMessage).payload.acknowledge).toBeFalse();
 
           if( i !== msg.length-1 ) {
-            expect((msg[i].payload as AutonegotiationMessage).code.technologyField).toBe( 0 );
-            expect((msg[i].payload as AutonegotiationMessage).code.nextPage).toBe( true );
+            expect((msg[i] as AutonegotiationMessage).payload.technologyField).toBe( 0 );
+            expect((msg[i] as AutonegotiationMessage).payload.nextPage).toBe( true );
           }
           else {
-            expect((msg[i].payload as AutonegotiationMessage).code.technologyField).toBe( bits );
-            expect((msg[i].payload as AutonegotiationMessage).code.nextPage).toBe( false );
+            expect((msg[i] as AutonegotiationMessage).payload.technologyField).toBe( bits );
+            expect((msg[i] as AutonegotiationMessage).payload.nextPage).toBe( false );
           }
         }
       }),

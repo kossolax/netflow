@@ -65,14 +65,14 @@ export class IPv4Message extends NetworkMessage {
 
 
   static Builder = class {
-    public payload: Payload|string = "";
-    public net_src: IPAddress|null = null;
-    public net_dst: IPAddress|null = null;
-    public ttl: number = 30;
-    public id: number;
-    public protocol: number = 0;
-    public service: number = 0;
-    public max_size: number = 65535;
+    protected payload: Payload|string = "";
+    protected net_src: IPAddress|null = null;
+    protected net_dst: IPAddress|null = null;
+    protected ttl: number = 30;
+    protected id: number;
+    protected protocol: number = 0;
+    protected service: number = 0;
+    protected max_size: number = 65535;
 
     constructor() {
       this.id = Math.floor(Math.random() * 65535);
@@ -120,7 +120,7 @@ export class IPv4Message extends NetworkMessage {
       return this;
     }
 
-    build(): IPv4Message[] {
+    public build(): IPv4Message[] {
       if( this.net_src === null )
         throw new Error("Source address is not set");
       if( this.net_dst === null )

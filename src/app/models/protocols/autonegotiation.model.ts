@@ -29,7 +29,7 @@ export enum AdvancedTechnologyField {
   A1000BaseT_HalfDuplex =  (1 << 3),
 }
 
-interface BaseLinkCodeWord {
+interface BaseLinkCodeWord extends Payload {
   remoteFault: boolean,
   acknowledge: boolean,
   nextPage: boolean,
@@ -41,23 +41,21 @@ interface LinkCodeWord_Page0 extends BaseLinkCodeWord {
 interface LinkCodeWord_Page1 extends BaseLinkCodeWord {
   technologyField: AdvancedTechnologyField,
 }
-type LinkCodeWords = LinkCodeWord_Page0|LinkCodeWord_Page1;
+type LinkCodeWords = (LinkCodeWord_Page0|LinkCodeWord_Page1);
 
 // CL73-AN 802.3ab
 // CL73-AN 802.3cd
 // CL73-AN 802.3ck
 
-export class AutonegotiationMessage implements Payload {
-  code: LinkCodeWords;
+export class AutonegotiationMessage extends PhysicalMessage {
+  override payload: LinkCodeWords;
 
   private constructor(code: LinkCodeWords) {
-    this.code = code;
+    super(code);
+    this.payload = code;
   }
 
-  get length(): number {
-    return 2;
-  }
-  toString(): string {
+  override toString(): string {
     return "AutoNegotiation";
   }
 
@@ -77,6 +75,8 @@ export class AutonegotiationMessage implements Payload {
         remoteFault: false,
         acknowledge: false,
         nextPage: false,
+
+        length: 2,
       }
       this.gigaEthernet = {
         technologyField: 0,
@@ -84,6 +84,8 @@ export class AutonegotiationMessage implements Payload {
         remoteFault: false,
         acknowledge: false,
         nextPage: false,
+
+        length: 2,
       }
     }
 
@@ -216,7 +218,7 @@ export class AutoNegotiationProtocol implements PhysicalListener {
     this.iface.FullDuplex = false;
     this.iface.Speed = minSpeed;
     builder.build().map( i => {
-      this.link?.sendBits(new PhysicalMessage(i), this.iface);
+      this.link?.sendBits(i, this.iface);
     });
   }
   private acknowledge(speed: number, fullDuplex: boolean): void {
@@ -234,23 +236,22 @@ export class AutoNegotiationProtocol implements PhysicalListener {
     this.iface.FullDuplex = fullDuplex;
     this.iface.Speed = speed;
     builder.build().map( i => {
-      this.link?.sendBits(new PhysicalMessage(i), this.iface);
+      this.link?.sendBits(i, this.iface);
     });
   }
 
   receiveBits(message: PhysicalMessage, from: Interface, to: Interface): ActionHandle {
-    if( message.payload instanceof AutonegotiationMessage ) {
+    if( message instanceof AutonegotiationMessage ) {
 
-      if( message.payload.code.acknowledge )
-        this.neighbourAcknoledge.push(message.payload.code);
+      if( message.payload.acknowledge )
+        this.neighbourAcknoledge.push(message.payload);
       else
-        this.neighbourConfig.push(message.payload.code);
+        this.neighbourConfig.push(message.payload);
 
-      if( message.payload.code.nextPage === false ) {
+      if( message.payload.nextPage === false ) {
 
-        this.setSpeed( message.payload.code.acknowledge );
-
-        if( message.payload.code.acknowledge === false )
+        this.setSpeed( message.payload.acknowledge );
+        if( message.payload.acknowledge === false )
           this.acknowledge(this.iface.Speed, this.iface.FullDuplex);
       }
 

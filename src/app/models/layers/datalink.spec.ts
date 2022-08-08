@@ -88,7 +88,7 @@ describe('Datalink layer test', () => {
     A.getInterface(0).addListener(listener);
 
     listener.receiveBits$.subscribe( msg => {
-      if( !(msg.payload instanceof AutonegotiationMessage) )
+      if( !(msg instanceof AutonegotiationMessage) )
         throw new Error("Should not receive bit");
     });
 

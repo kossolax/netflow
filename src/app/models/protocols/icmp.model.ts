@@ -50,8 +50,8 @@ export class ICMPMessage extends IPv4Message {
 
 
   static override Builder = class extends (IPv4Message.Builder) {
-    public type: ICMPType = ICMPType.EchoReply;
-    public code: number = 0;
+    protected type: ICMPType = ICMPType.EchoReply;
+    protected code: number = 0;
 
     public setType(type: ICMPType): this {
       this.type = type;
