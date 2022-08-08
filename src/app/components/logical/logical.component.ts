@@ -77,13 +77,12 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
     ).subscribe( () => {
 
       const icmp = new ICMPMessage.Builder()
-        .setMacSource((nodes[0] as RouterHost).getInterface(0).getMacAddress())
         .setNetSource((nodes[0] as RouterHost).getInterface(0).getNetAddress() as IPAddress)
         .setNetDestination((nodes[2] as RouterHost).getInterface(0).getNetAddress() as IPAddress)
         .setType(ICMPType.EchoRequest)
         .build();
 
-      icmp.map( i => nodes[0].send(i) );
+      icmp.map( i => (nodes[0] as RouterHost).send(i) );
     });
     this.scheduler.once(0.5).subscribe( () => {
       nodes[3].send("B", (nodes[0].getInterface(0) as NetworkInterface).getNetAddress());
