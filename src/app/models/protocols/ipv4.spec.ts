@@ -1,7 +1,8 @@
-import { take, bufferCount, ignoreElements, skip } from "rxjs";
+import { bufferCount, take, tap } from "rxjs";
 import { SchedulerService, SchedulerState } from "src/app/services/scheduler.service";
 import { IPAddress } from "../address.model";
 import { Link } from "../layers/physical.model";
+import { DatalinkMessage } from "../message.model";
 import { RouterHost } from "../node.model";
 import { IPv4Message } from "./ipv4.model";
 import { SimpleListener } from "./protocols.model";
@@ -27,7 +28,7 @@ describe('IPv4 protocol', () => {
     B.addInterface().up();
 
     C = new RouterHost();
-    C.name = "B";
+    C.name = "C";
     C.addInterface().up();
 
     AB = new Link(A.getInterface(0), B.getInterface(0));
@@ -46,8 +47,6 @@ describe('IPv4 protocol', () => {
 
     let msg = new IPv4Message.Builder()
       .setPayload(message)
-      .setMacSource(A.getInterface(0).getMacAddress())
-      .setMacDestination(B.getInterface(0).getMacAddress())
       .setNetSource(A.getInterface(0).getNetAddress() as IPAddress)
       .setNetDestination(B.getInterface(0).getNetAddress() as IPAddress)
       .setMaximumSize(1500)
@@ -77,8 +76,6 @@ describe('IPv4 protocol', () => {
 
     let msg = new IPv4Message.Builder()
       .setPayload(message)
-      .setMacSource(A.getInterface(0).getMacAddress())
-      .setMacDestination(B.getInterface(0).getMacAddress())
       .setNetSource(A.getInterface(0).getNetAddress() as IPAddress)
       .setNetDestination(B.getInterface(0).getNetAddress() as IPAddress)
       .setMaximumSize( Math.ceil(message.length / 2) + 1)
@@ -106,12 +103,10 @@ describe('IPv4 protocol', () => {
 
     B.getInterface(0).addListener(listener);
 
-    const message = `Hello World! ${Math.random()}`;
+    const message = `Router->IPv4[fragmented]-->Router....>Router  (should not reconstruct) ${Math.random()}`;
 
     let msg = new IPv4Message.Builder()
       .setPayload(message)
-      .setMacSource(A.getInterface(0).getMacAddress())
-      .setMacDestination(B.getInterface(0).getMacAddress())
       .setNetSource(A.getInterface(0).getNetAddress() as IPAddress)
       .setNetDestination(C.getInterface(0).getNetAddress() as IPAddress)
       .setMaximumSize( Math.ceil(message.length / 2) + 1)
@@ -119,7 +114,10 @@ describe('IPv4 protocol', () => {
 
     expect(msg.length).toBe(2);
 
-    msg.map( i => A.send(i));
+    msg.map( i => {
+      const trame = new DatalinkMessage(i, A.getInterface(0).getMacAddress(), B.getInterface(0).getMacAddress());
+      A.getInterface(0).sendTrame(trame);
+    });
 
     listener.receivePacket$.pipe(
       take(2),
@@ -154,8 +152,6 @@ describe('IPv4 protocol', () => {
     expect( () => msg.setTTL(-1)).toThrow();
     msg.setTTL(30);
 
-    expect( () => msg.build() ).toThrow();
-    msg.setMacSource(A.getInterface(0).getMacAddress());
     expect( () => msg.build() ).toThrow();
     msg.setNetSource(A.getInterface(0).getNetAddress() as IPAddress);
     expect( () => msg.build() ).toThrow();

@@ -80,8 +80,6 @@ describe('Network layer test', () => {
       take(1),
       delay(500)
     ).subscribe( msg => {
-      expect(msg.mac_src).toEqual(A.getInterface(0).getMacAddress());
-      expect(msg.mac_dst).toEqual(A.getInterface(0).getMacAddress());
       expect(msg.net_src).toEqual(A.getInterface(0).getNetAddress());
       expect(msg.net_dst).toEqual(A.getInterface(0).getNetAddress());
       expect(msg.payload).toBe(message);
@@ -101,8 +99,6 @@ describe('Network layer test', () => {
     C.receivePacket$.pipe(
       take(1)
     ).subscribe( msg => {
-      expect(msg.mac_src).toEqual(A.getInterface(0).getMacAddress());
-      expect(msg.mac_dst).toEqual(C.getInterface(0).getMacAddress());
       expect(msg.net_src).toEqual(A.getInterface(0).getNetAddress());
       expect(msg.net_dst).toEqual(C.getInterface(0).getNetAddress());
 
@@ -120,8 +116,6 @@ describe('Network layer test', () => {
     C.receivePacket$.pipe(
       take(1)
     ).subscribe( msg => {
-      expect(msg.mac_src).toEqual(A.getInterface(0).getMacAddress());
-      expect(msg.mac_dst).toEqual(C.getInterface(0).getMacAddress());
       expect(msg.net_src).toEqual(A.getInterface(0).getNetAddress());
       expect(msg.net_dst).toEqual(C.getInterface(0).getNetAddress());
 

@@ -46,9 +46,19 @@ describe('ICMP protocol', () => {
 
     ipface.sendIcmpRequest(B.getInterface(0).getNetAddress() as IPAddress).subscribe( msg => {
       expect(msg).not.toBeNull();
-      expect(msg instanceof IPv4Message).toBeTruthy();
-      expect(msg?.payload instanceof ICMPMessage).toBeTruthy();
+      expect(msg instanceof ICMPMessage).toBeTruthy();
 
+      done();
+    });
+
+  });
+
+  it('Router->ICMP-->none ', (done) => {
+
+    const ipface = (A.getInterface(0) as IPInterface);
+
+    ipface.sendIcmpRequest(IPAddress.generateAddress()).subscribe( msg => {
+      expect(msg).toBeNull();
       done();
     });
 
@@ -57,7 +67,6 @@ describe('ICMP protocol', () => {
   it('ICMP builder', () => {
 
     let msg = new ICMPMessage.Builder()
-      .setMacSource(A.getInterface(0).getMacAddress())
       .setNetSource(A.getInterface(0).getNetAddress() as IPAddress)
       .setNetDestination(B.getInterface(0).getNetAddress() as IPAddress);
 
