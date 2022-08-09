@@ -16,7 +16,7 @@ export class EthernetMessage extends DatalinkMessage  {
   }
 
   override toString(): string {
-    return "ETH";
+    return `Ethernet\n${this.payload.toString()}`;
   }
 
   public checksum(): number {

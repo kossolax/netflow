@@ -64,8 +64,8 @@ export function handleChain(
         case "sendBits": {
           if( !receiver )
             throw new Error("receiver is required for sendBits");
-          if( i instanceof AbstractLink )
-            (i as PhysicalSender).sendBits(message as NetworkMessage, sender, receiver, delay);
+
+          (i as PhysicalSender).sendBits(message as NetworkMessage, sender, receiver, delay);
           break;
         }
       }
