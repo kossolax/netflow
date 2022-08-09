@@ -4,7 +4,7 @@ import { GenericNode } from "../node.model";
 import { PhysicalMessage, DatalinkMessage, NetworkMessage } from "../message.model";
 import { ActionHandle, DatalinkListener, DatalinkSender, GenericListener, handleChain, PhysicalListener } from "../protocols/protocols.model";
 import { AutoNegotiationProtocol } from "../protocols/autonegotiation.model";
-import { Dot1QMessage, EthernetMessage, EthernetProtocol, VlanMode } from "../protocols/ethernet.model";
+import { Dot1QMessage, Dot1QProtocol, EthernetMessage, EthernetProtocol, VlanMode } from "../protocols/ethernet.model";
 
 export abstract class Interface {
   protected host: GenericNode;
@@ -153,8 +153,6 @@ export class EthernetInterface extends HardwareInterface {
   protected fullDuplexCapable: boolean;
   protected discovery: AutoNegotiationProtocol|null = null;
   protected ethernet: EthernetProtocol;
-  protected vlan: number[];
-  protected VlanMode: VlanMode;
 
   constructor(node: GenericNode, addr: MacAddress, name: string="", minSpeed: number=10, maxSpeed: number=1000, fullDuplexCapable: boolean=true, autonegotiate: boolean=true) {
     super(node, addr, "eth" + name);
@@ -162,9 +160,6 @@ export class EthernetInterface extends HardwareInterface {
     this.maxSpeed = maxSpeed;
     this.Speed = maxSpeed;
     this.fullDuplexCapable = fullDuplexCapable;
-
-    this.vlan = [0];
-    this.VlanMode = VlanMode.Access;
 
     if( autonegotiate )
       this.discovery = new AutoNegotiationProtocol(this, this.Link);
@@ -225,6 +220,42 @@ export class EthernetInterface extends HardwareInterface {
   }
 
 
+  override sendTrame(message: DatalinkMessage): void {
+
+    if( message instanceof EthernetMessage ) {
+      super.sendTrame(message);
+    }
+    else {
+      const trame = new EthernetMessage.Builder()
+        .setMacSource(message.mac_src as MacAddress)
+        .setMacDestination(message.mac_dst as MacAddress)
+        .setPayload(message.payload)
+        .build();
+
+      super.sendTrame(trame);
+    }
+  }
+
+  override receiveTrame(message: DatalinkMessage): ActionHandle {
+    return super.receiveTrame(message);
+  }
+
+}
+
+export class Dot1QInterface extends EthernetInterface {
+  protected vlan: number[];
+  protected VlanMode: VlanMode;
+
+  protected dot1q: Dot1QProtocol;
+
+  constructor(node: GenericNode, addr: MacAddress, name: string="", minSpeed: number=10, maxSpeed: number=1000, fullDuplexCapable: boolean=true, autonegotiate: boolean=true) {
+    super(node, addr, name, minSpeed, maxSpeed, fullDuplexCapable, autonegotiate);
+
+    this.vlan = [0];
+    this.VlanMode = VlanMode.Access;
+    this.dot1q = new Dot1QProtocol(this);
+  }
+
   public addVlan(vlan_id: number) {
     if( this.VlanMode === VlanMode.Access ) {
       this.vlan = [vlan_id];
@@ -248,8 +279,12 @@ export class EthernetInterface extends HardwareInterface {
     return this.vlan;
   }
 
-
   override sendTrame(message: DatalinkMessage): void {
+
+    if( message instanceof Dot1QMessage ) {
+      if( this.vlan.indexOf(message.vlan_id) === -1 )
+        return;
+    }
 
     const trame = new Dot1QMessage.Builder()
       .setVlan(this.vlan[0])
@@ -259,11 +294,5 @@ export class EthernetInterface extends HardwareInterface {
       .build();
 
     super.sendTrame(trame);
-
   }
-
-  override receiveTrame(message: DatalinkMessage): ActionHandle {
-    return super.receiveTrame(message);
-  }
-
 }

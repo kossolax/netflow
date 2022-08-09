@@ -1,7 +1,7 @@
 import { Observable, Subject } from "rxjs";
 import { SchedulerService } from "../services/scheduler.service";
 import { Address, MacAddress, IPAddress, NetworkAddress, HardwareAddress } from "./address.model";
-import { EthernetInterface, HardwareInterface, Interface } from "./layers/datalink.model";
+import { Dot1QInterface, EthernetInterface, HardwareInterface, Interface } from "./layers/datalink.model";
 import { IPInterface, NetworkInterface } from "./layers/network.model";
 import { DatalinkMessage, Message, NetworkMessage } from "./message.model";
 import { ActionHandle, DatalinkListener, NetworkListener } from "./protocols/protocols.model";
@@ -91,7 +91,7 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
     if( name == "" )
       name = "GigabitEthernet0/" + Object.keys(this.interfaces).length;
 
-    const iface = new EthernetInterface(this, mac, name, 10, 1000, true);
+    const iface = new Dot1QInterface(this, mac, name, 10, 1000, true);
     iface.addListener(this);
     this.interfaces[name] = iface;
 

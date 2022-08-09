@@ -1,5 +1,5 @@
 import { HardwareAddress, MacAddress } from "../address.model";
-import { EthernetInterface, HardwareInterface, Interface } from "../layers/datalink.model";
+import { Dot1QInterface, EthernetInterface, HardwareInterface, Interface } from "../layers/datalink.model";
 import { DatalinkMessage, Message, Payload } from "../message.model";
 import { ActionHandle, DatalinkListener } from "./protocols.model";
 
@@ -99,7 +99,7 @@ export enum VlanMode {
   Trunk = 1,
 }
 export class EthernetProtocol implements DatalinkListener {
-  private iface: EthernetInterface;
+  protected iface: EthernetInterface;
 
   constructor(iface: EthernetInterface) {
     this.iface = iface;
@@ -109,10 +109,8 @@ export class EthernetProtocol implements DatalinkListener {
 
     if( message instanceof EthernetMessage ) {
 
-      if( message instanceof Dot1QMessage ) {
-        if( this.iface.Vlan.indexOf(message.vlan_id) === -1 )
-          return ActionHandle.Stop;
-      }
+      if( message instanceof Dot1QMessage )
+        return ActionHandle.Continue;
 
       if( message.IsReadyAtEndPoint(this.iface) ) {
         const msg = new DatalinkMessage(message.payload, message.mac_src, message.mac_dst);
@@ -126,4 +124,22 @@ export class EthernetProtocol implements DatalinkListener {
     return ActionHandle.Continue;
   }
 
+}
+
+export class Dot1QProtocol extends EthernetProtocol {
+  override receiveTrame(message: DatalinkMessage, from: Interface): ActionHandle {
+
+    if( message instanceof Dot1QMessage ) {
+      if( (this.iface as Dot1QInterface).Vlan.indexOf(message.vlan_id) === -1 )
+        return ActionHandle.Stop;
+
+      if( message.IsReadyAtEndPoint(this.iface) ) {
+        const msg = new DatalinkMessage(message.payload, message.mac_src, message.mac_dst);
+        this.iface.receiveTrame(msg);
+        return ActionHandle.Stop;
+      }
+    }
+
+    return ActionHandle.Continue;
+  }
 }

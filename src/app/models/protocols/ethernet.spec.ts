@@ -1,6 +1,6 @@
 import { catchError, take, timeout } from "rxjs";
 import { SchedulerService, SchedulerState } from "src/app/services/scheduler.service";
-import { EthernetInterface } from "../layers/datalink.model";
+import { Dot1QInterface, EthernetInterface } from "../layers/datalink.model";
 import { Link } from "../layers/physical.model";
 import { DatalinkMessage } from "../message.model";
 import { SwitchHost } from "../node.model";
@@ -60,9 +60,9 @@ describe('Ethernet protocol', () => {
     const message = `Hello World! ${Math.random()}`;
     const trame = new DatalinkMessage(message, A.getInterface(0).getMacAddress(), C.getInterface(0).getMacAddress());
 
-    (B.getInterface(0) as EthernetInterface).addVlan(1);
-    (B.getInterface(1) as EthernetInterface).addVlan(1);
-    (C.getInterface(0) as EthernetInterface).addVlan(1);
+    (B.getInterface(0) as Dot1QInterface).addVlan(1);
+    (B.getInterface(1) as Dot1QInterface).addVlan(1);
+    (C.getInterface(0) as Dot1QInterface).addVlan(1);
 
     A.send(trame);
     listener.receiveTrame$.pipe(
@@ -81,14 +81,16 @@ describe('Ethernet protocol', () => {
     const message = `Hello World! ${Math.random()}`;
     const trame = new DatalinkMessage(message, A.getInterface(0).getMacAddress(), C.getInterface(0).getMacAddress());
 
-    (B.getInterface(1) as EthernetInterface).addVlan(1);
-    (C.getInterface(0) as EthernetInterface).addVlan(1);
+    (B.getInterface(1) as Dot1QInterface).addVlan(1);
+    (C.getInterface(0) as Dot1QInterface).addVlan(1);
 
     A.send(trame);
     listener.receiveTrame$.pipe(
       take(1),
+      timeout(1000),
+      catchError( async () => { })
     ).subscribe(packet => {
-      expect(packet.payload).toBe(message);
+      expect(packet).toBeUndefined();
       done();
     });
   });
