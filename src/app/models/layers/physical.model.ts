@@ -128,5 +128,10 @@ export abstract class AbstractLink implements PhysicalListener, PhysicalSender {
     return this.listener;
   }
 }
+
 export class Link extends AbstractLink {
+
+  public override sendBits(message: PhysicalMessage, source: HardwareInterface): void {
+    super.sendBits(message, source);
+  }
 }

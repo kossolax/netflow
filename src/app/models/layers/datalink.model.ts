@@ -4,6 +4,7 @@ import { GenericNode } from "../node.model";
 import { PhysicalMessage, DatalinkMessage, NetworkMessage } from "../message.model";
 import { ActionHandle, DatalinkListener, DatalinkSender, GenericListener, handleChain, PhysicalListener } from "../protocols/protocols.model";
 import { AutoNegotiationProtocol } from "../protocols/autonegotiation.model";
+import { EthernetMessage } from "../protocols/ethernet.model";
 
 export abstract class Interface {
   protected host: GenericNode;
@@ -214,4 +215,17 @@ export class EthernetInterface extends HardwareInterface {
 
     super.Speed = speed;
   }
+
+
+  override sendTrame(message: DatalinkMessage): void {
+
+    const trame = new EthernetMessage.Builder()
+      .setMacSource(message.mac_src as MacAddress)
+      .setMacDestination(message.mac_dst as MacAddress)
+      .setPayload(message.payload)
+      .build();
+
+    super.sendTrame(trame);
+  }
+
 }

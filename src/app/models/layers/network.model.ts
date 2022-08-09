@@ -11,8 +11,8 @@ import { HardwareInterface, Interface } from "./datalink.model";
 
 export abstract class NetworkInterface extends Interface implements DatalinkListener, NetworkListener, NetworkSender {
   private addresses: {addr: NetworkAddress, mask: NetworkAddress}[] = [];
-  private datalink: HardwareInterface;
-  private discovery: ArpProtocol;
+  protected datalink: HardwareInterface;
+  protected discovery: ArpProtocol;
 
   constructor(node: GenericNode, name: string, datalink: HardwareInterface) {
     super(node, name);
@@ -142,6 +142,21 @@ export class IPInterface extends NetworkInterface {
 
   public sendIcmpRequest(destination: IPAddress, timeout: number=20): Observable<IPv4Message|null> {
     return this.protocols2.sendIcmpRequest(destination, timeout);
+  }
+
+  public override sendPacket(message: NetworkMessage): void {
+    if( message instanceof IPv4Message ) {
+      super.sendPacket(message);
+    }
+    else {
+      const ipv4 = new IPv4Message.Builder()
+        .setNetSource(message.net_src as IPAddress)
+        .setNetDestination(message.net_dst as IPAddress)
+        .setPayload(message.payload)
+        .build();
+
+      ipv4.map( i => super.sendPacket(i));
+    }
   }
 }
 
