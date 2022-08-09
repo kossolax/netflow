@@ -4,7 +4,7 @@ import { GenericNode } from "../node.model";
 import { PhysicalMessage, DatalinkMessage, NetworkMessage } from "../message.model";
 import { ActionHandle, DatalinkListener, DatalinkSender, GenericListener, handleChain, PhysicalListener } from "../protocols/protocols.model";
 import { AutoNegotiationProtocol } from "../protocols/autonegotiation.model";
-import { EthernetMessage } from "../protocols/ethernet.model";
+import { Dot1QMessage, EthernetMessage, EthernetProtocol, VlanMode } from "../protocols/ethernet.model";
 
 export abstract class Interface {
   protected host: GenericNode;
@@ -152,6 +152,9 @@ export class EthernetInterface extends HardwareInterface {
   protected maxSpeed: number;
   protected fullDuplexCapable: boolean;
   protected discovery: AutoNegotiationProtocol|null = null;
+  protected ethernet: EthernetProtocol;
+  protected vlan: number[];
+  protected VlanMode: VlanMode;
 
   constructor(node: GenericNode, addr: MacAddress, name: string="", minSpeed: number=10, maxSpeed: number=1000, fullDuplexCapable: boolean=true, autonegotiate: boolean=true) {
     super(node, addr, "eth" + name);
@@ -159,8 +162,13 @@ export class EthernetInterface extends HardwareInterface {
     this.maxSpeed = maxSpeed;
     this.Speed = maxSpeed;
     this.fullDuplexCapable = fullDuplexCapable;
+
+    this.vlan = [0];
+    this.VlanMode = VlanMode.Access;
+
     if( autonegotiate )
       this.discovery = new AutoNegotiationProtocol(this, this.Link);
+    this.ethernet = new EthernetProtocol(this);
   }
 
   reconfigure(minSpeed: number, maxSpeed: number, fullDuplexCapable: boolean): void {
@@ -217,15 +225,45 @@ export class EthernetInterface extends HardwareInterface {
   }
 
 
+  public addVlan(vlan_id: number) {
+    if( this.VlanMode === VlanMode.Access ) {
+      this.vlan = [vlan_id];
+    }
+    else {
+      if( this.vlan.indexOf(vlan_id) === -1 )
+        this.vlan.push(vlan_id);
+    }
+  }
+  public removeVlan(vlan_id: number) {
+    if( this.VlanMode === VlanMode.Access ) {
+      this.vlan = [0];
+    }
+    else {
+      const index = this.vlan.indexOf(vlan_id);
+      if( index !== -1 )
+        this.vlan.splice(index, 1);
+    }
+  }
+  public get Vlan(): number[] {
+    return this.vlan;
+  }
+
+
   override sendTrame(message: DatalinkMessage): void {
 
-    const trame = new EthernetMessage.Builder()
+    const trame = new Dot1QMessage.Builder()
+      .setVlan(this.vlan[0])
       .setMacSource(message.mac_src as MacAddress)
       .setMacDestination(message.mac_dst as MacAddress)
       .setPayload(message.payload)
       .build();
 
     super.sendTrame(trame);
+
+  }
+
+  override receiveTrame(message: DatalinkMessage): ActionHandle {
+    return super.receiveTrame(message);
   }
 
 }
