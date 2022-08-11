@@ -244,7 +244,7 @@ export class EthernetInterface extends HardwareInterface {
 
 export class Dot1QInterface extends EthernetInterface {
   protected vlan: number[];
-  protected VlanMode: VlanMode;
+  protected vlanMode: VlanMode;
 
   protected dot1q: Dot1QProtocol;
 
@@ -252,7 +252,7 @@ export class Dot1QInterface extends EthernetInterface {
     super(node, addr, name, minSpeed, maxSpeed, fullDuplexCapable, autonegotiate);
 
     this.vlan = [0];
-    this.VlanMode = VlanMode.Access;
+    this.vlanMode = VlanMode.Access;
     this.dot1q = new Dot1QProtocol(this);
   }
 
@@ -275,24 +275,59 @@ export class Dot1QInterface extends EthernetInterface {
         this.vlan.splice(index, 1);
     }
   }
+
   public get Vlan(): number[] {
     return this.vlan;
   }
+  public get VlanMode(): VlanMode {
+    return this.vlanMode;
+  }
+  public set VlanMode(vlanMode: VlanMode) {
+    if( vlanMode === VlanMode.Access ) {
+      if( this.vlan.length > 1 )
+        this.vlan = [this.vlan[0]];
+    }
+    this.vlanMode = vlanMode;
+  }
 
   override sendTrame(message: DatalinkMessage): void {
+    if( message instanceof Dot1QMessage && this.vlan.indexOf(message.vlan_id) === -1 )
+      throw new Error("Vlan mismatch");
 
-    if( message instanceof Dot1QMessage ) {
-      if( this.vlan.indexOf(message.vlan_id) === -1 )
-        return;
+
+    if( this.vlanMode === VlanMode.Trunk ) {
+      let trame: Dot1QMessage;
+
+      if( message instanceof Dot1QMessage ) {
+        trame = message;
+      }
+      else {
+        trame = new Dot1QMessage.Builder()
+          .setVlan(this.vlan[0])
+          .setMacSource(message.mac_src as MacAddress)
+          .setMacDestination(message.mac_dst as MacAddress)
+          .setPayload(message.payload)
+          .build();
+      }
+
+      super.sendTrame(trame);
+    }
+    else {
+      let trame: DatalinkMessage;
+
+      if( message instanceof Dot1QMessage ) {
+        trame = new EthernetMessage.Builder()
+          .setMacSource(message.mac_src as MacAddress)
+          .setMacDestination(message.mac_dst as MacAddress)
+          .setPayload(message.payload)
+          .build();
+      }
+      else {
+        trame = message;
+      }
+
+      super.sendTrame(trame);
     }
 
-    const trame = new Dot1QMessage.Builder()
-      .setVlan(this.vlan[0])
-      .setMacSource(message.mac_src as MacAddress)
-      .setMacDestination(message.mac_dst as MacAddress)
-      .setPayload(message.payload)
-      .build();
-
-    super.sendTrame(trame);
   }
 }

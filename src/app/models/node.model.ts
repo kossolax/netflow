@@ -4,6 +4,7 @@ import { Address, MacAddress, IPAddress, NetworkAddress, HardwareAddress } from 
 import { Dot1QInterface, EthernetInterface, HardwareInterface, Interface } from "./layers/datalink.model";
 import { IPInterface, NetworkInterface } from "./layers/network.model";
 import { DatalinkMessage, Message, NetworkMessage } from "./message.model";
+import { Dot1QMessage } from "./protocols/ethernet.model";
 import { ActionHandle, DatalinkListener, NetworkListener } from "./protocols/protocols.model";
 
 export abstract class GenericNode {
@@ -147,16 +148,25 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
       this.ARPTable.get(src)?.push({iface: from, lastSeen: SchedulerService.Instance.getDeltaTime()});
     }
 
+    let vlan_id = 0;
+    if( message instanceof Dot1QMessage )
+      vlan_id = message.vlan_id;
+    else
+      vlan_id = (from as Dot1QInterface).Vlan[0];
+
     if( dst.isBroadcast || this.ARPTable.get(dst) === undefined ) {
       for( const name in this.interfaces ) {
-        if( this.interfaces[name] !== from )
-          this.interfaces[name].sendTrame(message);
+        if( this.interfaces[name] !== from ) {
+          if( (this.interfaces[name] as Dot1QInterface).Vlan.indexOf(vlan_id) !== -1 )
+            this.interfaces[name].sendTrame(message);
+        }
       }
     }
     else {
       this.ARPTable.get(dst)?.map( i => {
         if( i.iface !== from )
-          i.iface.sendTrame(message);
+          if( (i.iface as Dot1QInterface).Vlan.indexOf(vlan_id) !== -1 )
+            i.iface.sendTrame(message);
       });
 
     }
