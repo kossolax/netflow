@@ -3,6 +3,7 @@ import { HardwareAddress, MacAddress, NetworkAddress } from "../address.model";
 import { HardwareInterface } from "../layers/datalink.model";
 import { NetworkInterface } from "../layers/network.model";
 import { DatalinkMessage, NetworkMessage, Payload } from "../message.model";
+import { GenericNode, RouterHost } from "../node.model";
 import { ActionHandle, DatalinkListener } from "./protocols.model";
 
 export class ArpMessage implements Payload {
@@ -72,15 +73,15 @@ export class ArpProtocol implements DatalinkListener {
     return this.table.get(addr)?.address;
   }
 
-  enqueueRequest(message: NetworkMessage): void {
-    const addr = message.net_dst as NetworkAddress;
+  enqueueRequest(message: NetworkMessage, nextHop: NetworkAddress): void {
+    //const addr = message.net_dst as NetworkAddress;
 
-    if( this.queue.has(addr) ) {
-      this.queue.get(addr)?.push(message);
+    if( this.queue.has(nextHop) ) {
+      this.queue.get(nextHop)?.push(message);
     }
     else {
-      this.queue.set(addr, [message]);
-      this.sendArpRequest(addr);
+      this.queue.set(nextHop, [message]);
+      this.sendArpRequest(nextHop);
     }
   }
   sendArpRequest(addr: NetworkAddress): void {

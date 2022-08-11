@@ -129,7 +129,6 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
 
   }
 
-  // TODO: Make this private.
   receiveTrame(message: DatalinkMessage, from: HardwareInterface): ActionHandle {
     const src = message.mac_src as HardwareAddress;
     const dst = message.mac_dst as HardwareAddress;
@@ -168,14 +167,13 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
           if( (i.iface as Dot1QInterface).Vlan.indexOf(vlan_id) !== -1 )
             i.iface.sendTrame(message);
       });
-
     }
 
     this.receiveTrame$.next(message);
     return ActionHandle.Continue;
   }
 
-  cleanARPTable(): void {
+  private cleanARPTable(): void {
     const cleanDelay = SchedulerService.Instance.getDelay(60 * 5);
 
     for( const key of this.ARPTable.keys() ) {
@@ -205,8 +203,10 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
 export class RouterHost extends Node<NetworkInterface> implements NetworkListener {
   public override name = "Router";
   public override type = "router";
+  private routingTable: {network: NetworkAddress, mask: NetworkAddress, gateway: NetworkAddress}[] = [];
 
   public receivePacket$: Subject<NetworkMessage> = new Subject<NetworkMessage>();
+
 
   constructor(name: string="", iface: number=0) {
     super();
@@ -265,9 +265,80 @@ export class RouterHost extends Node<NetworkInterface> implements NetworkListene
     }
   }
 
-  receivePacket(message: NetworkMessage, from: Interface): ActionHandle {
+  receivePacket(message: NetworkMessage, from: NetworkInterface): ActionHandle {
+
+    const dst = message.net_dst as NetworkAddress;
+
+    if( from.hasNetAddress(dst) === false ) {
+
+      const route = this.getNextHop(dst);
+
+      if( route != null ) {
+        for( const name in this.interfaces ) {
+
+          const iface_ip = this.interfaces[name].getNetAddress();
+          const iface_mask = this.interfaces[name].getNetMask();
+
+          if( iface_ip.InSameNetwork(iface_mask, route) ) {
+            this.interfaces[name].sendPacket(message);
+          }
+
+        }
+      }
+
+    }
+
+
     this.receivePacket$.next(message);
     return ActionHandle.Continue;
+  }
+
+  addRoute(network: NetworkAddress|string, mask: NetworkAddress|string, gateway: NetworkAddress|string): void {
+    if( typeof network === "string" )
+      network = new IPAddress(network);
+    if( typeof mask === "string" )
+      mask = new IPAddress(mask, true);
+    if( typeof gateway === "string" )
+      gateway = new IPAddress(gateway);
+
+    for( let route of this.routingTable ) {
+      if( route.network.equals(network) && route.mask.equals(mask) && route.gateway.equals(gateway) )
+        throw new Error("Route already exists");
+    }
+    this.routingTable.push({network: network, mask: mask, gateway: gateway});
+  }
+  deleteRoute(network: NetworkAddress, mask: NetworkAddress, gateway: NetworkAddress): void {
+    for( let i = 0; i < this.routingTable.length; i++ ) {
+      if( this.routingTable[i].network.equals(network) && this.routingTable[i].mask.equals(mask) && this.routingTable[i].gateway.equals(gateway) ) {
+        this.routingTable.splice(i, 1);
+        return;
+      }
+    }
+    throw new Error("Route not found");
+  }
+  getNextHop(address: NetworkAddress|null): NetworkAddress|null {
+    if( address === null )
+      throw new Error("No address specified");
+
+    let bestRoute = null;
+    let bestCidr = 0;
+
+    for( let route of this.routingTable ) {
+      if( route.network.InSameNetwork(route.mask, address) ) {
+
+        if( bestRoute === null ) {
+          bestRoute = route.gateway;
+          bestCidr = route.mask.CIDR;
+        }
+
+        if( route.mask.CIDR > bestCidr ) {
+          bestRoute = route.gateway;
+          bestCidr = route.mask.CIDR;
+        }
+      }
+    }
+
+    return bestRoute;
   }
 }
 export class ServerHost extends RouterHost {

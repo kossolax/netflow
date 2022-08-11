@@ -45,9 +45,20 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
     nodes.push(new RouterHost("Router-1A", 2));
     nodes.push(new SwitchHost("Switch-1", 24));
     nodes.push(new RouterHost("Router-1B", 2));
-    nodes.push(new RouterHost("Router-2", 2));
+    nodes.push(new RouterHost("Router-2", 1));
 
-    (nodes[2] as RouterHost).getInterface(0).setNetAddress(new IPAddress("1.2.3.4"));
+    (nodes[0] as RouterHost).getInterface(0).setNetAddress(new IPAddress("192.168.0.1"));
+    (nodes[0] as RouterHost).addRoute("192.168.0.0", "255.255.255.0", "192.168.0.1");
+    (nodes[0] as RouterHost).addRoute("0.0.0.0", "0.0.0.0", "192.168.0.2");
+
+    (nodes[2] as RouterHost).getInterface(0).setNetAddress(new IPAddress("192.168.0.2"));
+    (nodes[2] as RouterHost).getInterface(1).setNetAddress(new IPAddress("192.168.1.2"));
+    (nodes[2] as RouterHost).addRoute("192.168.0.0", "255.255.255.0", "192.168.0.2");
+    (nodes[2] as RouterHost).addRoute("192.168.1.0", "255.255.255.0", "192.168.1.2");
+
+    (nodes[3] as RouterHost).getInterface(0).setNetAddress(new IPAddress("192.168.1.1"));
+    (nodes[3] as RouterHost).addRoute("192.168.1.0", "255.255.255.0", "192.168.1.1");
+    (nodes[3] as RouterHost).addRoute("0.0.0.0", "0.0.0.0", "192.168.1.2");
 
     let index = 0;
     nodes.map( i => {
@@ -67,12 +78,12 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
     let links = [];
     links.push(new Link(nodes[0].getFirstAvailableInterface(), nodes[1].getFirstAvailableInterface(), 10));
     links.push(new Link(nodes[1].getFirstAvailableInterface(), nodes[2].getFirstAvailableInterface(), 10));
-    links.push(new Link(nodes[1].getFirstAvailableInterface(), nodes[3].getFirstAvailableInterface(), 10));
+    links.push(new Link(nodes[2].getFirstAvailableInterface(), nodes[3].getFirstAvailableInterface(), 10));
     links.map( i => {
       net.links.push(i);
     });
 
-    this.scheduler.repeat(1).pipe(
+    this.scheduler.once(10).pipe(
       takeUntil(this.onDestroy$)
     ).subscribe( () => {
 
@@ -84,7 +95,7 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
 
       icmp.map( i => (nodes[0] as RouterHost).send(i) );
     });
-    this.scheduler.once(0.5).subscribe( () => {
+    this.scheduler.repeat(1).subscribe( () => {
       nodes[3].send("B", (nodes[0].getInterface(0) as NetworkInterface).getNetAddress());
     });
 

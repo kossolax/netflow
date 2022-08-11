@@ -1,7 +1,7 @@
 import { Observable } from "rxjs";
 import { HardwareAddress, IPAddress, NetworkAddress } from "../address.model";
 import { DatalinkMessage, NetworkMessage } from "../message.model";
-import { GenericNode } from "../node.model";
+import { GenericNode, RouterHost } from "../node.model";
 import { ArpProtocol } from "../protocols/arp.model";
 import { ICMPProtocol } from "../protocols/icmp.model";
 import { IPv4Message, IPv4Protocol } from "../protocols/ipv4.model";
@@ -120,7 +120,14 @@ export abstract class NetworkInterface extends Interface implements DatalinkList
       return;
     }
 
-    this.discovery.enqueueRequest(message);
+    let nextHop = (this.Host as RouterHost).getNextHop(message.net_dst);
+    if( nextHop === null || this.hasNetAddress(nextHop) )
+      nextHop = message.net_dst;
+
+    if( nextHop === null )
+      throw new Error("No next hop found");
+
+    this.discovery.enqueueRequest(message, nextHop);
   }
   sendTrame(message: DatalinkMessage) {
     this.datalink.sendTrame(message);

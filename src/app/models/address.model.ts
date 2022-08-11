@@ -78,6 +78,7 @@ export abstract class NetworkAddress extends Address {
   }
   abstract generateMask(): IPAddress;
   abstract InSameNetwork(mask: NetworkAddress, dest: NetworkAddress): boolean;
+  abstract get CIDR(): number;
 }
 export class IPAddress extends NetworkAddress {
   constructor(address: string, isMask: boolean = false) {
@@ -155,6 +156,16 @@ export class IPAddress extends NetworkAddress {
     const dst_and = dst.split('').map((value, index) => value === '1' && net[index] === '1' ? '1' : '0').join('');
 
     return src_and === dst_and;
+  }
+  get CIDR(): number {
+    const binary = this.address.split('.').map(value => parseInt(value, 10).toString(2).padStart(8, '0')).join('');
+
+    let count = 0;
+    for( let i = 0; i < binary.length; i++ ) {
+      if( binary[i] === '1' )
+        count++;
+    }
+    return count;
   }
 
   static generateBroadcast(): IPAddress {
