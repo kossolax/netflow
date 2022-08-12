@@ -144,6 +144,8 @@ export abstract class HardwareInterface extends Interface implements PhysicalLis
   }
 
   public sendBits(message: PhysicalMessage): void {
+    if( !this.isActive() )
+      throw new Error("Interface is down");
     this.Link?.sendBits(message, this);
   }
 }
@@ -162,7 +164,7 @@ export class EthernetInterface extends HardwareInterface {
     this.fullDuplexCapable = fullDuplexCapable;
 
     if( autonegotiate )
-      this.discovery = new AutoNegotiationProtocol(this, this.Link);
+      this.discovery = new AutoNegotiationProtocol(this);
     this.ethernet = new EthernetProtocol(this);
   }
 
@@ -177,8 +179,8 @@ export class EthernetInterface extends HardwareInterface {
   public override connectTo(link: Link): void {
     super.connectTo(link);
 
-    this.discovery?.setLink(link);
-    this.discovery?.negociate(this.minSpeed, this.maxSpeed, this.fullDuplexCapable);
+    if( this.isActive() )
+      this.discovery?.negociate(this.minSpeed, this.maxSpeed, this.fullDuplexCapable);
   }
   public override up(): void {
     super.up();
