@@ -66,6 +66,10 @@
             "generics": "only-multiline",
             "tuples": "only-multiline"
           }
+        ],
+        "@typescript-eslint/consistent-generic-constructors": [
+          "error",
+          "type-annotation"
         ]
       }
     },

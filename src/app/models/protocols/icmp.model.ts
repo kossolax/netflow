@@ -123,7 +123,7 @@ export class ICMPProtocol implements NetworkListener {
       .setNetDestination(destination)
       .build()[0];
 
-    const subject = new Subject<IPv4Message>();
+    const subject: Subject<IPv4Message> = new Subject();
 
     this.queue.set(request.identification, subject);
     this.iface.sendPacket(request);
