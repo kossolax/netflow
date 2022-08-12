@@ -2,7 +2,7 @@ import { Link } from "./layers/physical.model";
 import { GenericNode, ServerHost, RouterHost, SwitchHost } from "./node.model";
 
 export class Network {
-  public nodes: {[key: string]: GenericNode} = {};
+  public nodes: Record<string, GenericNode> = {};
   public links: Link[] = [];
 
   private parsePort(node: GenericNode, json: any, depth: number[] = []): void {

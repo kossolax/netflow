@@ -46,12 +46,7 @@
           }
         ],
         "@typescript-eslint/adjacent-overload-signatures": "error",
-        "@typescript-eslint/array-type": [
-          "error",
-          {
-            "default": "array"
-          }
-        ],
+        "@typescript-eslint/array-type": ["error"],
         "comma-dangle": "off",
         "@typescript-eslint/comma-dangle": [
           "error",
@@ -70,7 +65,9 @@
         "@typescript-eslint/consistent-generic-constructors": [
           "error",
           "type-annotation"
-        ]
+        ],
+        "@typescript-eslint/consistent-indexed-object-style": ["error"],
+        "@typescript-eslint/consistent-type-definitions": ["error", "interface"]
       }
     },
     {

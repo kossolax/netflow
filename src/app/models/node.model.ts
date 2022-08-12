@@ -28,7 +28,7 @@ export abstract class GenericNode {
 
 }
 export abstract class Node<T extends Interface> extends GenericNode {
-  protected interfaces: { [key: string]: T } = {};
+  protected interfaces: Record<string, T> = {};
 
   public abstract addInterface(name: string): T;
   public getInterface(index: string|number): T {

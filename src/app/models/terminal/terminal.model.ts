@@ -22,7 +22,7 @@ abstract class TerminalCommand {
     return this.complete$;
   }
 
-  private subCommands: { [key: string]: TerminalCommand } = {};
+  private subCommands: Record<string, TerminalCommand> = {};
 
   constructor(terminal: Terminal, name: string, prompt: string = "") {
     this.terminal = terminal;
