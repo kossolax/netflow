@@ -42,14 +42,14 @@ export abstract class NetworkInterface extends Interface implements DatalinkList
   public getNetMask(index: number=0): NetworkAddress {
     return this.addresses[index].mask;
   }
-  public setNetAddress(addr: NetworkAddress, index: number=0) {
+  public setNetAddress(addr: NetworkAddress, index: number=0): void {
     if( addr.IsMask )
       throw new Error("Invalid netmask");
 
     this.addresses[index].addr = addr;
     this.addresses[index].mask = addr.generateMask();
   }
-  public setNetMask(addr: NetworkAddress, index: number=0) {
+  public setNetMask(addr: NetworkAddress, index: number=0): void {
     if( !addr.IsMask )
       throw new Error("Invalid netmask");
     this.addresses[index].mask = addr;
@@ -58,7 +58,7 @@ export abstract class NetworkInterface extends Interface implements DatalinkList
   public getMacAddress(): HardwareAddress {
     return this.datalink.getMacAddress();
   }
-  public setMacAddress(addr: HardwareAddress) {
+  public setMacAddress(addr: HardwareAddress): void {
     return this.datalink.setMacAddress(addr);
   }
   public getInterface(index: number): HardwareInterface {
@@ -105,7 +105,7 @@ export abstract class NetworkInterface extends Interface implements DatalinkList
     return ActionHandle.Continue;
   }
 
-  public sendPacket(message: NetworkMessage) {
+  public sendPacket(message: NetworkMessage): void {
     if( !this.isActive() )
       throw new Error("Interface is down");
 
@@ -129,7 +129,7 @@ export abstract class NetworkInterface extends Interface implements DatalinkList
 
     this.discovery.enqueueRequest(message, nextHop);
   }
-  public sendTrame(message: DatalinkMessage) {
+  public sendTrame(message: DatalinkMessage): void {
     this.datalink.sendTrame(message);
   }
 

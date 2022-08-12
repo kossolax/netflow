@@ -18,7 +18,7 @@ export class DialogCliComponent implements AfterViewInit {
 
   constructor() { }
 
-  public ngAfterViewInit() {
+  public ngAfterViewInit(): void {
     this.terminal = new Terminal(this.node as SwitchHost|RouterHost);
 
     this.terminal.Text$.subscribe( text => {

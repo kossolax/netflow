@@ -261,7 +261,7 @@ export class AutoNegotiationProtocol implements PhysicalListener {
     return ActionHandle.Continue;
   }
 
-  private setSpeed(ack: boolean) {
+  private setSpeed(ack: boolean): void {
     let speed = 0;
     let duplex = false;
     let testSpeed = 0;

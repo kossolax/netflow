@@ -1,7 +1,8 @@
-import { take, bufferCount, switchMap, tap, pipe, map, delay } from "rxjs";
+import { take, bufferCount, switchMap, tap, pipe, map, delay, Observable, UnaryFunction } from "rxjs";
 import { SchedulerService, SchedulerState } from "src/app/services/scheduler.service";
 import { EthernetInterface } from "../layers/datalink.model";
 import { Link } from "../layers/physical.model";
+import { Message, PhysicalMessage } from "../message.model";
 import { SwitchHost } from "../node.model";
 import { AdvancedTechnologyField, AutonegotiationMessage, TechnologyField } from "./autonegotiation.model";
 import { SimpleListener } from "./protocols.model";
@@ -66,37 +67,37 @@ describe('AutoNegotiation Protocol test', () => {
     });
   });
 
-  function TOAST(speed: number, duplex: boolean, bits: number) {
+  function TOAST(speed: number, duplex: boolean, bits: number): UnaryFunction<Observable<unknown>, Observable<PhysicalMessage[]>> {
     return pipe(
-      switchMap( _ => {
+      switchMap(_ => {
         (A.getInterface(0) as EthernetInterface).reconfigure(speed, speed, duplex);
         (B.getInterface(0) as EthernetInterface).reconfigure(speed, speed, duplex);
         return listener.receiveBits$;
       }),
       bufferCount(speed >= 1000 ? 2 : 1),
       bufferCount(2),
-      map( msg => {
-        if( (msg[0][0] as AutonegotiationMessage).payload.acknowledge )
+      map(msg => {
+        if ((msg[0][0] as AutonegotiationMessage).payload.acknowledge)
           return msg[1];
         return msg[0];
       }),
       take(1),
-      tap( msg => {
-        for(let i=0; i<msg.length; i++) {
+      tap(msg => {
+        for (let i = 0; i < msg.length; i++) {
           expect(msg[i]).toBeInstanceOf(AutonegotiationMessage);
           expect((msg[i] as AutonegotiationMessage).payload.acknowledge).toBeFalse();
 
-          if( i !== msg.length-1 ) {
-            expect((msg[i] as AutonegotiationMessage).payload.technologyField).toBe( 0 );
-            expect((msg[i] as AutonegotiationMessage).payload.nextPage).toBe( true );
+          if (i !== msg.length - 1) {
+            expect((msg[i] as AutonegotiationMessage).payload.technologyField).toBe(0);
+            expect((msg[i] as AutonegotiationMessage).payload.nextPage).toBe(true);
           }
           else {
-            expect((msg[i] as AutonegotiationMessage).payload.technologyField).toBe( bits );
-            expect((msg[i] as AutonegotiationMessage).payload.nextPage).toBe( false );
+            expect((msg[i] as AutonegotiationMessage).payload.technologyField).toBe(bits);
+            expect((msg[i] as AutonegotiationMessage).payload.nextPage).toBe(false);
           }
         }
-      }),
-    )
+      })
+    );
   }
 
   it( 'Reconfigure both interfaces to different same speeds', (done) => {

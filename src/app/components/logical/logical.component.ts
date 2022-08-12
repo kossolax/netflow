@@ -39,7 +39,7 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
     this.configNode = null;
   }
 
-  private debug() {
+  private debug(): void {
     let net = new Network();
     let nodes: (RouterHost|SwitchHost)[] = [];
     nodes.push(new RouterHost("Router-1A", 2));
@@ -118,7 +118,7 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
   public ngAfterViewInit(): void {
     this.diagram.constraints = DiagramConstraints.Default | DiagramConstraints.Bridging;
     this.diagram.snapSettings.constraints = SnapConstraints.ShowLines | SnapConstraints.SnapToLines;
-    this.diagram.getCustomTool = (action: string) => {
+    this.diagram.getCustomTool = (action: string): ToolBase => {
       let tool!: ToolBase;
       if( action == "Draw" )
         tool = new CustomConnectorDrawingTool(this.diagram.commandHandler, "ConnectorSourceEnd", this.diagram.drawingObject as Connector, this);
@@ -194,7 +194,7 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
 
     this.onNewNode(node);
   }
-  public onDoubleClick(e: any) {
+  public onDoubleClick(e: any): void {
     if( e.position === undefined || e.source === null )
       return;
 
@@ -203,7 +203,7 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
     this.configNode = node as (SwitchHost|RouterHost);
   }
 
-  public onNewNode(node: GenericNode) {
+  public onNewNode(node: GenericNode): void {
     this.currentNetwork.nodes[node.guid] = node;
     this.addNode(node);
     this.network.setNode(null);
@@ -217,7 +217,7 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
     this.network.setNode(null);
   }
 
-  private addNode(node: GenericNode) {
+  private addNode(node: GenericNode): void {
     this.diagram.add({
       id: node.guid,
       offsetX: node.x,
@@ -245,7 +245,7 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
       constraints: NodeConstraints.Default & ~NodeConstraints.Resize & ~NodeConstraints.Rotate | NodeConstraints.HideThumbs,
     });
   }
-  private addLink(link: Link, src_guid?: string, dst_guid?: string) {
+  private addLink(link: Link, src_guid?: string, dst_guid?: string): void {
     this.diagram.addConnector({
       sourceID: src_guid ?? link.getInterface(0)?.Host.guid,
       targetID: dst_guid ?? link.getInterface(1)?.Host.guid,
@@ -278,7 +278,7 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
       }],
     });
 
-    const render = (() => {
+    const render = ((): void => {
       const now = new Date().getTime() / 1000 * this.scheduler.SpeedOfLight;
       const progress = (now - start) / delay;
 

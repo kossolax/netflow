@@ -32,7 +32,7 @@ export class NetworkService {
   public setNetwork(network: Network): void {
     this._network$.next(network);
   }
-  public setNode(node: GenericNode|AbstractLink|null) {
+  public setNode(node: GenericNode|AbstractLink|null): void {
     this._node$.next(node);
   }
 }

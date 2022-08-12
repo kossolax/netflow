@@ -241,7 +241,7 @@ export class IPv4Protocol implements NetworkListener {
     return ActionHandle.Continue;
   }
 
-  private cleanQueue() {
+  private cleanQueue(): void {
     const cleanDelay = SchedulerService.Instance.getDelay(60 * 5);
 
     this.queue.forEach( (value, key) => {

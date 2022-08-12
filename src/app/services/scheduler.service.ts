@@ -141,7 +141,7 @@ export class SchedulerService {
       tap(() =>  interval$.next(this.getDelay(delay)))
     );
   }
-  private reset() {
+  private reset(): void {
     this.listener.map( i => {
       i.callback.next(  this.getDelay(i.delay)  );
     });

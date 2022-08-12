@@ -50,26 +50,26 @@ export abstract class AbstractLink implements PhysicalListener, PhysicalSender {
     return node;
   }
 
-  public getPropagationDelay() {
+  private getPropagationDelay(): number {
 		return (length / (Link.SPEED_OF_LIGHT*2/3));
 	}
-  public getTransmissionDelay(bytes: number, speed: number) {
+  private getTransmissionDelay(bytes: number, speed: number): number {
     if( SchedulerService.Instance.Speed === SchedulerState.SLOWER )
       speed = 1 + Math.log2(speed);
 
     return (bytes / (speed*1000*1000)) / SchedulerService.Instance.Transmission;
   }
-  public getDelay(bytes: number, speed: number) {
+  private getDelay(bytes: number, speed: number): number {
     if( SchedulerService.Instance.Speed === SchedulerState.PAUSED )
       return 99999999999999;
     return this.getPropagationDelay() + this.getTransmissionDelay(bytes, speed);
   }
 
-  public isConnectedTo(iface: Interface) {
+  public isConnectedTo(iface: Interface): boolean {
     return (this.iface1 === iface || this.iface2 === iface);
   }
 
-  public sendBits(message: PhysicalMessage, source: HardwareInterface) {
+  public sendBits(message: PhysicalMessage, source: HardwareInterface): void {
     if( this.iface1 == null || this.iface2 == null )
       throw new Error("Link is not connected");
 

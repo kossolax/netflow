@@ -98,7 +98,7 @@ export abstract class HardwareInterface extends Interface implements PhysicalLis
   public getMacAddress(): HardwareAddress {
     return this.address;
   }
-  public setMacAddress(addr: HardwareAddress) {
+  public setMacAddress(addr: HardwareAddress): void {
     this.address = addr;
   }
 
@@ -126,7 +126,7 @@ export abstract class HardwareInterface extends Interface implements PhysicalLis
     return ActionHandle.Continue;
   }
 
-  public sendTrame(message: DatalinkMessage) {
+  public sendTrame(message: DatalinkMessage): void {
     if( !this.isActive() )
       throw new Error("Interface is down");
 
@@ -143,7 +143,7 @@ export abstract class HardwareInterface extends Interface implements PhysicalLis
     this.sendBits(new PhysicalMessage(message));
   }
 
-  public sendBits(message: PhysicalMessage) {
+  public sendBits(message: PhysicalMessage): void {
     this.Link?.sendBits(message, this);
   }
 }
@@ -180,7 +180,7 @@ export class EthernetInterface extends HardwareInterface {
     this.discovery?.setLink(link);
     this.discovery?.negociate(this.minSpeed, this.maxSpeed, this.fullDuplexCapable);
   }
-  public override up() {
+  public override up(): void {
     super.up();
 
     if( this.isConnected )
@@ -256,7 +256,7 @@ export class Dot1QInterface extends EthernetInterface {
     this.dot1q = new Dot1QProtocol(this);
   }
 
-  public addVlan(vlan_id: number) {
+  public addVlan(vlan_id: number): void {
     if( this.VlanMode === VlanMode.Access ) {
       this.vlan = [vlan_id];
     }
@@ -265,7 +265,7 @@ export class Dot1QInterface extends EthernetInterface {
         this.vlan.push(vlan_id);
     }
   }
-  public removeVlan(vlan_id: number) {
+  public removeVlan(vlan_id: number): void {
     if( this.VlanMode === VlanMode.Access ) {
       this.vlan = [0];
     }

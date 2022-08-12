@@ -1,7 +1,7 @@
 export abstract class Address {
   protected address: string;
   protected broadcast: boolean = false;
-  get isBroadcast() {
+  get isBroadcast(): boolean {
     return this.broadcast;
   }
 

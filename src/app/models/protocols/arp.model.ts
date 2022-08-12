@@ -131,7 +131,7 @@ export class ArpProtocol implements DatalinkListener {
     this.interface.sendTrame(trame);
   }
 
-  private cleanARPTable() {
+  private cleanARPTable(): void {
     const cleanDelay = SchedulerService.Instance.getDelay(60 * 5);
 
     this.table.forEach( (value, key) => {

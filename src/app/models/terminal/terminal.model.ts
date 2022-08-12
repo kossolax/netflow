@@ -31,11 +31,11 @@ abstract class TerminalCommand {
     this.parent = this;
   }
 
-  public registerCommand(command: TerminalCommand) {
+  public registerCommand(command: TerminalCommand): void {
     this.subCommands[command.name] = command;
   }
 
-  public exec(command: string, args: string[]) {
+  public exec(command: string, args: string[]): void {
     if( command === 'end' ) {
       this.terminal.changeDirectory(this.parent);
     }
@@ -66,7 +66,7 @@ abstract class TerminalCommand {
     return commands.filter(c => c.startsWith(command));
   }
 
-  protected finalize() {
+  protected finalize(): void {
     this.parent.complete$.next(0);
   }
 
@@ -77,7 +77,7 @@ class PingCommand extends TerminalCommand {
     this.parent = parent;
   }
 
-  public override exec(command: string, args: string[]) {
+  public override exec(command: string, args: string[]): void {
     if( args.length < 1 )
       throw new Error(`${this.name} requires a hostname`);
 
@@ -99,7 +99,7 @@ class TraceRouteCommand extends TerminalCommand {
     this.parent = parent;
   }
 
-  public override exec(command: string, args: string[]) {
+  public override exec(command: string, args: string[]): void {
     if( args.length < 1 )
       throw new Error(`${this.name} requires a hostname`);
 
@@ -116,7 +116,7 @@ class AdminCommand extends TerminalCommand {
     this.registerCommand(new TraceRouteCommand(this));
   }
 
-  public override exec(command: string, args: string[]) {
+  public override exec(command: string, args: string[]): void {
     if( command === this.name ) {
       this.terminal.write(`${this.Terminal.Node.name} is now in admin mode.`);
       this.terminal.changeDirectory(this);
@@ -176,7 +176,7 @@ export class Terminal {
     this.changeDirectory(this.location);
   }
 
-  public exec(command: string, args: string[]) {
+  public exec(command: string, args: string[]): void {
     this.locked = true;
     this.history.push([command, ...args].join(' '));
 
@@ -191,12 +191,12 @@ export class Terminal {
   public autocomplete(command: string, args: string[]): string[] {
     return this.location.autocomplete(command, args);
   }
-  public changeDirectory(t: TerminalCommand) {
+  public changeDirectory(t: TerminalCommand): void {
     this.location = t;
     this.directory$.next(t);
     this.complete$.next(0);
   }
-  public write(text: string) {
+  public write(text: string): void {
     this.text$.next(text);
   }
 }
