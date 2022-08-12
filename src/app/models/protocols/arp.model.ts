@@ -76,7 +76,10 @@ export class ArpProtocol implements DatalinkListener {
   enqueueRequest(message: NetworkMessage, nextHop: NetworkAddress): void {
     //const addr = message.net_dst as NetworkAddress;
 
-    if( this.queue.has(nextHop) ) {
+    if( this.table.has(nextHop) ) {
+      this.sendTrame(message, this.table.get(nextHop)?.address!);
+    }
+    else if( this.queue.has(nextHop) ) {
       this.queue.get(nextHop)?.push(message);
     }
     else {
@@ -84,7 +87,7 @@ export class ArpProtocol implements DatalinkListener {
       this.sendArpRequest(nextHop);
     }
   }
-  sendArpRequest(addr: NetworkAddress): void {
+  private sendArpRequest(addr: NetworkAddress): void {
     const arp = new ArpMessage.Builder()
       .SetNetworkAddress(addr)
       .build();
@@ -112,9 +115,7 @@ export class ArpProtocol implements DatalinkListener {
 
         if( this.queue.has(arp.request) ) {
           this.queue.get(arp.request)?.map( i => {
-
-            const message = new DatalinkMessage(i, this.interface.getMacAddress(), arp.response!);
-            this.interface.sendTrame(message);
+            this.sendTrame(i, arp.response!);
           });
           this.queue.delete(arp.request);
         }
@@ -124,6 +125,11 @@ export class ArpProtocol implements DatalinkListener {
     }
 
     return ActionHandle.Continue;
+  }
+
+  private sendTrame(message: NetworkMessage, mac: HardwareAddress): void {
+    const trame = new DatalinkMessage(message, this.interface.getMacAddress(), mac!);
+    this.interface.sendTrame(trame);
   }
 
   private cleanARPTable() {
