@@ -21,13 +21,13 @@ export abstract class NetworkInterface extends Interface implements DatalinkList
     this.discovery = new ArpProtocol(this, datalink);
   }
 
-  hasNetAddress(ip: NetworkAddress): boolean {
+  public hasNetAddress(ip: NetworkAddress): boolean {
     if( ip.isBroadcast )
       return true;
 
     return this.addresses.filter( i => i.addr.equals(ip) ).length > 0;
   }
-  addNetAddress(ip: NetworkAddress): void {
+  public addNetAddress(ip: NetworkAddress): void {
     if( this.hasNetAddress(ip) )
       throw new Error("IP address already added");
 
@@ -36,44 +36,44 @@ export abstract class NetworkInterface extends Interface implements DatalinkList
       mask: ip.generateMask()
     });
   }
-  getNetAddress(index: number=0): NetworkAddress {
+  public getNetAddress(index: number=0): NetworkAddress {
     return this.addresses[index].addr;
   }
-  getNetMask(index: number=0): NetworkAddress {
+  public getNetMask(index: number=0): NetworkAddress {
     return this.addresses[index].mask;
   }
-  setNetAddress(addr: NetworkAddress, index: number=0) {
+  public setNetAddress(addr: NetworkAddress, index: number=0) {
     if( addr.IsMask )
       throw new Error("Invalid netmask");
 
     this.addresses[index].addr = addr;
     this.addresses[index].mask = addr.generateMask();
   }
-  setNetMask(addr: NetworkAddress, index: number=0) {
+  public setNetMask(addr: NetworkAddress, index: number=0) {
     if( !addr.IsMask )
       throw new Error("Invalid netmask");
     this.addresses[index].mask = addr;
   }
 
-  getMacAddress(): HardwareAddress {
+  public getMacAddress(): HardwareAddress {
     return this.datalink.getMacAddress();
   }
-  setMacAddress(addr: HardwareAddress) {
+  public setMacAddress(addr: HardwareAddress) {
     return this.datalink.setMacAddress(addr);
   }
-  getInterface(index: number): HardwareInterface {
+  public getInterface(index: number): HardwareInterface {
     return this.datalink;
   }
-  override up(): void {
+  public override up(): void {
     super.up();
     this.datalink.up();
   }
-  override down(): void {
+  public override down(): void {
     super.down();
     this.datalink.down();
   }
-  override isConnected(): boolean {
-    return this.datalink.isConnected();
+  override get isConnected(): boolean {
+    return this.datalink.isConnected;
   }
   override get Speed(): number {
     return this.datalink.Speed;
@@ -82,7 +82,7 @@ export abstract class NetworkInterface extends Interface implements DatalinkList
     this.datalink.Speed = speed;
   }
 
-  receiveTrame(message: DatalinkMessage): ActionHandle {
+  public receiveTrame(message: DatalinkMessage): ActionHandle {
     const mac_dst = message.mac_dst as HardwareAddress;
 
     if( mac_dst.equals(this.datalink.getMacAddress()) && mac_dst.isBroadcast == false ) {
@@ -96,7 +96,7 @@ export abstract class NetworkInterface extends Interface implements DatalinkList
     return ActionHandle.Continue;
   }
 
-  receivePacket(message: NetworkMessage): ActionHandle {
+  public receivePacket(message: NetworkMessage): ActionHandle {
     let action = handleChain("receivePacket", this.getListener, message, this);
     if( action !== ActionHandle.Continue )
       return action;
@@ -105,7 +105,7 @@ export abstract class NetworkInterface extends Interface implements DatalinkList
     return ActionHandle.Continue;
   }
 
-  sendPacket(message: NetworkMessage) {
+  public sendPacket(message: NetworkMessage) {
     if( !this.isActive() )
       throw new Error("Interface is down");
 
@@ -129,7 +129,7 @@ export abstract class NetworkInterface extends Interface implements DatalinkList
 
     this.discovery.enqueueRequest(message, nextHop);
   }
-  sendTrame(message: DatalinkMessage) {
+  public sendTrame(message: DatalinkMessage) {
     this.datalink.sendTrame(message);
   }
 

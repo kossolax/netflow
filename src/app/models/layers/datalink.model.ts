@@ -23,17 +23,17 @@ export abstract class Interface {
     this.name = name;
     this.status = false;
   }
-  toString(): string {
+  public toString(): string {
     return `${this.host.name}(${this.name})`;
   }
   // ---
-  up(): void {
+  public up(): void {
     this.status = true;
   }
-  down(): void {
+  public down(): void {
     this.status = false;
   }
-  isActive() : boolean {
+  public isActive() : boolean {
     return this.status;
   }
   get Speed(): number {
@@ -49,17 +49,17 @@ export abstract class Interface {
     this.fullDuplex = fullDuplex;
   }
   // ---
-  isConnected(): boolean {
+  get isConnected(): boolean {
     return this.link != null;
   }
-  isConnectedTo(link: Link): boolean {
+  public isConnectedTo(link: Link): boolean {
     return this.link == link;
   }
-  connectTo(link: Link): void {
+  public connectTo(link: Link): void {
     if( link.isConnectedTo(this) == false )
       throw new Error("Cannot be connected to this port");
 
-    if( this.isConnected() ) {
+    if( this.isConnected ) {
       if( this.isConnectedTo(link) )
         throw new Error("Already connected to this link");
       else
@@ -75,7 +75,7 @@ export abstract class Interface {
     return this.host;
   }
   // ---
-  addListener(listener: GenericListener): void {
+  public addListener(listener: GenericListener): void {
     this.listener.push(listener);
   }
   get getListener(): GenericListener[] {
@@ -90,20 +90,20 @@ export abstract class HardwareInterface extends Interface implements PhysicalLis
     this.address = address;
   }
 
-  hasMacAddress(address: HardwareAddress): boolean {
+  public hasMacAddress(address: HardwareAddress): boolean {
     if( address.isBroadcast)
       return true;
     return this.address.equals(address);
   }
-  getMacAddress(): HardwareAddress {
+  public getMacAddress(): HardwareAddress {
     return this.address;
   }
-  setMacAddress(addr: HardwareAddress) {
+  public setMacAddress(addr: HardwareAddress) {
     this.address = addr;
   }
 
 
-  receiveBits(message: PhysicalMessage, source: HardwareInterface, destination: HardwareInterface): ActionHandle {
+  public receiveBits(message: PhysicalMessage, source: HardwareInterface, destination: HardwareInterface): ActionHandle {
     if( !this.isActive() )
       return ActionHandle.Stop;
 
@@ -117,7 +117,7 @@ export abstract class HardwareInterface extends Interface implements PhysicalLis
 
     return ActionHandle.Continue;
   }
-  receiveTrame(message: DatalinkMessage): ActionHandle {
+  public receiveTrame(message: DatalinkMessage): ActionHandle {
 
     let action = handleChain("receiveTrame", this.getListener, message, this);
     if( action !== ActionHandle.Continue )
@@ -126,7 +126,7 @@ export abstract class HardwareInterface extends Interface implements PhysicalLis
     return ActionHandle.Continue;
   }
 
-  sendTrame(message: DatalinkMessage) {
+  public sendTrame(message: DatalinkMessage) {
     if( !this.isActive() )
       throw new Error("Interface is down");
 
@@ -143,7 +143,7 @@ export abstract class HardwareInterface extends Interface implements PhysicalLis
     this.sendBits(new PhysicalMessage(message));
   }
 
-  sendBits(message: PhysicalMessage) {
+  public sendBits(message: PhysicalMessage) {
     this.Link?.sendBits(message, this);
   }
 }
@@ -166,7 +166,7 @@ export class EthernetInterface extends HardwareInterface {
     this.ethernet = new EthernetProtocol(this);
   }
 
-  reconfigure(minSpeed: number, maxSpeed: number, fullDuplexCapable: boolean): void {
+  public reconfigure(minSpeed: number, maxSpeed: number, fullDuplexCapable: boolean): void {
     this.minSpeed = minSpeed;
     this.maxSpeed = maxSpeed;
     this.fullDuplexCapable = fullDuplexCapable;
@@ -174,16 +174,16 @@ export class EthernetInterface extends HardwareInterface {
     this.discovery?.negociate(this.minSpeed, this.maxSpeed, this.fullDuplexCapable);
   }
 
-  override connectTo(link: Link): void {
+  public override connectTo(link: Link): void {
     super.connectTo(link);
 
     this.discovery?.setLink(link);
     this.discovery?.negociate(this.minSpeed, this.maxSpeed, this.fullDuplexCapable);
   }
-  override up() {
+  public override up() {
     super.up();
 
-    if( this.isConnected() )
+    if( this.isConnected )
       this.discovery?.negociate(this.minSpeed, this.maxSpeed, this.fullDuplexCapable);
   }
 
@@ -220,7 +220,7 @@ export class EthernetInterface extends HardwareInterface {
   }
 
 
-  override sendTrame(message: DatalinkMessage): void {
+  public override sendTrame(message: DatalinkMessage): void {
 
     if( message instanceof EthernetMessage ) {
       super.sendTrame(message);
@@ -236,7 +236,7 @@ export class EthernetInterface extends HardwareInterface {
     }
   }
 
-  override receiveTrame(message: DatalinkMessage): ActionHandle {
+  public override receiveTrame(message: DatalinkMessage): ActionHandle {
     return super.receiveTrame(message);
   }
 
@@ -276,13 +276,13 @@ export class Dot1QInterface extends EthernetInterface {
     }
   }
 
-  public get Vlan(): number[] {
+  get Vlan(): number[] {
     return this.vlan;
   }
-  public get VlanMode(): VlanMode {
+  get VlanMode(): VlanMode {
     return this.vlanMode;
   }
-  public set VlanMode(vlanMode: VlanMode) {
+  set VlanMode(vlanMode: VlanMode) {
     if( vlanMode === VlanMode.Access ) {
       if( this.vlan.length > 1 )
         this.vlan = [this.vlan[0]];
@@ -290,7 +290,7 @@ export class Dot1QInterface extends EthernetInterface {
     this.vlanMode = vlanMode;
   }
 
-  override sendTrame(message: DatalinkMessage): void {
+  public override sendTrame(message: DatalinkMessage): void {
     if( message instanceof Dot1QMessage && this.vlan.indexOf(message.vlan_id) === -1 )
       throw new Error("Vlan mismatch");
 

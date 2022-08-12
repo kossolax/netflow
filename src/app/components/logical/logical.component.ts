@@ -21,14 +21,14 @@ import { SchedulerService } from 'src/app/services/scheduler.service';
   encapsulation: ViewEncapsulation.None
 })
 export class LogicalComponent implements AfterViewInit, OnDestroy  {
-  currentNetwork: Network;
-  addingNode: GenericNode|null = null;
-  configNode: SwitchHost|RouterHost|null = null;
-  networkSpy: LinkLayerSpy = new LinkLayerSpy();
+  public currentNetwork: Network;
+  public addingNode: GenericNode|null = null;
+  public configNode: SwitchHost|RouterHost|null = null;
+  public networkSpy: LinkLayerSpy = new LinkLayerSpy();
 
   private onDestroy$: Subject<void> = new Subject<void>();
 
-  @ViewChild("diagram") diagram!: DiagramComponent;
+  @ViewChild("diagram") public diagram!: DiagramComponent;
 
   constructor(private network: NetworkService, private scheduler: SchedulerService) {
     this.currentNetwork = new Network();
@@ -39,7 +39,7 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
     this.configNode = null;
   }
 
-  debug() {
+  private debug() {
     let net = new Network();
     let nodes: (RouterHost|SwitchHost)[] = [];
     nodes.push(new RouterHost("Router-1A", 2));
@@ -111,11 +111,11 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
   }
 
 
-  ngOnDestroy(): void {
+  public ngOnDestroy(): void {
     this.onDestroy$.next();
     this.onDestroy$.complete();
   }
-  ngAfterViewInit(): void {
+  public ngAfterViewInit(): void {
     this.diagram.constraints = DiagramConstraints.Default | DiagramConstraints.Bridging;
     this.diagram.snapSettings.constraints = SnapConstraints.ShowLines | SnapConstraints.SnapToLines;
     this.diagram.getCustomTool = (action: string) => {
@@ -184,7 +184,7 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
     });
   }
 
-  onClick(e: any): void {
+  public onClick(e: any): void {
     if( e.position === undefined || this.addingNode === null )
       return;
 
@@ -194,7 +194,7 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
 
     this.onNewNode(node);
   }
-  onDoubleClick(e: any) {
+  public onDoubleClick(e: any) {
     if( e.position === undefined || e.source === null )
       return;
 
@@ -203,12 +203,12 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
     this.configNode = node as (SwitchHost|RouterHost);
   }
 
-  onNewNode(node: GenericNode) {
+  public onNewNode(node: GenericNode) {
     this.currentNetwork.nodes[node.guid] = node;
     this.addNode(node);
     this.network.setNode(null);
   }
-  onNewConnexion(
+  public onNewConnexion(
     src: GenericNode, src_iface: HardwareInterface|NetworkInterface,
     dst: GenericNode, dst_iface: HardwareInterface|NetworkInterface): void {
     const link = new Link(src_iface, dst_iface, 1);
@@ -217,7 +217,7 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
     this.network.setNode(null);
   }
 
-  addNode(node: GenericNode) {
+  private addNode(node: GenericNode) {
     this.diagram.add({
       id: node.guid,
       offsetX: node.x,
@@ -245,7 +245,7 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
       constraints: NodeConstraints.Default & ~NodeConstraints.Resize & ~NodeConstraints.Rotate | NodeConstraints.HideThumbs,
     });
   }
-  addLink(link: Link, src_guid?: string, dst_guid?: string) {
+  private addLink(link: Link, src_guid?: string, dst_guid?: string) {
     this.diagram.addConnector({
       sourceID: src_guid ?? link.getInterface(0)?.Host.guid,
       targetID: dst_guid ?? link.getInterface(1)?.Host.guid,
@@ -258,7 +258,7 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
 
 
 
-  public animate(source: GenericNode, target: GenericNode, delay: number, message: string=""): void {
+  private animate(source: GenericNode, target: GenericNode, delay: number, message: string=""): void {
     const start = new Date().getTime() / 1000 * this.scheduler.SpeedOfLight;
 
     const node = this.diagram.addNode({

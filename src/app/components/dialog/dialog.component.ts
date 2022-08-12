@@ -9,18 +9,18 @@ import { GenericNode, RouterHost, ServerHost, SwitchHost } from 'src/app/models/
   styleUrls: ['./dialog.component.scss']
 })
 export class DialogComponent implements OnChanges {
-  @ViewChild('dialog') dialog!: SyncfusionDialogComponent;
-  @ViewChild('tabs') tabs!: TabComponent;
+  @ViewChild('dialog') public dialog!: SyncfusionDialogComponent;
+  @ViewChild('tabs') public tabs!: TabComponent;
 
-  @Input() node: SwitchHost|RouterHost|null = null;
-  @Output() exit: EventEmitter<void> = new EventEmitter<void>();
+  @Input() public node: SwitchHost|RouterHost|null = null;
+  @Output() public exit: EventEmitter<void> = new EventEmitter<void>();
 
-  IsServer(node: GenericNode|null): boolean {
+  public IsServer(node: GenericNode|null): boolean {
     return node instanceof ServerHost;
   }
   constructor() { }
 
-  ngOnChanges(changes: SimpleChanges): void {
+  public ngOnChanges(changes: SimpleChanges): void {
     try {
       if( changes["node"] ) {
         if( changes["node"].currentValue !== null )
@@ -29,7 +29,7 @@ export class DialogComponent implements OnChanges {
     } catch( e ) { }
   }
 
-  onClose(): void {
+  public onClose(): void {
     this.node = null;
     this.exit.emit();
   }

@@ -10,15 +10,15 @@ import { Terminal } from 'src/app/models/terminal/terminal.model';
 })
 export class DialogCliComponent implements AfterViewInit {
 
-  @ViewChild('term', { static: true }) child!: NgTerminal;
-  terminal!: Terminal;
-  buffer: string[] = [];
+  @ViewChild('term', { static: true }) public child!: NgTerminal;
+  public terminal!: Terminal;
+  public buffer: string[] = [];
 
-  @Input() node: SwitchHost|RouterHost|null = null;
+  @Input() public node: SwitchHost|RouterHost|null = null;
 
   constructor() { }
 
-  ngAfterViewInit() {
+  public ngAfterViewInit() {
     this.terminal = new Terminal(this.node as SwitchHost|RouterHost);
 
     this.terminal.Text$.subscribe( text => {

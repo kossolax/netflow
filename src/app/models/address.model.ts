@@ -9,13 +9,13 @@ export abstract class Address {
     this.address = address;
   }
 
-  equals(other: Address|null): boolean {
+  public equals(other: Address|null): boolean {
     if( other == null )
       return false;
 
     return this.address === other.address;
   }
-  toString(): string {
+  public toString(): string {
     return this.address;
   }
   abstract get length(): number;
@@ -55,14 +55,14 @@ export class MacAddress extends HardwareAddress {
     return 6;
   }
 
-  static generateAddress(): MacAddress {
+  public static generateAddress(): MacAddress {
     const mac = new Array(6);
     for (let i = 0; i < 6; i++)
       mac[i] = Math.floor(Math.random() * 256).toString(16);
     return new MacAddress(mac.join(':'));
   }
 
-  static generateBroadcast(): MacAddress {
+  public static generateBroadcast(): MacAddress {
     const mac = new MacAddress("FF:FF:FF:FF:FF:FF");
     mac.broadcast = true;
     return mac;
@@ -76,8 +76,8 @@ export abstract class NetworkAddress extends Address {
   get IsMask(): boolean {
     return this.isMask;
   }
-  abstract generateMask(): IPAddress;
-  abstract InSameNetwork(mask: NetworkAddress, dest: NetworkAddress): boolean;
+  public abstract generateMask(): IPAddress;
+  public abstract InSameNetwork(mask: NetworkAddress, dest: NetworkAddress): boolean;
   abstract get CIDR(): number;
 }
 export class IPAddress extends NetworkAddress {
@@ -125,13 +125,13 @@ export class IPAddress extends NetworkAddress {
     return 4;
   }
 
-  static generateAddress(): IPAddress {
+  public static generateAddress(): IPAddress {
     const ip = new Array(4);
     for (let i = 0; i < 4; i++)
       ip[i] = Math.floor(Math.random() * 256);
     return new IPAddress(ip.join('.'));
   }
-  override generateMask(): IPAddress {
+  public override generateMask(): IPAddress {
     const firstBlock = parseInt(this.address.split('.')[0]);
 
     if( firstBlock >= 0 && firstBlock <= 127 )        // class A
@@ -146,7 +146,7 @@ export class IPAddress extends NetworkAddress {
       return new IPAddress("255.255.255.0", true);
   }
 
-  InSameNetwork(mask: IPAddress, dest: IPAddress): boolean {
+  public InSameNetwork(mask: IPAddress, dest: IPAddress): boolean {
 
     const src = this.address.split('.').map(value => parseInt(value, 10).toString(2).padStart(8, '0')).join('');
     const net = mask.address.split('.').map(value => parseInt(value, 10).toString(2).padStart(8, '0')).join('');
@@ -168,7 +168,7 @@ export class IPAddress extends NetworkAddress {
     return count;
   }
 
-  static generateBroadcast(): IPAddress {
+  public static generateBroadcast(): IPAddress {
     const ip = new IPAddress("255.255.255.255");
     ip.broadcast = true;
     return ip;

@@ -15,7 +15,7 @@ export class EthernetMessage extends DatalinkMessage  {
     return super.length + 16 + this.payload.length;
   }
 
-  override toString(): string {
+  public override toString(): string {
     return `Ethernet\n${this.payload.toString()}`;
   }
 
@@ -30,7 +30,7 @@ export class EthernetMessage extends DatalinkMessage  {
   }
 
 
-  static Builder = class {
+  public static Builder = class {
     public payload: Payload|string = "";
     public mac_src: MacAddress|null = null;
     public mac_dst: MacAddress|null = null;
@@ -51,7 +51,7 @@ export class EthernetMessage extends DatalinkMessage  {
       return this;
     }
 
-    build(): EthernetMessage {
+    public build(): EthernetMessage {
       if( this.mac_src === null )
         throw new Error("MAC source address is not set");
       if( this.mac_dst === null )
@@ -72,7 +72,7 @@ export class Dot1QMessage extends EthernetMessage {
     super(payload, mac_src, mac_dst);
   }
 
-  static override Builder = class extends (EthernetMessage.Builder) {
+  public static override Builder = class extends (EthernetMessage.Builder) {
     public vlan_id: number = 0;
 
     public setVlan(vlan_id: number): this {
@@ -80,7 +80,7 @@ export class Dot1QMessage extends EthernetMessage {
       return this;
     }
 
-    override build(): Dot1QMessage {
+    public override build(): Dot1QMessage {
       if( this.mac_src === null )
         throw new Error("MAC source address is not set");
       if( this.mac_dst === null )
@@ -105,7 +105,7 @@ export class EthernetProtocol implements DatalinkListener {
     this.iface = iface;
     iface.addListener(this);
   }
-  receiveTrame(message: DatalinkMessage, from: Interface): ActionHandle {
+  public receiveTrame(message: DatalinkMessage, from: Interface): ActionHandle {
 
     if( message instanceof EthernetMessage ) {
 
@@ -127,7 +127,7 @@ export class EthernetProtocol implements DatalinkListener {
 }
 
 export class Dot1QProtocol extends EthernetProtocol {
-  override receiveTrame(message: DatalinkMessage, from: Interface): ActionHandle {
+  public override receiveTrame(message: DatalinkMessage, from: Interface): ActionHandle {
 
     if( message instanceof Dot1QMessage ) {
       if( (this.iface as Dot1QInterface).Vlan.indexOf(message.vlan_id) === -1 )

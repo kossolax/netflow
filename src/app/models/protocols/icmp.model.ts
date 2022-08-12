@@ -30,7 +30,7 @@ export class ICMPMessage extends IPv4Message {
     return 4;
   }
 
-  override toString(): string {
+  public override toString(): string {
     switch(this.type) {
       case ICMPType.EchoReply:
         return "ICMP\nReply";
@@ -49,7 +49,7 @@ export class ICMPMessage extends IPv4Message {
   }
 
 
-  static override Builder = class extends (IPv4Message.Builder) {
+  public static override Builder = class extends (IPv4Message.Builder) {
     protected type: ICMPType = ICMPType.EchoReply;
     protected code: number = 0;
 
@@ -134,7 +134,7 @@ export class ICMPProtocol implements NetworkListener {
     )
   }
 
-  receivePacket(message: NetworkMessage, from: Interface): ActionHandle {
+  public receivePacket(message: NetworkMessage, from: Interface): ActionHandle {
 
     if( message instanceof ICMPMessage && message.IsReadyAtEndPoint(this.iface) ) {
 

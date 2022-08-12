@@ -22,7 +22,7 @@ abstract class TerminalCommand {
     return this.complete$;
   }
 
-  subCommands: { [key: string]: TerminalCommand } = {};
+  private subCommands: { [key: string]: TerminalCommand } = {};
 
   constructor(terminal: Terminal, name: string, prompt: string = "") {
     this.terminal = terminal;
@@ -77,7 +77,7 @@ class PingCommand extends TerminalCommand {
     this.parent = parent;
   }
 
-  override exec(command: string, args: string[]) {
+  public override exec(command: string, args: string[]) {
     if( args.length < 1 )
       throw new Error(`${this.name} requires a hostname`);
 
@@ -99,7 +99,7 @@ class TraceRouteCommand extends TerminalCommand {
     this.parent = parent;
   }
 
-  override exec(command: string, args: string[]) {
+  public override exec(command: string, args: string[]) {
     if( args.length < 1 )
       throw new Error(`${this.name} requires a hostname`);
 
@@ -116,7 +116,7 @@ class AdminCommand extends TerminalCommand {
     this.registerCommand(new TraceRouteCommand(this));
   }
 
-  override exec(command: string, args: string[]) {
+  public override exec(command: string, args: string[]) {
     if( command === this.name ) {
       this.terminal.write(`${this.Terminal.Node.name} is now in admin mode.`);
       this.terminal.changeDirectory(this);

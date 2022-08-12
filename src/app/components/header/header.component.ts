@@ -30,21 +30,21 @@ export class HeaderComponent implements OnInit {
     }
   ];
 
-  public get SpeedString(): string {
+  get SpeedString(): string {
     let str = SchedulerState[this.Speed].replace(/_/g, ' ').toLowerCase();
     str = str.charAt(0).toUpperCase() + str.slice(1);
     return str;
   }
-  public get SpeedOfLight(): number {
+  get SpeedOfLight(): number {
     return SchedulerService.Instance.SpeedOfLight;
   }
-  public get SpeedOfTransmission(): number {
+  get SpeedOfTransmission(): number {
     return SchedulerService.Instance.Transmission;
   }
-  public get Speed(): SchedulerState {
+  get Speed(): SchedulerState {
     return this.scheduler.Speed;
   }
-  public set Speed(speed: SchedulerState) {
+  set Speed(speed: SchedulerState) {
     this.scheduler.Speed = speed;
   }
 
@@ -52,7 +52,7 @@ export class HeaderComponent implements OnInit {
   constructor(private network: NetworkService, private scheduler: SchedulerService) {
   }
 
-  ngOnInit(): void {
+  public ngOnInit(): void {
     this.time$ = this.scheduler.Timer$;
   }
 

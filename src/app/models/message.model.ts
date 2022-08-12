@@ -5,13 +5,13 @@ export interface Payload {
 }
 
 export abstract class Message {
-  payload: Payload|string;
+  public payload: Payload|string;
 
   constructor(payload: Payload|string) {
     this.payload = payload;
   }
 
-  toString(): string {
+  public toString(): string {
     return this.payload.toString();
   }
   get length(): number {
@@ -24,8 +24,8 @@ export class PhysicalMessage extends Message {
   }
 }
 export class DatalinkMessage extends PhysicalMessage {
-  mac_src: HardwareAddress;
-  mac_dst: HardwareAddress|null;
+  public mac_src: HardwareAddress;
+  public mac_dst: HardwareAddress|null;
 
   constructor(payload: Payload|string,
     mac_src: HardwareAddress, mac_dst: HardwareAddress|null) {
@@ -40,8 +40,8 @@ export class DatalinkMessage extends PhysicalMessage {
 
 }
 export class NetworkMessage extends Message {
-  net_src: NetworkAddress;
-  net_dst: NetworkAddress|null;
+  public net_src: NetworkAddress;
+  public net_dst: NetworkAddress|null;
 
   constructor(payload: Payload|string,
     net_src: NetworkAddress, net_dst: NetworkAddress|null) {

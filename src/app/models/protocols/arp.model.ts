@@ -3,13 +3,12 @@ import { HardwareAddress, MacAddress, NetworkAddress } from "../address.model";
 import { HardwareInterface } from "../layers/datalink.model";
 import { NetworkInterface } from "../layers/network.model";
 import { DatalinkMessage, NetworkMessage, Payload } from "../message.model";
-import { GenericNode, RouterHost } from "../node.model";
 import { ActionHandle, DatalinkListener } from "./protocols.model";
 
 export class ArpMessage implements Payload {
-  type: "request"|"reply";
-  request: NetworkAddress;
-  response?: HardwareAddress|null;
+  public type: "request"|"reply";
+  public request: NetworkAddress;
+  public response?: HardwareAddress|null;
 
   private constructor(type: "request"|"reply", request: NetworkAddress) {
     this.type = type;
@@ -19,11 +18,11 @@ export class ArpMessage implements Payload {
   get length(): number {
     return this.request.length * 2 + 1;
   }
-  toString(): string {
+  public toString(): string {
     return "ARP" + this.type;
   }
 
-  static Builder = class {
+  public static Builder = class {
     private type: "request"|"reply" = "request";
     private net: NetworkAddress|null = null;
     private mac: HardwareAddress|null = null;
@@ -40,7 +39,7 @@ export class ArpMessage implements Payload {
     }
 
 
-    build(): ArpMessage {
+    public build(): ArpMessage {
       if( this.net === null )
         throw new Error("No request data specified");
 
@@ -69,11 +68,11 @@ export class ArpProtocol implements DatalinkListener {
     });
   }
 
-  getMapping(addr: NetworkAddress): HardwareAddress|undefined {
+  public getMapping(addr: NetworkAddress): HardwareAddress|undefined {
     return this.table.get(addr)?.address;
   }
 
-  enqueueRequest(message: NetworkMessage, nextHop: NetworkAddress): void {
+  public enqueueRequest(message: NetworkMessage, nextHop: NetworkAddress): void {
     //const addr = message.net_dst as NetworkAddress;
 
     if( this.table.has(nextHop) ) {
@@ -96,7 +95,7 @@ export class ArpProtocol implements DatalinkListener {
     this.interface.getInterface(0).sendTrame(message);
   }
 
-  receiveTrame(message: DatalinkMessage): ActionHandle {
+  public receiveTrame(message: DatalinkMessage): ActionHandle {
     if( message.payload instanceof ArpMessage ) {
       const arp = message.payload as ArpMessage;
 

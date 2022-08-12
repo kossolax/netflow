@@ -128,7 +128,7 @@ export class Network {
     return Network.fromPKT(json.PACKETTRACER5[0]);
   }
 
-  static fromPacketTracer(json: any): Network {
+  public static fromPacketTracer(json: any): Network {
 
     if( json.PACKETTRACER5 !== undefined )
       return Network.fromPKT(json.PACKETTRACER5);

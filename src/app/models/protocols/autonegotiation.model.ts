@@ -48,18 +48,18 @@ type LinkCodeWords = (LinkCodeWord_Page0|LinkCodeWord_Page1);
 // CL73-AN 802.3ck
 
 export class AutonegotiationMessage extends PhysicalMessage {
-  override payload: LinkCodeWords;
+  public override payload: LinkCodeWords;
 
   private constructor(code: LinkCodeWords) {
     super(code);
     this.payload = code;
   }
 
-  override toString(): string {
+  public override toString(): string {
     return "AutoNegotiation";
   }
 
-  static Builder = class {
+  public static Builder = class {
 
     private fastEthernet: LinkCodeWord_Page0;
     private gigaEthernet: LinkCodeWord_Page1;
@@ -89,7 +89,7 @@ export class AutonegotiationMessage extends PhysicalMessage {
       }
     }
 
-    setHalfDuplex(): this {
+    public setHalfDuplex(): this {
       // remove flags
       this.fastEthernet.technologyField &= ~TechnologyField.A10BaseT_FullDuplex;
       this.fastEthernet.technologyField &= ~TechnologyField.A100BaseTX_FullDuplex;
@@ -102,7 +102,7 @@ export class AutonegotiationMessage extends PhysicalMessage {
       return this;
     }
 
-    setFullDuplex(): this {
+    public setFullDuplex(): this {
       // add flags
       if( this.fastEthernet.technologyField & TechnologyField.A10BaseT )
         this.fastEthernet.technologyField |= TechnologyField.A10BaseT_FullDuplex;
@@ -116,7 +116,7 @@ export class AutonegotiationMessage extends PhysicalMessage {
       return this;
     }
 
-    setMaxSpeed(speed: number): this {
+    public setMaxSpeed(speed: number): this {
       this.maxSpeed = speed;
 
       if( speed >= 10 && this.minSpeed <= 10) {
@@ -134,7 +134,7 @@ export class AutonegotiationMessage extends PhysicalMessage {
       return this;
     }
 
-    setMinSpeed(speed: number): this {
+    public setMinSpeed(speed: number): this {
       this.minSpeed = speed;
 
       if( speed > 10 ) {
@@ -156,7 +156,7 @@ export class AutonegotiationMessage extends PhysicalMessage {
       return this;
     }
 
-    acknowledge(): this {
+    public acknowledge(): this {
       this.fastEthernet.acknowledge = true;
       this.gigaEthernet.acknowledge = true;
       return this;
@@ -164,7 +164,7 @@ export class AutonegotiationMessage extends PhysicalMessage {
 
 
 
-    build(): AutonegotiationMessage[] {
+    public build(): AutonegotiationMessage[] {
       let messages:AutonegotiationMessage[]  = []
 
       if( this.gigaEthernet.technologyField !== 0 )
@@ -240,7 +240,7 @@ export class AutoNegotiationProtocol implements PhysicalListener {
     });
   }
 
-  receiveBits(message: PhysicalMessage, from: Interface, to: Interface): ActionHandle {
+  public receiveBits(message: PhysicalMessage, from: Interface, to: Interface): ActionHandle {
     if( message instanceof AutonegotiationMessage ) {
 
       if( message.payload.acknowledge )

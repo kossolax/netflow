@@ -34,7 +34,7 @@ export class IPv4Message extends NetworkMessage {
     return super.length + 16 + this.payload.length;
   }
 
-  override toString(): string {
+  public override toString(): string {
     return "IPv4";
   }
 
@@ -64,7 +64,7 @@ export class IPv4Message extends NetworkMessage {
   }
 
 
-  static Builder = class {
+  public static Builder = class {
     protected payload: Payload|string = "";
     protected net_src: IPAddress|null = null;
     protected net_dst: IPAddress|null = null;
@@ -174,7 +174,7 @@ export class IPv4Protocol implements NetworkListener {
     });
   }
 
-  receivePacket(message: NetworkMessage, from: Interface): ActionHandle {
+  public receivePacket(message: NetworkMessage, from: Interface): ActionHandle {
     if( message instanceof IPv4Message ) {
 
       // this packet was not fragmented

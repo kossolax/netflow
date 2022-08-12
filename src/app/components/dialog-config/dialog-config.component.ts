@@ -11,11 +11,11 @@ import { RouterHost, SwitchHost } from 'src/app/models/node.model';
   styleUrls: ['./dialog-config.component.scss']
 })
 export class DialogConfigComponent {
-  @Input() node: SwitchHost|RouterHost|null = null;
+  @Input() public node: SwitchHost|RouterHost|null = null;
 
   constructor() { }
 
-  setSpeed(iface: HardwareInterface|NetworkInterface, evt: any): void {
+  public setSpeed(iface: HardwareInterface|NetworkInterface, evt: any): void {
     try {
       iface.Speed = evt.value;
     } catch( e ) {
@@ -24,7 +24,7 @@ export class DialogConfigComponent {
     }
   }
 
-  setMacAddress(iface: HardwareInterface|NetworkInterface, evt: any): void {
+  public setMacAddress(iface: HardwareInterface|NetworkInterface, evt: any): void {
     evt.container.classList.remove("e-error");
 
     try {
@@ -33,7 +33,7 @@ export class DialogConfigComponent {
       evt.container.classList.add("e-error");
     }
   }
-  setNetAddress(iface: NetworkInterface, evt: any): void {
+  public setNetAddress(iface: NetworkInterface, evt: any): void {
     evt.container.classList.remove("e-error");
 
     try {
@@ -42,7 +42,7 @@ export class DialogConfigComponent {
       evt.container.classList.add("e-error");
     }
   }
-  setNetMask(iface: NetworkInterface, evt: any): void {
+  public setNetMask(iface: NetworkInterface, evt: any): void {
     evt.container.classList.remove("e-error");
 
     try {

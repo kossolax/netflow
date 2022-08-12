@@ -20,7 +20,7 @@ export abstract class AbstractLink implements PhysicalListener, PhysicalSender {
 
   protected length: number;
 
-  static SPEED_OF_LIGHT: number = 299792458;
+  public static readonly SPEED_OF_LIGHT: number = 299792458;
 
   constructor( iface1: HardwareInterface|NetworkInterface|null = null, iface2: HardwareInterface|NetworkInterface|null = null, length: number=1) {
     this.iface1 = iface1 instanceof(NetworkInterface) ? iface1.getInterface(0) : iface1;
@@ -41,10 +41,10 @@ export abstract class AbstractLink implements PhysicalListener, PhysicalSender {
     if( this.iface2 != null )
       this.iface2.connectTo(this);
   }
-  toString(): string {
+  public toString(): string {
     return `${this.iface1} <->  ${this.iface2}`;
   }
-  clone(): AbstractLink {
+  public clone(): AbstractLink {
     const node = structuredClone(this);
     node.guid = Math.random().toString(36).substring(2, 9);
     return node;
@@ -121,7 +121,7 @@ export abstract class AbstractLink implements PhysicalListener, PhysicalSender {
 
 
   // ---
-  addListener(listener: GenericListener): void {
+  public addListener(listener: GenericListener): void {
     this.listener.push(listener);
   }
   get getListener(): GenericListener[] {

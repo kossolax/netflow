@@ -1,4 +1,4 @@
-import { Observable, Subject } from "rxjs";
+import { Subject } from "rxjs";
 import { SchedulerService } from "../services/scheduler.service";
 import { Address, MacAddress, IPAddress, NetworkAddress, HardwareAddress } from "./address.model";
 import { Dot1QInterface, EthernetInterface, HardwareInterface, Interface } from "./layers/datalink.model";
@@ -14,10 +14,10 @@ export abstract class GenericNode {
   public x: number = 0;
   public y: number = 0;
 
-  toString(): string {
+  public toString(): string {
     return this.name;
   }
-  abstract clone(): GenericNode;
+  public abstract clone(): GenericNode;
   protected cloneInto(node: GenericNode): void {
     node.guid = Math.random().toString(36).substring(2, 9);
     node.name = this.name;
@@ -30,8 +30,8 @@ export abstract class GenericNode {
 export abstract class Node<T extends Interface> extends GenericNode {
   protected interfaces: { [key: string]: T } = {};
 
-  abstract addInterface(name: string): T;
-  getInterface(index: string|number): T {
+  public abstract addInterface(name: string): T;
+  public getInterface(index: string|number): T {
     let response;
     if( typeof index === "number" )
       response = this.interfaces[Object.keys(this.interfaces)[index]]
@@ -45,12 +45,12 @@ export abstract class Node<T extends Interface> extends GenericNode {
 
     return response;
   }
-  getInterfaces(): string[] {
+  public getInterfaces(): string[] {
     return Object.keys(this.interfaces);
   }
-  getFirstAvailableInterface(): T {
+  public getFirstAvailableInterface(): T {
     for(let key in this.interfaces) {
-      if( !this.interfaces[key].isConnected() )
+      if( !this.interfaces[key].isConnected )
         return this.interfaces[key];
     }
 
@@ -63,7 +63,7 @@ export abstract class Node<T extends Interface> extends GenericNode {
       node.addInterface(key);
   }
 
-  abstract send(message: string, dst?: Address): void;
+  public abstract send(message: string, dst?: Address): void;
 }
 
 export class SwitchHost extends Node<HardwareInterface> implements DatalinkListener {
@@ -86,7 +86,7 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
     });
   }
 
-  addInterface(name: string = ""): HardwareInterface {
+  public addInterface(name: string = ""): HardwareInterface {
     const mac = MacAddress.generateAddress();
 
     if( name == "" )
@@ -99,13 +99,13 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
     return iface;
   }
 
-  clone(): SwitchHost {
+  public clone(): SwitchHost {
     const clone = new SwitchHost();
     this.cloneInto(clone);
     return clone;
   }
 
-  send(message: string|DatalinkMessage, dst?: HardwareAddress): void {
+  public send(message: string|DatalinkMessage, dst?: HardwareAddress): void {
 
     if( message instanceof DatalinkMessage ) {
       for( const name in this.interfaces ) {
@@ -129,7 +129,7 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
 
   }
 
-  receiveTrame(message: DatalinkMessage, from: HardwareInterface): ActionHandle {
+  public receiveTrame(message: DatalinkMessage, from: HardwareInterface): ActionHandle {
     const src = message.mac_src as HardwareAddress;
     const dst = message.mac_dst as HardwareAddress;
 
@@ -217,13 +217,13 @@ export class RouterHost extends Node<NetworkInterface> implements NetworkListene
       this.addInterface();
   }
 
-  clone(): RouterHost {
+  public clone(): RouterHost {
     const clone = new RouterHost();
     this.cloneInto(clone);
     return clone;
   }
 
-  addInterface(name: string = ""): NetworkInterface {
+  public addInterface(name: string = ""): NetworkInterface {
     if( name == "" )
       name = "GigabitEthernet0/" + Object.keys(this.interfaces).length;
 
@@ -240,7 +240,7 @@ export class RouterHost extends Node<NetworkInterface> implements NetworkListene
     return iface;
   }
 
-  send(message: string|NetworkMessage, net_dst?: NetworkAddress): void {
+  public send(message: string|NetworkMessage, net_dst?: NetworkAddress): void {
 
     if( message instanceof NetworkMessage ) {
       for( const name in this.interfaces ) {
@@ -265,7 +265,7 @@ export class RouterHost extends Node<NetworkInterface> implements NetworkListene
     }
   }
 
-  receivePacket(message: NetworkMessage, from: NetworkInterface): ActionHandle {
+  public receivePacket(message: NetworkMessage, from: NetworkInterface): ActionHandle {
 
     const dst = message.net_dst as NetworkAddress;
 
@@ -293,7 +293,7 @@ export class RouterHost extends Node<NetworkInterface> implements NetworkListene
     return ActionHandle.Continue;
   }
 
-  addRoute(network: NetworkAddress|string, mask: NetworkAddress|string, gateway: NetworkAddress|string): void {
+  public addRoute(network: NetworkAddress|string, mask: NetworkAddress|string, gateway: NetworkAddress|string): void {
     if( typeof network === "string" )
       network = new IPAddress(network);
     if( typeof mask === "string" )
@@ -307,7 +307,7 @@ export class RouterHost extends Node<NetworkInterface> implements NetworkListene
     }
     this.routingTable.push({network: network, mask: mask, gateway: gateway});
   }
-  deleteRoute(network: NetworkAddress, mask: NetworkAddress, gateway: NetworkAddress): void {
+  public deleteRoute(network: NetworkAddress, mask: NetworkAddress, gateway: NetworkAddress): void {
     for( let i = 0; i < this.routingTable.length; i++ ) {
       if( this.routingTable[i].network.equals(network) && this.routingTable[i].mask.equals(mask) && this.routingTable[i].gateway.equals(gateway) ) {
         this.routingTable.splice(i, 1);
@@ -316,7 +316,7 @@ export class RouterHost extends Node<NetworkInterface> implements NetworkListene
     }
     throw new Error("Route not found");
   }
-  getNextHop(address: NetworkAddress|null): NetworkAddress|null {
+  public getNextHop(address: NetworkAddress|null): NetworkAddress|null {
     if( address === null )
       throw new Error("No address specified");
 

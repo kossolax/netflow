@@ -79,7 +79,7 @@ export function handleChain(
 }
 
 export abstract class GenericListener {
-  toString(): string {
+  public toString(): string {
     return this.constructor.name.toString();
   }
 
@@ -108,19 +108,19 @@ export interface NetworkSender extends Listener<NetworkInterface> {
 }
 
 export class SimpleListener implements PhysicalListener, DatalinkListener, NetworkListener {
-  receiveBits$: Subject<PhysicalMessage> = new Subject<PhysicalMessage>();
-  receiveTrame$: Subject<DatalinkMessage> = new Subject<DatalinkMessage>();
-  receivePacket$: Subject<NetworkMessage> = new Subject<NetworkMessage>();
+  public receiveBits$: Subject<PhysicalMessage> = new Subject<PhysicalMessage>();
+  public receiveTrame$: Subject<DatalinkMessage> = new Subject<DatalinkMessage>();
+  public receivePacket$: Subject<NetworkMessage> = new Subject<NetworkMessage>();
 
-  receiveBits(message: PhysicalMessage, from: Interface, to: Interface): ActionHandle {
+  public receiveBits(message: PhysicalMessage, from: Interface, to: Interface): ActionHandle {
     this.receiveBits$.next(message);
     return ActionHandle.Continue;
   }
-  receiveTrame(message: DatalinkMessage, from: Interface): ActionHandle {
+  public receiveTrame(message: DatalinkMessage, from: Interface): ActionHandle {
     this.receiveTrame$.next(message);
     return ActionHandle.Continue;
   }
-  receivePacket(message: NetworkMessage, from: Interface): ActionHandle {
+  public receivePacket(message: NetworkMessage, from: Interface): ActionHandle {
     this.receivePacket$.next(message);
     return ActionHandle.Continue;
   }
@@ -134,15 +134,15 @@ declare interface Pair<P extends Message, Q extends Interface> {
 }
 
 export class LinkLayerSpy implements PhysicalSender, PhysicalListener {
-  receiveBits$: Subject<Pair<PhysicalMessage, Interface>> = new Subject<Pair<PhysicalMessage, Interface>>();
-  sendBits$: Subject<Pair<PhysicalMessage, Interface>> = new Subject<Pair<PhysicalMessage, Interface>>();
+  public receiveBits$: Subject<Pair<PhysicalMessage, Interface>> = new Subject<Pair<PhysicalMessage, Interface>>();
+  public sendBits$: Subject<Pair<PhysicalMessage, Interface>> = new Subject<Pair<PhysicalMessage, Interface>>();
 
-  receiveBits(message: PhysicalMessage, from: Interface, to: Interface): ActionHandle {
+  public receiveBits(message: PhysicalMessage, from: Interface, to: Interface): ActionHandle {
     this.receiveBits$.next({message: message, source: from, destination: to, delay: 0});
     return ActionHandle.Continue;
 
   }
-  sendBits(message: PhysicalMessage, from: Interface, to: Interface, delay:number = 0): void {
+  public sendBits(message: PhysicalMessage, from: Interface, to: Interface, delay:number = 0): void {
     this.sendBits$.next({message: message, source: from, destination: to, delay: delay});
   }
 }

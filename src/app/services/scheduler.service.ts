@@ -20,16 +20,16 @@ export class SchedulerService {
   private startPause: number = 0;
   private listener: {delay: number, callback: BehaviorSubject<number>}[] = [];
 
-  public get Transmission(): number {
+  get Transmission(): number {
     return this.transmissionMultiplier;
   }
-  public get SpeedOfLight(): number {
+  get SpeedOfLight(): number {
     return this.speedOfLightMultiplier;
   }
-  public get Speed(): SchedulerState {
+  get Speed(): SchedulerState {
     return this.currentState;
   }
-  public set Speed(delay: SchedulerState) {
+  set Speed(delay: SchedulerState) {
     let delta = this.getDeltaTime();
 
     switch (delay) {
@@ -67,13 +67,13 @@ export class SchedulerService {
 
     this.reset();
   }
-  public get Timer$(): Observable<string> {
+  get Timer$(): Observable<string> {
     return timer(1, 10).pipe(
       map(() => this.calculateStringTime()),
     );
   }
 
-  public static get Instance(): SchedulerService {
+  static get Instance(): SchedulerService {
     // TODO: check l'injection de dépendance dans les tests unitaires
     if( !SchedulerService.instance )
       SchedulerService.instance = new SchedulerService();
