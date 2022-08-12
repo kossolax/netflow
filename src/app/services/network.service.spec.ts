@@ -16,10 +16,10 @@ describe('packet tracer decoding host', () => {
     TestBed.configureTestingModule({
       imports: [
         BrowserModule,
-        HttpClientModule
+        HttpClientModule,
       ],
       providers: [
-        NetworkService
+        NetworkService,
       ],
     });
     service = TestBed.inject(NetworkService);

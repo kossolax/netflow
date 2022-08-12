@@ -44,6 +44,28 @@
               "accessors": "no-public"
             }
           }
+        ],
+        "@typescript-eslint/adjacent-overload-signatures": "error",
+        "@typescript-eslint/array-type": [
+          "error",
+          {
+            "default": "array"
+          }
+        ],
+        "comma-dangle": "off",
+        "@typescript-eslint/comma-dangle": [
+          "error",
+          {
+            "arrays": "always-multiline",
+            "objects": "always-multiline",
+            "enums": "always-multiline",
+
+            "imports": "only-multiline",
+            "exports": "only-multiline",
+            "functions": "only-multiline",
+            "generics": "only-multiline",
+            "tuples": "only-multiline"
+          }
         ]
       }
     },

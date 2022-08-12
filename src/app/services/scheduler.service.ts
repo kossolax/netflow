@@ -5,7 +5,7 @@ export enum SchedulerState {
   FASTER,
   REAL_TIME,
   SLOWER,
-  PAUSED
+  PAUSED,
 }
 
 @Injectable(

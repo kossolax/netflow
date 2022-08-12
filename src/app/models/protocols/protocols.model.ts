@@ -7,7 +7,7 @@ import { DatalinkMessage, NetworkMessage, PhysicalMessage, Message } from "../me
 export enum ActionHandle {
   Continue, // Continue with the original action
   Handled,  // Handle the action at the end (don't call it)
-  Stop      // Immediately stop the hook chain and handle the original
+  Stop,      // Immediately stop the hook chain and handle the original
 }
 
 

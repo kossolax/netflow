@@ -6,7 +6,7 @@ import { Terminal } from 'src/app/models/terminal/terminal.model';
 @Component({
   selector: 'app-dialog-cli',
   templateUrl: './dialog-cli.component.html',
-  styleUrls: ['./dialog-cli.component.scss']
+  styleUrls: ['./dialog-cli.component.scss'],
 })
 export class DialogCliComponent implements AfterViewInit {
 

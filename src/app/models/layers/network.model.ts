@@ -33,7 +33,7 @@ export abstract class NetworkInterface extends Interface implements DatalinkList
 
     this.addresses.push({
       addr: ip,
-      mask: ip.generateMask()
+      mask: ip.generateMask(),
     });
   }
   public getNetAddress(index: number=0): NetworkAddress {

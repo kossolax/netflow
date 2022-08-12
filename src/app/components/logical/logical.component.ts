@@ -18,7 +18,7 @@ import { SchedulerService } from 'src/app/services/scheduler.service';
   selector: 'app-logical',
   templateUrl: './logical.component.html',
   styleUrls: ['./logical.component.scss'],
-  encapsulation: ViewEncapsulation.None
+  encapsulation: ViewEncapsulation.None,
 })
 export class LogicalComponent implements AfterViewInit, OnDestroy  {
   public currentNetwork: Network;
@@ -226,7 +226,7 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
       height: 48,
       style: {
         fill: "transparent",
-        strokeColor: "transparent"
+        strokeColor: "transparent",
       },
       annotations: [{
         content: node.name,
@@ -236,7 +236,7 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
         style: {
           fill: '#ffffff',
         },
-        constraints: AnnotationConstraints.ReadOnly
+        constraints: AnnotationConstraints.ReadOnly,
       }],
       shape: {
         type: "Image",
@@ -252,7 +252,7 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
       sourceDecorator: { shape: "None" },
       targetDecorator: { shape: "None" },
       constraints: ConnectorConstraints.Default & ~ConnectorConstraints.Select,
-      annotations: [{ constraints: AnnotationConstraints.ReadOnly  }]
+      annotations: [{ constraints: AnnotationConstraints.ReadOnly  }],
     });
   }
 
@@ -275,7 +275,7 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
       annotations: [{
         content: message,
         constraints: AnnotationConstraints.ReadOnly,
-      }]
+      }],
     });
 
     const render = (() => {

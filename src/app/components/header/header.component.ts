@@ -8,7 +8,7 @@ import { Observable, take } from 'rxjs';
 @Component({
   selector: 'app-header',
   templateUrl: './header.component.html',
-  styleUrls: ['./header.component.scss']
+  styleUrls: ['./header.component.scss'],
 })
 export class HeaderComponent implements OnInit {
   public time$!: Observable<string>;
@@ -21,13 +21,13 @@ export class HeaderComponent implements OnInit {
           { text: 'Open', iconCss: 'folder', id: 'menu-item-open' },
           { text: 'Save', iconCss: 'save' },
           { separator: true },
-          { text: 'Exit' }
-      ]
+          { text: 'Exit' },
+      ],
     },
     { separator: true },
     {
-        text: 'Help'
-    }
+        text: 'Help',
+    },
   ];
 
   get SpeedString(): string {

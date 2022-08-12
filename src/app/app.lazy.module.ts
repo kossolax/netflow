@@ -20,7 +20,7 @@ import { NgTerminalModule } from 'ng-terminal';
 const routes: Routes = [
   { path: 'logical', component: LogicalComponent },
   { path: 'physical', component: PhysicalComponent },
-  { path: '**', redirectTo: '/logical' }
+  { path: '**', redirectTo: '/logical' },
 ];
 
 
@@ -30,7 +30,7 @@ const routes: Routes = [
     PhysicalComponent,
     DialogComponent,
     DialogConfigComponent,
-    DialogCliComponent
+    DialogCliComponent,
   ],
   imports: [
     RouterModule.forChild(routes),
@@ -46,10 +46,10 @@ const routes: Routes = [
     SwitchModule,
     RadioButtonModule,
 
-    NgTerminalModule
+    NgTerminalModule,
   ],
   providers: [SnappingService],
   bootstrap: [],
-  exports: [RouterModule]
+  exports: [RouterModule],
 })
 export class AppLazyModule { }

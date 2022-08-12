@@ -7,7 +7,7 @@ import { NetworkService } from 'src/app/services/network.service';
 @Component({
   selector: 'app-footer',
   templateUrl: './footer.component.html',
-  styleUrls: ['./footer.component.scss']
+  styleUrls: ['./footer.component.scss'],
 })
 
 export class FooterComponent {
@@ -20,7 +20,7 @@ export class FooterComponent {
         new RouterHost("Router 4", 4),
         new RouterHost("Router 5", 5),
         new RouterHost("Router 6", 6),
-      ]
+      ],
     },
     {
       text: 'Switch',
@@ -28,8 +28,8 @@ export class FooterComponent {
         new SwitchHost("Switch 6", 6),
         new SwitchHost("Switch 12", 12),
         new SwitchHost("Switch 24", 24),
-        new SwitchHost("Switch 48", 48)
-      ]
+        new SwitchHost("Switch 48", 48),
+      ],
     },
     {
       text: 'Host',
@@ -38,14 +38,14 @@ export class FooterComponent {
         new ServerHost("Laptop", "laptop"),
         new ServerHost("PC", "pc"),
         new ServerHost("Printer", "printer"),
-      ]
+      ],
     },
     {
       text: 'Link',
       child: [
-        new Link()
-      ]
-    }
+        new Link(),
+      ],
+    },
   ];
   public node$;
 

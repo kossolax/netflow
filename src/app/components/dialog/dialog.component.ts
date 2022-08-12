@@ -6,7 +6,7 @@ import { GenericNode, RouterHost, ServerHost, SwitchHost } from 'src/app/models/
 @Component({
   selector: 'app-dialog',
   templateUrl: './dialog.component.html',
-  styleUrls: ['./dialog.component.scss']
+  styleUrls: ['./dialog.component.scss'],
 })
 export class DialogComponent implements OnChanges {
   @ViewChild('dialog') public dialog!: SyncfusionDialogComponent;

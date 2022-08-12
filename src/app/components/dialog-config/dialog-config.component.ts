@@ -8,7 +8,7 @@ import { RouterHost, SwitchHost } from 'src/app/models/node.model';
 @Component({
   selector: 'app-dialog-config',
   templateUrl: './dialog-config.component.html',
-  styleUrls: ['./dialog-config.component.scss']
+  styleUrls: ['./dialog-config.component.scss'],
 })
 export class DialogConfigComponent {
   @Input() public node: SwitchHost|RouterHost|null = null;

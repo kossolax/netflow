@@ -84,7 +84,7 @@ describe('Physical layer test', () => {
     [0, 10, 100, 1000].map( speed => {
       speeds.push({
         propagation: link1.getPropagationDelay(),
-        transmission: link1.getTransmissionDelay(42, speed)
+        transmission: link1.getTransmissionDelay(42, speed),
       });
     });
 

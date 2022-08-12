@@ -17,14 +17,14 @@ enableRipple(true);
 
 const routes: Routes = [
   { path: 'view', loadChildren: () => import('./app.lazy.module').then(m => m.AppLazyModule) },
-  { path: '**', redirectTo: '/view/logical' }
+  { path: '**', redirectTo: '/view/logical' },
 ];
 
 @NgModule({
   declarations: [
     AppComponent,
     HeaderComponent,
-    FooterComponent
+    FooterComponent,
   ],
   imports: [
     RouterModule.forRoot(routes),
@@ -35,12 +35,12 @@ const routes: Routes = [
 
     MenuModule,
     ToolbarModule,
-    TabModule
+    TabModule,
   ],
   bootstrap: [AppComponent],
   exports: [RouterModule],
   providers: [
-    SchedulerService
-  ]
+    SchedulerService,
+  ],
 })
 export class AppModule { }

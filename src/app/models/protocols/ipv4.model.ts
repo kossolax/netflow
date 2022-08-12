@@ -15,7 +15,7 @@ export class IPv4Message extends NetworkMessage {
   public flags = {
     reserved: false,
     dont_fragment: false,
-    more_fragments: false
+    more_fragments: false,
   };
   public fragment_offset: number = 0;
 
