@@ -213,8 +213,6 @@ export class Terminal {
     this.history.push([command, ...args].join(' '));
 
     try {
-      console.log(command, args);
-
       let real_command = this.location.autocomplete(command, []);
       if( real_command.length === 1 ) {
         command = real_command.join('');
@@ -224,8 +222,6 @@ export class Terminal {
           if( real_args.length === 1 )
             args[i] = real_args.join('');
         }
-
-        console.log(command, args);
       }
 
       this.location.exec(command, args);

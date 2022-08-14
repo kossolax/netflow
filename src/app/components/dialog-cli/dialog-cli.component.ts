@@ -85,7 +85,7 @@ export class DialogCliComponent implements AfterViewInit {
         // history management
       }
       else if (printable) {
-        console.log(key);
+        //console.log(key);
         this.child.write(e.key);
         this.buffer.push(e.key);
       }
