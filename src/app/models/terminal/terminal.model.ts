@@ -134,6 +134,9 @@ class ConfigCommand extends TerminalCommand {
   constructor(parent: TerminalCommand) {
     super(parent.Terminal, 'configure', '(config)#');
     this.parent = parent;
+
+
+    this.registerCommand(new IPCommand(this));
   }
   public override exec(command: string, args: string[]): void {
     if( command === this.name ) {
@@ -151,6 +154,41 @@ class ConfigCommand extends TerminalCommand {
     if( command === this.name ) {
       if( args.length === 1 )
         return ['terminal'];
+
+      return [];
+    }
+
+    return super.autocomplete(command, args);
+  }
+}
+class IPCommand extends TerminalCommand {
+  constructor(parent: TerminalCommand) {
+    super(parent.Terminal, 'ip');
+    this.parent = parent;
+  }
+
+  public override exec(command: string, args: string[]): void {
+    if( command === this.name ) {
+      if( args[0] === 'route' && args.length === 4 ) {
+        const network = new IPAddress(args[1]);
+        const mask = new IPAddress(args[2], true);
+        const gateway = new IPAddress(args[3]);
+
+        (this.Terminal.Node as RouterHost).addRoute(network, mask, gateway);
+        this.finalize();
+      }
+      else
+        throw new Error(`${this.name} requires a subcommand`);
+    }
+    else {
+      super.exec(command, args);
+    }
+  }
+
+  public override autocomplete(command: string, args: string[]): string[] {
+    if( command === this.name ) {
+      if( args.length === 1 )
+        return ['route'];
 
       return [];
     }
