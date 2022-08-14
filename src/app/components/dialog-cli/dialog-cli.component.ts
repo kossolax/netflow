@@ -61,15 +61,18 @@ export class DialogCliComponent implements AfterViewInit {
       }
       else if( key === 'Tab' || key === '?' ) {
         let command = this.buffer.join('').trim().split(' ').filter(x => x);
+        if( this.buffer[this.buffer.length-1] === ' ' )
+          command.push('');
+
         let completions = this.terminal.autocomplete(command[0], command.slice(1));
 
         if( completions.length === 1 ) {
 
           if( completions[0] !== command[0] ) {
-            this.buffer = completions[0].split('');
-            let rightPart = this.buffer.slice(command[0].length).join('');
+            let rightPart = completions[0].slice(command[command.length-1].length).split('');
 
-            this.child.write(rightPart);
+            rightPart.forEach(c => this.buffer.push(c));
+            this.child.write(rightPart.join(''));
           }
         }
         else if ( completions.length > 1 ) {

@@ -1,9 +1,7 @@
-import { merge, Observable, startWith, Subject, switchMap, tap, timer } from "rxjs";
+import { merge, Observable, startWith, Subject, switchMap, tap } from "rxjs";
 import { IPAddress } from "../address.model";
 import { IPInterface, NetworkInterface } from "../layers/network.model";
 import { RouterHost, SwitchHost } from "../node.model";
-import { ICMPMessage, ICMPType } from "../protocols/icmp.model";
-import { IPv4Message } from "../protocols/ipv4.model";
 
 abstract class TerminalCommand {
   protected name: string;
@@ -65,6 +63,11 @@ abstract class TerminalCommand {
 
     return commands.filter(c => c.startsWith(command));
   }
+  public autocomplete_child(command: string, args: string[]): string[] {
+    if( command in this.subCommands )
+      return this.subCommands[command].autocomplete(command, args);
+    return [];
+  }
 
   protected finalize(): void {
     this.parent.complete$.next(0);
@@ -114,6 +117,7 @@ class AdminCommand extends TerminalCommand {
 
     this.registerCommand(new PingCommand(this));
     this.registerCommand(new TraceRouteCommand(this));
+    this.registerCommand(new ConfigCommand(this));
   }
 
   public override exec(command: string, args: string[]): void {
@@ -124,6 +128,34 @@ class AdminCommand extends TerminalCommand {
     else {
       super.exec(command, args);
     }
+  }
+}
+class ConfigCommand extends TerminalCommand {
+  constructor(parent: TerminalCommand) {
+    super(parent.Terminal, 'configure', '(config)#');
+    this.parent = parent;
+  }
+  public override exec(command: string, args: string[]): void {
+    if( command === this.name ) {
+      if( args[0] === 'terminal' )
+        this.terminal.changeDirectory(this);
+      else
+        throw new Error(`${this.name} requires a subcommand`);
+    }
+    else {
+      super.exec(command, args);
+    }
+  }
+
+  public override autocomplete(command: string, args: string[]): string[] {
+    if( command === this.name ) {
+      if( args.length === 1 )
+        return ['terminal'];
+
+      return [];
+    }
+
+    return super.autocomplete(command, args);
   }
 }
 class RootCommand extends TerminalCommand {
@@ -181,6 +213,21 @@ export class Terminal {
     this.history.push([command, ...args].join(' '));
 
     try {
+      console.log(command, args);
+
+      let real_command = this.location.autocomplete(command, []);
+      if( real_command.length === 1 ) {
+        command = real_command.join('');
+
+        for(let i=0; i<args.length; i++) {
+          let real_args = this.location.autocomplete_child(command, args.slice(0, i+1));
+          if( real_args.length === 1 )
+            args[i] = real_args.join('');
+        }
+
+        console.log(command, args);
+      }
+
       this.location.exec(command, args);
     } catch( e ) {
       this.text$.next(e as string);
@@ -189,7 +236,15 @@ export class Terminal {
   }
 
   public autocomplete(command: string, args: string[]): string[] {
-    return this.location.autocomplete(command, args);
+    const commands = this.location.autocomplete(command, args);
+
+    if( commands.length === 1 ) {
+      const subCommands = this.location.autocomplete_child(commands[0], args);
+      if( subCommands.length >= 1 )
+        return subCommands;
+    }
+
+    return commands;
   }
   public changeDirectory(t: TerminalCommand): void {
     this.location = t;
