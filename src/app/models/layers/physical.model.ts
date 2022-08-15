@@ -54,8 +54,9 @@ export abstract class AbstractLink implements PhysicalListener, PhysicalSender {
 		return (length / (Link.SPEED_OF_LIGHT*2/3));
 	}
   public getTransmissionDelay(bytes: number, speed: number): number {
-    if( SchedulerService.Instance.Speed === SchedulerState.SLOWER )
-      speed = 1 + Math.log2(speed);
+    if( SchedulerService.Instance.Speed === SchedulerState.SLOWER ) {
+      return Math.max(0.1, (Math.log2(bytes) / Math.log10(speed)) / 10);
+    }
 
     return (bytes / (speed*1000*1000)) / SchedulerService.Instance.Transmission;
   }
