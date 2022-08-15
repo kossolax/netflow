@@ -50,7 +50,7 @@ abstract class TerminalCommand {
         this.subCommands[command].exec(command, args, negated);
     }
     else {
-      throw new Error(`Command ${command} not found.`);
+      throw new Error(`Command "${negated ? 'no ': ''}${command}" not found.`);
     }
   }
 
