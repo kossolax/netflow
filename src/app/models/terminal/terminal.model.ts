@@ -7,6 +7,7 @@ abstract class TerminalCommand {
   protected name: string;
   protected terminal: Terminal;
   protected parent: TerminalCommand;
+  protected canBeNegative: boolean;
   private prompt: string;
   private complete$: Subject<0> = new Subject();
 
@@ -27,35 +28,39 @@ abstract class TerminalCommand {
     this.name = name;
     this.prompt = prompt;
     this.parent = this;
+    this.canBeNegative = false;
   }
 
   public registerCommand(command: TerminalCommand): void {
     this.subCommands[command.name] = command;
   }
 
-  public exec(command: string, args: string[]): void {
-    if( command === 'end' ) {
+  public exec(command: string, args: string[], negated: boolean = false): void {
+    if( command === 'end' && !negated ) {
       this.terminal.changeDirectory(this.parent);
     }
-    else if( command === 'exit' ) {
+    else if( command === 'exit' && !negated ) {
       let p = this.parent;
       while( p !== p.parent )
         p = this.parent;
 
       this.terminal.changeDirectory(p);
     }
-    else if (command in this.subCommands) {
-      this.subCommands[command].exec(command, args);
+    else if (command in this.subCommands && (negated && this.subCommands[command].canBeNegative || !negated) ) {
+        this.subCommands[command].exec(command, args, negated);
     }
     else {
       throw new Error(`Command ${command} not found.`);
     }
   }
 
-  public autocomplete(command: string, args: string[]): string[] {
-    let commands = Object.keys(this.subCommands);
-    commands.push('end');
-    commands.push('exit');
+  public autocomplete(command: string, args: string[], negated: boolean): string[] {
+    let commands = Object.keys(this.subCommands).filter(c => negated && this.subCommands[c].canBeNegative || !negated);
+
+    /*if( !negated ) {
+      commands.push('end');
+      commands.push('exit');
+    }*/
     commands.sort();
 
     if( !command )
@@ -63,9 +68,9 @@ abstract class TerminalCommand {
 
     return commands.filter(c => c.startsWith(command));
   }
-  public autocomplete_child(command: string, args: string[]): string[] {
+  public autocomplete_child(command: string, args: string[], negated: boolean): string[] {
     if( command in this.subCommands )
-      return this.subCommands[command].autocomplete(command, args);
+      return this.subCommands[command].autocomplete(command, args, negated);
     return [];
   }
 
@@ -80,7 +85,7 @@ class PingCommand extends TerminalCommand {
     this.parent = parent;
   }
 
-  public override exec(command: string, args: string[]): void {
+  public override exec(command: string, args: string[], negated: boolean): void {
     if( args.length < 1 )
       throw new Error(`${this.name} requires a hostname`);
 
@@ -102,7 +107,7 @@ class TraceRouteCommand extends TerminalCommand {
     this.parent = parent;
   }
 
-  public override exec(command: string, args: string[]): void {
+  public override exec(command: string, args: string[], negated: boolean): void {
     if( args.length < 1 )
       throw new Error(`${this.name} requires a hostname`);
 
@@ -120,13 +125,13 @@ class AdminCommand extends TerminalCommand {
     this.registerCommand(new ConfigCommand(this));
   }
 
-  public override exec(command: string, args: string[]): void {
+  public override exec(command: string, args: string[], negated: boolean): void {
     if( command === this.name ) {
       this.terminal.write(`${this.Terminal.Node.name} is now in admin mode.`);
       this.terminal.changeDirectory(this);
     }
     else {
-      super.exec(command, args);
+      super.exec(command, args, negated);
     }
   }
 }
@@ -138,7 +143,7 @@ class ConfigCommand extends TerminalCommand {
 
     this.registerCommand(new IPCommand(this));
   }
-  public override exec(command: string, args: string[]): void {
+  public override exec(command: string, args: string[], negated: boolean): void {
     if( command === this.name ) {
       if( args[0] === 'terminal' )
         this.terminal.changeDirectory(this);
@@ -146,11 +151,11 @@ class ConfigCommand extends TerminalCommand {
         throw new Error(`${this.name} requires a subcommand`);
     }
     else {
-      super.exec(command, args);
+      super.exec(command, args, negated);
     }
   }
 
-  public override autocomplete(command: string, args: string[]): string[] {
+  public override autocomplete(command: string, args: string[], negated: boolean): string[] {
     if( command === this.name ) {
       if( args.length === 1 )
         return ['terminal'];
@@ -158,34 +163,39 @@ class ConfigCommand extends TerminalCommand {
       return [];
     }
 
-    return super.autocomplete(command, args);
+    return super.autocomplete(command, args, negated);
   }
 }
 class IPCommand extends TerminalCommand {
   constructor(parent: TerminalCommand) {
     super(parent.Terminal, 'ip');
     this.parent = parent;
+    this.canBeNegative = true;
   }
 
-  public override exec(command: string, args: string[]): void {
+  public override exec(command: string, args: string[], negated: boolean): void {
+    console.log(command, args, negated);
     if( command === this.name ) {
       if( args[0] === 'route' && args.length === 4 ) {
         const network = new IPAddress(args[1]);
         const mask = new IPAddress(args[2], true);
         const gateway = new IPAddress(args[3]);
 
-        (this.Terminal.Node as RouterHost).addRoute(network, mask, gateway);
+        if( negated )
+          (this.Terminal.Node as RouterHost).deleteRoute(network, mask, gateway);
+        else
+          (this.Terminal.Node as RouterHost).addRoute(network, mask, gateway);
         this.finalize();
       }
       else
         throw new Error(`${this.name} requires a subcommand`);
     }
     else {
-      super.exec(command, args);
+      super.exec(command, args, negated);
     }
   }
 
-  public override autocomplete(command: string, args: string[]): string[] {
+  public override autocomplete(command: string, args: string[], negated: boolean): string[] {
     if( command === this.name ) {
       if( args.length === 1 )
         return ['route'];
@@ -193,7 +203,7 @@ class IPCommand extends TerminalCommand {
       return [];
     }
 
-    return super.autocomplete(command, args);
+    return super.autocomplete(command, args, negated);
   }
 }
 class RootCommand extends TerminalCommand {
@@ -250,19 +260,25 @@ export class Terminal {
     this.locked = true;
     this.history.push([command, ...args].join(' '));
 
+    let negated = false;
+    if( command === 'no' ) {
+      negated = true;
+      command = args.length >= 1 ? args.shift()! : '';
+    }
+
     try {
-      let real_command = this.location.autocomplete(command, []);
+      let real_command = this.location.autocomplete(command, [], negated);
       if( real_command.length === 1 ) {
         command = real_command.join('');
 
         for(let i=0; i<args.length; i++) {
-          let real_args = this.location.autocomplete_child(command, args.slice(0, i+1));
+          let real_args = this.location.autocomplete_child(command, args.slice(0, i+1), negated);
           if( real_args.length === 1 )
             args[i] = real_args.join('');
         }
       }
 
-      this.location.exec(command, args);
+      this.location.exec(command, args, negated);
     } catch( e ) {
       this.text$.next(e as string);
       this.complete$.next(0);
@@ -270,10 +286,17 @@ export class Terminal {
   }
 
   public autocomplete(command: string, args: string[]): string[] {
-    const commands = this.location.autocomplete(command, args);
+    let negated = false;
+
+    if( command === 'no' ) {
+      negated = true;
+      command = args.length >= 1 ? args.shift()! : '';
+    }
+
+    const commands = this.location.autocomplete(command, args, negated);
 
     if( commands.length === 1 ) {
-      const subCommands = this.location.autocomplete_child(commands[0], args);
+      const subCommands = this.location.autocomplete_child(commands[0], args, negated);
       if( subCommands.length >= 1 )
         return subCommands;
     }
