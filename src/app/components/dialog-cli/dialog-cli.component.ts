@@ -77,7 +77,7 @@ export class DialogCliComponent implements AfterViewInit {
         }
         else if ( completions.length > 1 ) {
           this.child.write(`\n ${FunctionsUsingCSI.cursorColumn(1)} ${completions.join(' ')} `);
-          this.child.write(`\n ${FunctionsUsingCSI.cursorColumn(1)} ${this.terminal.Prompt} ${command}`);
+          this.child.write(`\n ${FunctionsUsingCSI.cursorColumn(1)} ${this.terminal.Prompt} ${this.buffer.join('')}`);
         }
 
       }

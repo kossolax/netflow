@@ -1,5 +1,6 @@
 import { merge, Observable, startWith, Subject, switchMap, tap } from "rxjs";
 import { IPAddress } from "../address.model";
+import { HardwareInterface } from "../layers/datalink.model";
 import { IPInterface, NetworkInterface } from "../layers/network.model";
 import { RouterHost, SwitchHost } from "../node.model";
 
@@ -79,6 +80,16 @@ abstract class TerminalCommand {
   }
 
 }
+class RootCommand extends TerminalCommand {
+  constructor(terminal: Terminal) {
+    super(terminal, '', '$');
+    this.parent = this;
+
+    this.registerCommand(new AdminCommand(this));
+    this.registerCommand(new PingCommand(this));
+    this.registerCommand(new TraceRouteCommand(this));
+  }
+}
 class PingCommand extends TerminalCommand {
   constructor(parent: TerminalCommand) {
     super(parent.Terminal, 'ping');
@@ -141,7 +152,8 @@ class ConfigCommand extends TerminalCommand {
     this.parent = parent;
 
 
-    this.registerCommand(new IPCommand(this));
+    this.registerCommand(new IPConfigCommand(this));
+    this.registerCommand(new InterfaceCommand(this));
   }
   public override exec(command: string, args: string[], negated: boolean): void {
     if( command === this.name ) {
@@ -166,7 +178,7 @@ class ConfigCommand extends TerminalCommand {
     return super.autocomplete(command, args, negated);
   }
 }
-class IPCommand extends TerminalCommand {
+class IPConfigCommand extends TerminalCommand {
   constructor(parent: TerminalCommand) {
     super(parent.Terminal, 'ip');
     this.parent = parent;
@@ -206,14 +218,100 @@ class IPCommand extends TerminalCommand {
     return super.autocomplete(command, args, negated);
   }
 }
-class RootCommand extends TerminalCommand {
-  constructor(terminal: Terminal) {
-    super(terminal, '', '$');
-    this.parent = this;
+class InterfaceCommand extends TerminalCommand {
+  public iface: NetworkInterface|HardwareInterface|null;
 
-    this.registerCommand(new AdminCommand(this));
-    this.registerCommand(new PingCommand(this));
-    this.registerCommand(new TraceRouteCommand(this));
+  constructor(parent: TerminalCommand) {
+    super(parent.Terminal, 'interface', '(config-if)#');
+    this.parent = parent;
+    this.iface = null;
+
+    this.registerCommand(new IPInterfaceCommand(this));
+  }
+  public override exec(command: string, args: string[], negated: boolean): void {
+    if( command === this.name ) {
+      if( args.length === 2 ) {
+        const ifaces = this.Terminal.Node.getInterfaces()
+          .map( (iface) => iface.matchAll(/^([a-zA-Z]+)\s?(\d+(?:\/\d+)*)/g).next().value  )
+          .filter( (iface) => iface[1].startsWith(args[0]) )
+          .filter( (iface) => iface[2].startsWith(args[1]) )
+          .map( (iface) => iface[0] );
+
+        if( ifaces.length !== 1 )
+          throw new Error(`${this.name} requires a valid interface`);
+
+        this.iface = this.Terminal.Node.getInterface(ifaces[0]);
+        this.terminal.changeDirectory(this);
+      }
+      else {
+        throw new Error(`${this.name} requires an interface`);
+      }
+    }
+    else {
+      super.exec(command, args, negated);
+    }
+  }
+
+  public override autocomplete(command: string, args: string[], negated: boolean): string[] {
+
+    if( command === this.name ) {
+      if( args.length === 1 ) {
+        const ifaces = this.Terminal.Node.getInterfaces()
+          .filter( (iface) => iface.startsWith(args[0]) )
+          .map( (iface) => iface.matchAll(/^([a-zA-Z]+)\s?(\d+(?:\/\d+)*)/g).next().value[1]  );
+
+        return [...new Set(ifaces)];
+      }
+      else if( args.length === 2 ) {
+        const ifaces = this.Terminal.Node.getInterfaces()
+          .filter( (iface) => iface.startsWith(args[0]) )
+          .map( (iface) => iface.matchAll(/^([a-zA-Z]+)\s?(\d+(?:\/\d+)*)/g).next().value[2]  )
+          .filter( (iface) => iface.startsWith(args[1]) );
+
+        return [...new Set(ifaces)];
+      }
+
+      return [];
+    }
+
+    return super.autocomplete(command, args, negated);
+  }
+}
+class IPInterfaceCommand extends TerminalCommand {
+
+  constructor(parent: TerminalCommand) {
+    super(parent.Terminal, 'ip');
+    this.parent = parent;
+  }
+
+  public override exec(command: string, args: string[], negated: boolean): void {
+    if( command === this.name ) {
+      if( args[0] === 'address' && args.length === 3 ) {
+        const network = new IPAddress(args[1]);
+        const mask = new IPAddress(args[2], true);
+
+        const iface = (this.parent as InterfaceCommand).iface as NetworkInterface;
+
+        iface.setNetAddress(network);
+        iface.setNetMask(mask);
+        this.finalize();
+      }
+      else
+        throw new Error(`${this.name} requires a subcommand`);
+    }
+    else {
+      super.exec(command, args, negated);
+    }
+  }
+
+  public override autocomplete(command: string, args: string[], negated: boolean): string[] {
+    if( command === this.name ) {
+      if( args.length === 1 )
+        return ['address'];
+      return [];
+    }
+
+    return super.autocomplete(command, args, negated);
   }
 }
 

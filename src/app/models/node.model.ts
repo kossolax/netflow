@@ -90,7 +90,7 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
     const mac = MacAddress.generateAddress();
 
     if( name == "" )
-      name = "GigabitEthernet0/" + Object.keys(this.interfaces).length;
+      name = "gig0/" + Object.keys(this.interfaces).length;
 
     const iface = new Dot1QInterface(this, mac, name, 10, 1000, true);
     iface.addListener(this);
@@ -225,7 +225,7 @@ export class RouterHost extends Node<NetworkInterface> implements NetworkListene
 
   public addInterface(name: string = ""): NetworkInterface {
     if( name == "" )
-      name = "GigabitEthernet0/" + Object.keys(this.interfaces).length;
+      name = "gig0/" + Object.keys(this.interfaces).length;
 
     const ip = IPAddress.generateAddress();
     const mac = MacAddress.generateAddress();
