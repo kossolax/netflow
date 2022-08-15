@@ -321,6 +321,7 @@ export class Terminal {
   protected complete$: Subject<0> = new Subject();
   protected locked: boolean = false;
 
+  private historyIndex: number = 0;
   private history: string[] = [];
   private location: TerminalCommand;
   private node: RouterHost | SwitchHost;
@@ -357,6 +358,7 @@ export class Terminal {
   public exec(command: string, args: string[]): void {
     this.locked = true;
     this.history.push([command, ...args].join(' '));
+    this.historyIndex = this.history.length-1;
 
     let negated = false;
     if( command === 'no' ) {
@@ -381,6 +383,16 @@ export class Terminal {
       this.text$.next(e as string);
       this.complete$.next(0);
     }
+  }
+  public historyBack(): string {
+    if( this.historyIndex > 0 )
+      this.historyIndex--;
+    return this.history[this.historyIndex];
+  }
+  public historyForward(): string {
+    if( this.historyIndex < this.history.length-1 )
+      this.historyIndex++;
+    return this.history[this.historyIndex];
   }
 
   public autocomplete(command: string, args: string[]): string[] {

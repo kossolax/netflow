@@ -81,8 +81,11 @@ export class DialogCliComponent implements AfterViewInit {
         }
 
       }
-      else if ( key === 'ArrowLeft' || key === 'ArrowRight' || key === 'ArrowUp' || key === 'ArrowDown' ) {
-        // history management
+      else if ( key === 'ArrowLeft' || key === 'ArrowRight' ) {
+      }
+      else if ( key === 'ArrowUp' || key === 'ArrowDown' ) {
+        const last = key === 'ArrowUp' ? this.terminal.historyBack() : this.terminal.historyForward();
+        this.child.write(`\n ${FunctionsUsingCSI.cursorColumn(1)} ${this.terminal.Prompt} ${last}`);
       }
       else if (printable) {
         //console.log(key);
