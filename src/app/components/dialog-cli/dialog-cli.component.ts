@@ -61,7 +61,7 @@ export class DialogCliComponent implements AfterViewInit {
       }
       else if( key === 'Tab' || key === '?' ) {
         let command = this.buffer.join('').trim().split(' ').filter(x => x);
-        if( this.buffer[this.buffer.length-1] === ' ' )
+        if( this.buffer[this.buffer.length-1] === ' ' || command.length === 0 )
           command.push('');
 
         let completions = this.terminal.autocomplete(command[0], command.slice(1));
