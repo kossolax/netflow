@@ -13,6 +13,7 @@ export class DialogCliComponent implements AfterViewInit {
   @ViewChild('term', { static: true }) public child!: NgTerminal;
   public terminal!: Terminal;
   public buffer: string[] = [];
+  private bufferPosition: number = 0;
 
   @Input() public node: SwitchHost|RouterHost|null = null;
 
@@ -43,6 +44,7 @@ export class DialogCliComponent implements AfterViewInit {
       if( key === 'Enter' ) {
         let command = this.buffer.join('').trim().split(' ').filter(x => x);
         this.buffer = [];
+        this.bufferPosition = this.buffer.length;
 
         if( command.length > 0 ) {
           this.child.write(`\n ${FunctionsUsingCSI.cursorColumn(1)}`);
@@ -57,40 +59,65 @@ export class DialogCliComponent implements AfterViewInit {
         if (this.child.underlying.buffer.active.cursorX > this.terminal.Prompt.length+2 ) {
           this.child.write('\b \b');
           this.buffer.pop();
+          this.bufferPosition--;
         }
       }
       else if( key === 'Tab' || key === '?' ) {
-        let command = this.buffer.join('').trim().split(' ').filter(x => x);
-        if( this.buffer[this.buffer.length-1] === ' ' || command.length === 0 )
-          command.push('');
+        if( this.bufferPosition === this.buffer.length ) {
+          let command = this.buffer.join('').trim().split(' ').filter(x => x);
+          if( this.buffer[this.buffer.length-1] === ' ' || command.length === 0 )
+            command.push('');
 
-        let completions = this.terminal.autocomplete(command[0], command.slice(1));
+          let completions = this.terminal.autocomplete(command[0], command.slice(1));
 
-        if( completions.length === 1 ) {
+          if( completions.length === 1 ) {
 
-          if( completions[0] !== command[0] ) {
-            let rightPart = completions[0].slice(command[command.length-1].length).split('');
+            if( completions[0] !== command[0] ) {
+              let rightPart = completions[0].slice(command[command.length-1].length).split('');
 
-            rightPart.forEach(c => this.buffer.push(c));
-            this.child.write(rightPart.join(''));
+              rightPart.forEach(c => this.buffer.push(c));
+              this.bufferPosition = this.buffer.length;
+              this.child.write(rightPart.join(''));
+            }
           }
-        }
-        else if ( completions.length > 1 ) {
-          this.child.write(`\n ${FunctionsUsingCSI.cursorColumn(1)} ${completions.join(' ')} `);
-          this.child.write(`\n ${FunctionsUsingCSI.cursorColumn(1)} ${this.terminal.Prompt} ${this.buffer.join('')}`);
+          else if ( completions.length > 1 ) {
+            this.child.write(`\n ${FunctionsUsingCSI.cursorColumn(1)} ${completions.join(' ')} `);
+            this.child.write(`\n ${FunctionsUsingCSI.cursorColumn(1)} ${this.terminal.Prompt} ${this.buffer.join('')}`);
+          }
         }
 
       }
       else if ( key === 'ArrowLeft' || key === 'ArrowRight' ) {
+        if( key === 'ArrowLeft' ) {
+          if( this.bufferPosition > 0 ) {
+            this.bufferPosition--;
+            this.child.write(FunctionsUsingCSI.cursorBackward(1));
+          }
+        }
+        if( key === 'ArrowRight' ) {
+          if( this.bufferPosition < this.buffer.length ) {
+            this.bufferPosition++;
+            this.child.write(FunctionsUsingCSI.cursorForward(1));
+          }
+        }
       }
       else if ( key === 'ArrowUp' || key === 'ArrowDown' ) {
         const last = key === 'ArrowUp' ? this.terminal.historyBack() : this.terminal.historyForward();
         this.child.write(`\n ${FunctionsUsingCSI.cursorColumn(1)} ${this.terminal.Prompt} ${last}`);
       }
       else if (printable) {
-        //console.log(key);
+
         this.child.write(e.key);
-        this.buffer.push(e.key);
+        this.buffer.splice(this.bufferPosition, 0, e.key);
+        this.bufferPosition++;
+
+        if( this.bufferPosition !== this.buffer.length ) {
+          const col = this.child.underlying.buffer.active.cursorX + 2;
+          for(let i=this.bufferPosition; i<this.buffer.length; i++)
+            this.child.write(this.buffer[i]);
+
+          this.child.write(FunctionsUsingCSI.cursorColumn(col));
+        }
       }
 
     });
