@@ -56,11 +56,20 @@ export class DialogCliComponent implements AfterViewInit {
 
       }
       else if( key === 'Backspace' ) {
-        if (this.child.underlying.buffer.active.cursorX > this.terminal.Prompt.length+2 ) {
-          this.child.write('\b \b');
-          this.buffer.pop();
+
+        if( this.bufferPosition > 0 ) {
+
+          const col = this.child.underlying.buffer.active.cursorX;
+
+          this.child.write(`${FunctionsUsingCSI.cursorBackward(1)}`);
+          for(let i=this.bufferPosition; i<this.buffer.length; i++)
+            this.child.write(`${this.buffer[i]}`);
+          this.child.write(` ${FunctionsUsingCSI.cursorColumn(col)}`);
+
+          this.buffer.splice(this.bufferPosition-1, 1);
           this.bufferPosition--;
         }
+
       }
       else if( key === 'Tab' || key === '?' ) {
         let command = this.buffer.join('').trim().split(' ').filter(x => x);
