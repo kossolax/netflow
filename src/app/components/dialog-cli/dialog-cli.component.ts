@@ -55,12 +55,11 @@ export class DialogCliComponent implements AfterViewInit {
         }
 
       }
-      else if( key === 'Backspace' ) {
+      else if( key === 'Backspace' || key === 'Delete' ) {
 
-        if( this.bufferPosition > 0 ) {
+        const col = this.child.underlying.buffer.active.cursorX;
 
-          const col = this.child.underlying.buffer.active.cursorX;
-
+        if( key === 'Backspace' && this.bufferPosition > 0 ) {
           this.child.write(`${FunctionsUsingCSI.cursorBackward(1)}`);
           for(let i=this.bufferPosition; i<this.buffer.length; i++)
             this.child.write(`${this.buffer[i]}`);
@@ -68,6 +67,15 @@ export class DialogCliComponent implements AfterViewInit {
 
           this.buffer.splice(this.bufferPosition-1, 1);
           this.bufferPosition--;
+        }
+
+        if( key === 'Delete' && this.bufferPosition < this.buffer.length ) {
+
+          for(let i=this.bufferPosition+1; i<this.buffer.length; i++)
+            this.child.write(`${this.buffer[i]}`);
+          this.child.write(` ${FunctionsUsingCSI.cursorColumn(col+1)}`);
+
+          this.buffer.splice(this.bufferPosition, 1);
         }
 
       }
