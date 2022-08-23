@@ -1,5 +1,6 @@
-import { AfterViewInit, Component, Input, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, Input, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
 import { FunctionsUsingCSI, NgTerminal } from 'ng-terminal';
+import { Subject, takeUntil } from 'rxjs';
 import { RouterHost, SwitchHost } from 'src/app/models/node.model';
 import { Terminal } from 'src/app/models/terminal/terminal.model';
 
@@ -8,7 +9,7 @@ import { Terminal } from 'src/app/models/terminal/terminal.model';
   templateUrl: './dialog-cli.component.html',
   styleUrls: ['./dialog-cli.component.scss'],
 })
-export class DialogCliComponent implements AfterViewInit {
+export class DialogCliComponent implements AfterViewInit, OnChanges {
 
   @ViewChild('term', { static: true }) public child!: NgTerminal;
   public terminal!: Terminal;
@@ -16,23 +17,44 @@ export class DialogCliComponent implements AfterViewInit {
   private bufferPosition: number = 0;
 
   @Input() public node: SwitchHost|RouterHost|null = null;
+  private onDestroy$: Subject<void> = new Subject<void>();
 
   constructor() { }
 
-  public ngAfterViewInit(): void {
-    this.terminal = new Terminal(this.node as SwitchHost|RouterHost);
+  public ngOnChanges(changes: SimpleChanges): void {
+    if( changes["node"] ) {
 
-    this.terminal.Text$.subscribe( text => {
+      this.onDestroy$.next();
+      this.child?.underlying?.clear();
+
+      if( changes["node"].currentValue !== null ) {
+        this.recreateTerminal();
+      }
+    }
+  }
+
+
+  private recreateTerminal(): void {
+    this.terminal = new Terminal(this.node as SwitchHost|RouterHost);
+    this.child.write(`\n ${FunctionsUsingCSI.cursorColumn(1)} ${this.terminal.Prompt} `);
+
+    this.terminal.Text$.pipe(
+      takeUntil(this.onDestroy$)
+    ).subscribe( text => {
       this.child.write(` ${text}`);
       this.child.write(`\n ${FunctionsUsingCSI.cursorColumn(1)}`);
     });
-    this.terminal.Complete$.subscribe( () => {
+
+    this.terminal.Complete$.pipe(
+      takeUntil(this.onDestroy$)
+    ).subscribe( () => {
       this.child.write(` ${this.terminal.Prompt} `);
     });
+  }
 
-    this.child.write(`\n ${FunctionsUsingCSI.cursorColumn(1)} ${this.terminal.Prompt} `);
+  public ngAfterViewInit(): void {
+    this.recreateTerminal();
 
-    //...
     this.child.keyEventInput.subscribe(e => {
       if( this.terminal.Locked )
         return;
