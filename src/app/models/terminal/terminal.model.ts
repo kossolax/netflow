@@ -1,6 +1,6 @@
 import { merge, Observable, startWith, Subject, switchMap, tap } from "rxjs";
 import { IPAddress } from "../address.model";
-import { HardwareInterface } from "../layers/datalink.model";
+import { Dot1QInterface, HardwareInterface } from "../layers/datalink.model";
 import { IPInterface, NetworkInterface } from "../layers/network.model";
 import { RouterHost, SwitchHost } from "../node.model";
 
@@ -151,8 +151,8 @@ class ConfigCommand extends TerminalCommand {
     super(parent.Terminal, 'configure', '(config)#');
     this.parent = parent;
 
-
-    this.registerCommand(new IPConfigCommand(this));
+    if( this.terminal.Node instanceof RouterHost )
+      this.registerCommand(new IPConfigCommand(this));
     this.registerCommand(new InterfaceCommand(this));
   }
   public override exec(command: string, args: string[], negated: boolean): void {
@@ -218,6 +218,7 @@ class IPConfigCommand extends TerminalCommand {
     return super.autocomplete(command, args, negated);
   }
 }
+
 class InterfaceCommand extends TerminalCommand {
   public iface: NetworkInterface|HardwareInterface|null;
 
@@ -226,7 +227,10 @@ class InterfaceCommand extends TerminalCommand {
     this.parent = parent;
     this.iface = null;
 
-    this.registerCommand(new IPInterfaceCommand(this));
+    if( this.terminal.Node instanceof RouterHost )
+      this.registerCommand(new IPInterfaceCommand(this));
+    if( this.terminal.Node instanceof SwitchHost )
+      this.registerCommand(new SwitchPortCommand(this));
   }
   public override exec(command: string, args: string[], negated: boolean): void {
     if( command === this.name ) {
@@ -270,6 +274,44 @@ class InterfaceCommand extends TerminalCommand {
 
         return [...new Set(ifaces)];
       }
+
+      return [];
+    }
+
+    return super.autocomplete(command, args, negated);
+  }
+}
+class SwitchPortCommand extends TerminalCommand {
+  constructor(parent: TerminalCommand) {
+    super(parent.Terminal, 'switchport');
+    this.parent = parent;
+  }
+
+  public override exec(command: string, args: string[], negated: boolean): void {
+    console.log(command, args, negated);
+    if( command === this.name ) {
+      if( args[0] === 'access' && args[1] === 'vlan' && args.length === 3 ) {
+        const vlanid = parseInt(args[2]);
+
+        const iface = (this.parent as InterfaceCommand).iface as Dot1QInterface;
+        iface.addVlan(vlanid);
+
+        this.finalize();
+      }
+      else
+        throw new Error(`${this.name} requires a subcommand`);
+    }
+    else {
+      super.exec(command, args, negated);
+    }
+  }
+
+  public override autocomplete(command: string, args: string[], negated: boolean): string[] {
+    if( command === this.name ) {
+      if( args.length === 1 )
+        return ['access'];
+      if( args[0] === 'access' && args.length === 2 )
+        return ['vlan'];
 
       return [];
     }
