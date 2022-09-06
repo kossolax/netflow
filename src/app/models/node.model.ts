@@ -70,6 +70,7 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
   public override name = "Switch";
   public override type = "switch";
   public receiveTrame$: Subject<DatalinkMessage> = new Subject<DatalinkMessage>();
+  public knownVlan: Record<number, string> = {};
 
   private ARPTable: Map<HardwareAddress, {iface: HardwareInterface, lastSeen: number}[]> = new Map<HardwareAddress, {iface: HardwareInterface, lastSeen: number}[]>();
 

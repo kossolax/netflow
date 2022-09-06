@@ -67,7 +67,7 @@ export class InterfaceCommand extends TerminalCommand {
     return super.autocomplete(command, args, negated);
   }
 }
-export class SwitchPortCommand extends TerminalCommand {
+class SwitchPortCommand extends TerminalCommand {
   constructor(parent: TerminalCommand) {
     super(parent.Terminal, 'switchport');
     this.parent = parent;
@@ -118,7 +118,7 @@ export class SwitchPortCommand extends TerminalCommand {
     return super.autocomplete(command, args, negated);
   }
 }
-export class IPInterfaceCommand extends TerminalCommand {
+class IPInterfaceCommand extends TerminalCommand {
 
   constructor(parent: TerminalCommand) {
     super(parent.Terminal, 'ip');
