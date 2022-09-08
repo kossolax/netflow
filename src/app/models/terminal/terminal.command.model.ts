@@ -40,7 +40,7 @@ export abstract class TerminalCommand {
     else if( command === 'exit' && !negated ) {
       let p = this.parent;
       while( p !== p.parent )
-        p = this.parent;
+        p = p.parent;
 
       this.terminal.changeDirectory(p);
     }

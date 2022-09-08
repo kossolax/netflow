@@ -8,6 +8,8 @@ export class ConfigCommand extends TerminalCommand {
     super(parent.Terminal, 'configure', '(config)#');
     this.parent = parent;
 
+    this.registerCommand(new HostnameConfigCommand(this));
+
     if( this.terminal.Node instanceof RouterHost )
       this.registerCommand(new IPConfigCommand(this));
     if( this.terminal.Node instanceof SwitchHost )
@@ -36,6 +38,28 @@ export class ConfigCommand extends TerminalCommand {
     }
 
     return super.autocomplete(command, args, negated);
+  }
+}
+class HostnameConfigCommand extends TerminalCommand {
+  constructor(parent: TerminalCommand) {
+    super(parent.Terminal, 'hostname');
+    this.parent = parent;
+    this.canBeNegative = true;
+  }
+
+  public override exec(command: string, args: string[], negated: boolean): void {
+    if( command === this.name ) {
+      if( args.length === 1 ) {
+        this.Terminal.Node.name = args[0];
+
+        this.finalize();
+      }
+      else
+        throw new Error(`${this.name} requires a subcommand`);
+    }
+    else {
+      super.exec(command, args, negated);
+    }
   }
 }
 class IPConfigCommand extends TerminalCommand {
