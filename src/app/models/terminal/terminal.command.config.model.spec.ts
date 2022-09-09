@@ -43,9 +43,44 @@ describe('Terminal config test', () => {
     expect(host.RoutingTable.length).toBe(1);
     expect(host.RoutingTable[0].network.toString()).toBe("0.0.0.0");
 
-
+    // should not exist on switch
     terminalSwitch.exec("enable", []);
     terminalSwitch.exec("configure", ["terminal"]);
     expect(terminalSwitch.autocomplete("ip", [])).toEqual([]);
   });
+
+  it( 'vlan', () => {
+    const host = terminalSwitch.Node as SwitchHost
+
+    terminalSwitch.exec("enable", []);
+    terminalSwitch.exec("configure", ["terminal"]);
+
+    expect(host.knownVlan[10]).toBeUndefined();
+    expect(host.knownVlan[20]).toBeUndefined();
+
+    terminalSwitch.exec("vlan", ["10"]);
+    terminalSwitch.exec("name", ["rouge"]);
+    terminalSwitch.exec("end", []);
+
+    terminalSwitch.exec("vlan", ["20"]);
+    terminalSwitch.exec("name", ["bleu"]);
+    terminalSwitch.exec("end", []);
+
+    expect(host.knownVlan[10]).toBe("rouge");
+    expect(host.knownVlan[20]).toBe("bleu");
+
+    terminalSwitch.exec("no", ["vlan", "10"]);
+    expect(host.knownVlan[10]).toBeUndefined();
+
+    terminalSwitch.exec("vlan", ["10"]);
+    terminalSwitch.exec("end", []);
+    expect(host.knownVlan[10]).not.toBeUndefined();
+    expect(host.knownVlan[10]).not.toBe("rouge");
+
+    // should not exist on router
+    terminalRouter.exec("enable", []);
+    terminalRouter.exec("configure", ["terminal"]);
+    expect(terminalRouter.autocomplete("vlan", [])).toEqual([]);
+  });
+
 });

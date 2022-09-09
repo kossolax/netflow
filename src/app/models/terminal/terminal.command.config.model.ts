@@ -117,7 +117,7 @@ class VlanConfigCommand extends TerminalCommand {
     if( command === this.name ) {
       if( args.length === 1 ) {
         const host = this.Terminal.Node as SwitchHost;
-        this.vlan_id = parseInt(args[1]);
+        this.vlan_id = parseInt(args[0]);
 
         if( !negated ) {
           if( !host.knownVlan[this.vlan_id] )
@@ -152,8 +152,8 @@ class VlanNameCommand extends TerminalCommand {
         const vlan_id = (this.parent as VlanConfigCommand).vlan_id;
         const host = this.Terminal.Node as SwitchHost;
 
-        if( negated )
-          host.knownVlan[vlan_id] = args[1];
+        if( !negated )
+          host.knownVlan[vlan_id] = args[0];
 
         this.finalize();
       }
