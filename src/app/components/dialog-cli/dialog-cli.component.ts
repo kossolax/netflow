@@ -64,13 +64,13 @@ export class DialogCliComponent implements AfterViewInit, OnChanges {
       const key = ev.key;
 
       if( key === 'Enter' ) {
-        let command = this.buffer.join('').trim().split(' ').filter(x => x);
+        let command = this.buffer.join('').trim();
         this.buffer = [];
         this.bufferPosition = this.buffer.length;
 
         if( command.length > 0 ) {
           this.child.write(`\n ${FunctionsUsingCSI.cursorColumn(1)}`);
-          this.terminal.exec(command[0], command.slice(1));
+          this.terminal.exec(command);
         }
         else {
           this.child.write(`\n ${FunctionsUsingCSI.cursorColumn(1)} ${this.terminal.Prompt} `);
@@ -102,24 +102,23 @@ export class DialogCliComponent implements AfterViewInit, OnChanges {
 
       }
       else if( key === 'Tab' || key === '?' ) {
-        let command = this.buffer.join('').trim().split(' ').filter(x => x);
-        if( this.buffer[this.buffer.length-1] === ' ' || command.length === 0 )
-          command.push('');
+        let command = this.buffer.join('');
 
-        let completions = this.terminal.autocomplete(command[0], command.slice(1));
+        let completions = this.terminal.autocomplete(command);
 
         if( completions.length === 1 ) {
+          let commands = command.split(' ').filter(x => x);
+          if( command[command.length-1] === ' ' || commands.length === 0 )
+            commands.push('');
 
-          if( completions[0] !== command[0] ) {
-            let rightPart = completions[0].slice(command[command.length-1].length).split('');
+          let rightPart = completions[0].slice(commands[commands.length-1].length).split('');
 
-            for(let i=this.bufferPosition; i<this.buffer.length; i++)
-              this.child.write(FunctionsUsingCSI.cursorForward(1));
+          for(let i=this.bufferPosition; i<this.buffer.length; i++)
+            this.child.write(FunctionsUsingCSI.cursorForward(1));
 
-            rightPart.forEach(c => this.buffer.push(c));
-            this.bufferPosition = this.buffer.length;
-            this.child.write(rightPart.join(''));
-          }
+          rightPart.forEach(c => this.buffer.push(c));
+          this.bufferPosition = this.buffer.length;
+          this.child.write(rightPart.join(''));
         }
         else if ( completions.length > 1 ) {
           this.child.write(`\n ${FunctionsUsingCSI.cursorColumn(1)} ${completions.join(' ')} `);

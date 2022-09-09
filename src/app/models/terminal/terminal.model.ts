@@ -48,7 +48,12 @@ export class Terminal {
     this.changeDirectory(this.location);
   }
 
-  public exec(command: string, args: string[]): void {
+  public exec(commandWithArguments: string): void {
+    let commands = commandWithArguments.trim().split(' ').filter(x => x);
+    let command = commands[0];
+    let args = commands.slice(1);
+
+
     this.locked = true;
     this.history.push([command, ...args].join(' '));
     this.historyIndex = this.history.length-1;
@@ -88,7 +93,10 @@ export class Terminal {
     return this.history[this.historyIndex];
   }
 
-  public autocomplete(command: string, args: string[]): string[] {
+  public autocomplete(commandWithArguments: string): string[] {
+    let commands = commandWithArguments.trim().split(' ').filter(x => x);
+    let command = commands[0] || '';
+    let args = commands.slice(1) || [];
     let negated = false;
 
     if( command === 'no' ) {
@@ -96,15 +104,18 @@ export class Terminal {
       command = args.length >= 1 ? args.shift()! : '';
     }
 
-    const commands = this.location.autocomplete(command, args, negated);
+    if( commandWithArguments[commandWithArguments.length-1] === ' ' )
+      args.push('');
 
-    if( commands.length === 1 ) {
-      const subCommands = this.location.autocomplete_child(commands[0], args, negated);
-      if( subCommands.length >= 1 )
+    const commandsAvailable = this.location.autocomplete(command, args, negated);
+
+    if( commandsAvailable.length === 1 ) {
+      const subCommands = this.location.autocomplete_child(commandsAvailable[0], args, negated);
+      if( subCommands.length >= 1 || args.length >= 1 )
         return subCommands;
     }
 
-    return commands;
+    return commandsAvailable;
   }
   public changeDirectory(t: TerminalCommand): void {
     this.location = t;
