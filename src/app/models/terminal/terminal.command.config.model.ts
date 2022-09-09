@@ -70,7 +70,6 @@ class IPConfigCommand extends TerminalCommand {
   }
 
   public override exec(command: string, args: string[], negated: boolean): void {
-    console.log(command, args, negated);
     if( command === this.name ) {
       if( args[0] === 'route' && args.length === 4 ) {
         const network = new IPAddress(args[1]);

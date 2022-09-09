@@ -205,6 +205,9 @@ export class RouterHost extends Node<NetworkInterface> implements NetworkListene
   public override name = "Router";
   public override type = "router";
   private routingTable: {network: NetworkAddress, mask: NetworkAddress, gateway: NetworkAddress}[] = [];
+  get RoutingTable(): {network: NetworkAddress, mask: NetworkAddress, gateway: NetworkAddress}[] {
+    return this.routingTable;
+  }
 
   public receivePacket$: Subject<NetworkMessage> = new Subject<NetworkMessage>();
 
