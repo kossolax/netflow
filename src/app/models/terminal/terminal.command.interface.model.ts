@@ -74,15 +74,61 @@ class SwitchPortCommand extends TerminalCommand {
   }
 
   public override exec(command: string, args: string[], negated: boolean): void {
-    console.log(command, args, negated);
     if( command === this.name ) {
       if( args[0] === 'access' && args[1] === 'vlan' && args.length === 3 ) {
         const vlanid = parseInt(args[2]);
 
         const iface = (this.parent as InterfaceCommand).iface as Dot1QInterface;
-        iface.addVlan(vlanid);
+        if( iface.VlanMode == VlanMode.Access )
+          iface.addVlan(vlanid);
 
         this.finalize();
+      }
+      else if( args[0] === 'trunk' && args[1] === 'allowed' && args[2] === "vlan" ) {
+        const iface = (this.parent as InterfaceCommand).iface as Dot1QInterface;
+
+        if( (args[3] === 'add' || args[3] === 'remove') && args.length === 5 ) {
+          const vlanid = parseInt(args[4]);
+          if( args[3] === 'add' )
+            iface.addVlan(vlanid);
+          else
+            iface.removeVlan(vlanid);
+        }
+        else if( args[3] === 'except' && args.length === 5 ) {
+          const host = this.Terminal.Node as SwitchHost;
+          const vlanid = parseInt(args[4]);
+
+          const vlans = iface.Vlan.map( i => i );
+          vlans.map( i => iface.removeVlan(i) );
+
+          for(const vlanid in host.knownVlan)
+            iface.addVlan(parseInt(vlanid));
+          iface.removeVlan(vlanid);
+        }
+        else if( args[3] === 'all' && args.length === 4 ) {
+          const host = this.Terminal.Node as SwitchHost;
+
+          const vlans = iface.Vlan.map( i => i );
+          vlans.map( i => iface.removeVlan(i) );
+
+          for(const vlanid in host.knownVlan)
+            iface.addVlan(parseInt(vlanid));
+        }
+        else if( args.length === 4 ) {
+          const vlanid = parseInt(args[3]);
+
+          const vlans = iface.Vlan.map( i => i );
+          vlans.map( i => iface.removeVlan(i) );
+          iface.addVlan(vlanid);
+        }
+
+        this.finalize();
+      }
+      else if( args[0] === 'trunk' && args[1] === 'native' && args[2] === "vlan" && args.length === 4 ) {
+        const iface = (this.parent as InterfaceCommand).iface as Dot1QInterface;
+        const vlanid = parseInt(args[3]);
+
+        iface.NativeVlan = vlanid;
       }
       else if( args[0] === 'mode' && args.length === 2 ) {
         const iface = (this.parent as InterfaceCommand).iface as Dot1QInterface;
@@ -106,9 +152,21 @@ class SwitchPortCommand extends TerminalCommand {
   public override autocomplete(command: string, args: string[], negated: boolean): string[] {
     if( command === this.name ) {
       if( args.length === 1 )
-        return ['access', 'mode'];
+        return ['access', 'trunk', 'mode'];
       if( args[0] === 'access' && args.length === 2 )
         return ['vlan'];
+      if( args[0] === 'trunk' ) {
+        if( args.length === 2 )
+          return ['allowed', 'native' ];
+
+        if( args[1] === 'allowed' && args.length === 3 )
+          return ['vlan'];
+        if( args[1] === 'allowed' && args[2] === 'vlan' && args.length === 4 )
+          return ['add', 'remove', 'except', 'all'];
+
+        if( args[1] === 'native' && args.length === 3 )
+          return ['vlan'];
+      }
       if( args[0] === 'mode' && args.length === 2 )
         return ['access', 'dynamic', 'trunk'];
 

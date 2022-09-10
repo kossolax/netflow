@@ -247,13 +247,14 @@ export class EthernetInterface extends HardwareInterface {
 export class Dot1QInterface extends EthernetInterface {
   protected vlan: number[];
   protected vlanMode: VlanMode;
+  protected natif: number = 0;
 
   protected dot1q: Dot1QProtocol;
 
   constructor(node: GenericNode, addr: MacAddress, name: string="", minSpeed: number=10, maxSpeed: number=1000, fullDuplexCapable: boolean=true, autonegotiate: boolean=true) {
     super(node, addr, name, minSpeed, maxSpeed, fullDuplexCapable, autonegotiate);
 
-    this.vlan = [0];
+    this.vlan = [ this.natif ];
     this.vlanMode = VlanMode.Access;
     this.dot1q = new Dot1QProtocol(this);
   }
@@ -269,7 +270,7 @@ export class Dot1QInterface extends EthernetInterface {
   }
   public removeVlan(vlan_id: number): void {
     if( this.VlanMode === VlanMode.Access ) {
-      this.vlan = [0];
+      this.vlan = [ this.natif ];
     }
     else {
       const index = this.vlan.indexOf(vlan_id);
@@ -286,10 +287,18 @@ export class Dot1QInterface extends EthernetInterface {
   }
   set VlanMode(vlanMode: VlanMode) {
     if( vlanMode === VlanMode.Access ) {
+      if( this.vlan.length === 0 )
+        this.vlan = [ this.natif ];
       if( this.vlan.length > 1 )
         this.vlan = [this.vlan[0]];
     }
     this.vlanMode = vlanMode;
+  }
+  get NativeVlan(): number {
+    return this.natif;
+  }
+  set NativeVlan(natif: number) {
+    this.natif = natif;
   }
 
   public override sendTrame(message: DatalinkMessage): void {
