@@ -12,7 +12,6 @@ export class RootCommand extends TerminalCommand {
 
     this.registerCommand(new AdminCommand(this));
     this.registerCommand(new PingCommand(this));
-    this.registerCommand(new TraceRouteCommand(this));
   }
 }
 export class PingCommand extends TerminalCommand {
@@ -35,19 +34,5 @@ export class PingCommand extends TerminalCommand {
         this.terminal.write(`${args[0]} is dead`);
       this.finalize();
     });
-  }
-}
-export class TraceRouteCommand extends TerminalCommand {
-  constructor(parent: TerminalCommand) {
-    super(parent.Terminal, 'traceroute');
-    this.parent = parent;
-  }
-
-  public override exec(command: string, args: string[], negated: boolean): void {
-    if( args.length < 1 )
-      throw new Error(`${this.name} requires a hostname`);
-
-    this.Terminal.Node.send("traceroute", new IPAddress(args[0]));
-    this.finalize();
   }
 }

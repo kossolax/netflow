@@ -1,4 +1,4 @@
-import { PingCommand, TraceRouteCommand } from "./terminal.command.basic.model";
+import { PingCommand } from "./terminal.command.basic.model";
 import { ConfigCommand } from "./terminal.command.config.model";
 import { TerminalCommand } from "./terminal.command.model";
 
@@ -9,7 +9,6 @@ export class AdminCommand extends TerminalCommand {
     this.parent = parent;
 
     this.registerCommand(new PingCommand(this));
-    this.registerCommand(new TraceRouteCommand(this));
     this.registerCommand(new ConfigCommand(this));
   }
 
