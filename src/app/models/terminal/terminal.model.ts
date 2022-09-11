@@ -1,8 +1,5 @@
 import { merge, Observable, startWith, Subject, switchMap, tap } from "rxjs";
-import { IPAddress } from "../address.model";
-import { IPInterface } from "../layers/network.model";
-import { RouterHost, SwitchHost } from "../node.model";
-import { AdminCommand } from "./terminal.command.admin.model";
+import { NetworkHost, SwitchHost } from "../node.model";
 import { RootCommand } from "./terminal.command.basic.model";
 import { TerminalCommand } from "./terminal.command.model";
 
@@ -17,7 +14,7 @@ export class Terminal {
   private historyIndex: number = 0;
   private history: string[] = [];
   private location: TerminalCommand;
-  private node: RouterHost | SwitchHost;
+  private node: NetworkHost | SwitchHost;
 
   get Text$(): Observable<string> {
     return this.text$.asObservable();
@@ -35,14 +32,14 @@ export class Terminal {
   get Locked(): boolean {
     return this.locked;
   }
-  get Node(): RouterHost|SwitchHost {
+  get Node(): NetworkHost|SwitchHost {
     return this.node;
   }
   get Prompt(): string {
     return `${this.Node.name}${this.location.Prompt}`;
   }
 
-  constructor(node: RouterHost|SwitchHost) {
+  constructor(node: NetworkHost|SwitchHost) {
     this.node = node;
     this.location = new RootCommand(this);
     this.changeDirectory(this.location);

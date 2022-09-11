@@ -8,7 +8,7 @@ import { NetworkInterface } from 'src/app/models/layers/network.model';
 import { AbstractLink, Link } from 'src/app/models/layers/physical.model';
 import { PhysicalMessage } from 'src/app/models/message.model';
 import { Network } from 'src/app/models/network.model';
-import { GenericNode, RouterHost, SwitchHost } from 'src/app/models/node.model';
+import { GenericNode, RouterHost, ServerHost, SwitchHost } from 'src/app/models/node.model';
 import { ICMPMessage, ICMPType } from 'src/app/models/protocols/icmp.model';
 import { LinkLayerSpy } from 'src/app/models/protocols/protocols.model';
 import { NetworkService } from 'src/app/services/network.service';
@@ -41,44 +41,52 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
 
   private debug(): void {
     let net = new Network();
-    let nodes: (RouterHost|SwitchHost)[] = [];
+    let nodes: (RouterHost|SwitchHost|ServerHost)[] = [];
     nodes.push(new RouterHost("Router-1A", 2));
     nodes.push(new SwitchHost("Switch-1", 24));
     nodes.push(new RouterHost("Router-1B", 2));
     nodes.push(new RouterHost("Router-2", 1));
+    nodes.push(new ServerHost("Server-1", "server", 1));
 
-    (nodes[0] as RouterHost).getInterface(0).setNetAddress(new IPAddress("192.168.0.1"));
-    (nodes[0] as RouterHost).addRoute("192.168.0.0", "255.255.255.0", "192.168.0.1");
-    (nodes[0] as RouterHost).addRoute("0.0.0.0", "0.0.0.0", "192.168.0.2");
+    let i = 0;
 
-    (nodes[2] as RouterHost).getInterface(0).setNetAddress(new IPAddress("192.168.0.2"));
-    (nodes[2] as RouterHost).getInterface(1).setNetAddress(new IPAddress("192.168.1.2"));
-    (nodes[2] as RouterHost).addRoute("192.168.0.0", "255.255.255.0", "192.168.0.2");
-    (nodes[2] as RouterHost).addRoute("192.168.1.0", "255.255.255.0", "192.168.1.2");
+    (nodes[i] as RouterHost).getInterface(0).setNetAddress(new IPAddress("192.168.0.1"));
+    (nodes[i] as RouterHost).addRoute("192.168.0.0", "255.255.255.0", "192.168.0.1");
+    (nodes[i] as RouterHost).addRoute("0.0.0.0", "0.0.0.0", "192.168.0.2");
+    nodes[i].x = 200;
+    nodes[i].y = 200;
+    net.nodes[nodes[i].guid] = nodes[i++];
 
-    (nodes[3] as RouterHost).getInterface(0).setNetAddress(new IPAddress("192.168.1.1"));
-    (nodes[3] as RouterHost).addRoute("192.168.1.0", "255.255.255.0", "192.168.1.1");
-    (nodes[3] as RouterHost).addRoute("0.0.0.0", "0.0.0.0", "192.168.1.2");
+    nodes[i].x = 400;
+    nodes[i].y = 200;
+    net.nodes[nodes[i].guid] = nodes[i++];
 
-    let index = 0;
-    nodes.map( i => {
-      i.x = 200 + index * 200;
-      i.y = 200;
+    (nodes[i] as RouterHost).getInterface(0).setNetAddress(new IPAddress("192.168.0.2"));
+    (nodes[i] as RouterHost).getInterface(1).setNetAddress(new IPAddress("192.168.1.2"));
+    (nodes[i] as RouterHost).addRoute("192.168.0.0", "255.255.255.0", "192.168.0.2");
+    (nodes[i] as RouterHost).addRoute("192.168.1.0", "255.255.255.0", "192.168.1.2");
+    nodes[i].x = 600;
+    nodes[i].y = 200;
+    net.nodes[nodes[i].guid] = nodes[i++];
 
-      if( index === nodes.length-1 ) {
-        i.x = 600;
-        i.y = 400;
-      }
+    (nodes[i] as RouterHost).getInterface(0).setNetAddress(new IPAddress("192.168.1.1"));
+    (nodes[i] as RouterHost).addRoute("192.168.1.0", "255.255.255.0", "192.168.1.1");
+    (nodes[i] as RouterHost).addRoute("0.0.0.0", "0.0.0.0", "192.168.1.2");
+    nodes[i].x = 600;
+    nodes[i].y = 400;
+    net.nodes[nodes[i].guid] = nodes[i++];
 
-      net.nodes[i.guid] = i;
-      //i.getInterfaces().map( j => i.getInterface(j).up() );
-      index++;
-    });
+
+    (nodes[i] as ServerHost).getInterface(0).setNetAddress(new IPAddress("192.168.0.3"));
+    nodes[i].x = 400;
+    nodes[i].y = 400;
+    net.nodes[nodes[i].guid] = nodes[i++];
 
     let links = [];
     links.push(new Link(nodes[0].getFirstAvailableInterface(), nodes[1].getFirstAvailableInterface(), 10));
     links.push(new Link(nodes[1].getFirstAvailableInterface(), nodes[2].getFirstAvailableInterface(), 10));
     links.push(new Link(nodes[2].getFirstAvailableInterface(), nodes[3].getFirstAvailableInterface(), 10));
+    links.push(new Link(nodes[4].getFirstAvailableInterface(), nodes[1].getFirstAvailableInterface(), 10));
     links.map( i => {
       net.links.push(i);
     });

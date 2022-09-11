@@ -1,5 +1,5 @@
 import { Link } from "./layers/physical.model";
-import { GenericNode, ServerHost, RouterHost, SwitchHost } from "./node.model";
+import { GenericNode, ServerHost, RouterHost, SwitchHost, NetworkHost } from "./node.model";
 
 export class Network {
   public nodes: Record<string, GenericNode> = {};
@@ -26,7 +26,7 @@ export class Network {
 
     name += depth.join("/");
 
-    if(  node instanceof SwitchHost || node instanceof RouterHost )
+    if(  node instanceof SwitchHost || node instanceof NetworkHost )
       node.addInterface(name);
     else
       throw new Error("Unknown node type: " + node.type);
@@ -106,8 +106,8 @@ export class Network {
 
     if( json.NETWORK.LINKS && json.NETWORK.LINKS.LINK ) {
       json.NETWORK.LINKS.LINK.map( (i: any) => {
-        const from = network.nodes[i.CABLE.FROM] as (SwitchHost|RouterHost|ServerHost);
-        const to = network.nodes[i.CABLE.TO] as (SwitchHost|RouterHost|ServerHost);
+        const from = network.nodes[i.CABLE.FROM] as (SwitchHost|NetworkHost);
+        const to = network.nodes[i.CABLE.TO] as (SwitchHost|NetworkHost);
         const length = i.CABLE.LENGTH;
 
         try {

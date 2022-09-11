@@ -5,7 +5,7 @@ import { Dot1QInterface, EthernetInterface, HardwareInterface, Interface } from 
 import { IPInterface, NetworkInterface } from "./layers/network.model";
 import { DatalinkMessage, Message, NetworkMessage } from "./message.model";
 import { Dot1QMessage } from "./protocols/ethernet.model";
-import { ActionHandle, DatalinkListener, NetworkListener } from "./protocols/protocols.model";
+import { ActionHandle, DatalinkListener, NetworkListener, NetworkSender } from "./protocols/protocols.model";
 
 export abstract class GenericNode {
   public guid: string = Math.random().toString(36).substring(2, 9);
@@ -201,7 +201,31 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
 
 }
 
-export class RouterHost extends Node<NetworkInterface> implements NetworkListener {
+
+
+
+export abstract class NetworkHost extends Node<NetworkInterface> {
+
+  public addInterface(name: string = ""): NetworkInterface {
+    if( name == "" )
+      name = "gig0/" + Object.keys(this.interfaces).length;
+
+    const ip = IPAddress.generateAddress();
+    const mac = MacAddress.generateAddress();
+
+    const eth = new EthernetInterface(this, mac, name, 10, 1000, true);
+    const iface = new IPInterface(this, name, eth);
+    iface.addNetAddress(ip);
+    iface.addListener(this);
+
+    this.interfaces[name] = iface;
+
+    return iface;
+  }
+
+  public abstract getNextHop(address: NetworkAddress|null): NetworkAddress|null;
+}
+export class RouterHost extends NetworkHost implements NetworkListener {
   public override name = "Router";
   public override type = "router";
   private routingTable: {network: NetworkAddress, mask: NetworkAddress, gateway: NetworkAddress}[] = [];
@@ -227,22 +251,6 @@ export class RouterHost extends Node<NetworkInterface> implements NetworkListene
     return clone;
   }
 
-  public addInterface(name: string = ""): NetworkInterface {
-    if( name == "" )
-      name = "gig0/" + Object.keys(this.interfaces).length;
-
-    const ip = IPAddress.generateAddress();
-    const mac = MacAddress.generateAddress();
-
-    const eth = new EthernetInterface(this, mac, name, 10, 1000, true);
-    const iface = new IPInterface(this, name, eth);
-    iface.addNetAddress(ip);
-    iface.addListener(this);
-
-    this.interfaces[name] = iface;
-
-    return iface;
-  }
 
   public send(message: string|NetworkMessage, net_dst?: NetworkAddress): void {
 
@@ -345,11 +353,13 @@ export class RouterHost extends Node<NetworkInterface> implements NetworkListene
     return bestRoute;
   }
 }
-export class ServerHost extends RouterHost {
+export class ServerHost extends NetworkHost {
   public override name = "Server";
   public override type = "server";
 
-  constructor(name: string = "", type: string = "", iface: number=1) {
+  private gateway: NetworkAddress = new IPAddress("0.0.0.0");
+
+  constructor(name: string = "", type: string="server", iface: number=1) {
     super();
     if( name != "" )
       this.name = name;
@@ -358,5 +368,49 @@ export class ServerHost extends RouterHost {
 
     for(let i=0; i<iface; i++)
       this.addInterface();
+  }
+
+  public clone(): ServerHost {
+    const clone = new ServerHost();
+    this.cloneInto(clone);
+    return clone;
+  }
+
+  public send(message: string|NetworkMessage, net_dst?: NetworkAddress): void {
+
+    if( message instanceof NetworkMessage ) {
+      for( const name in this.interfaces ) {
+        this.interfaces[name].sendPacket(message);
+      }
+    }
+    else {
+
+      if( net_dst === undefined )
+        throw new Error("No destination specified");
+
+      const net_src = this.getInterface(0).getNetAddress();
+
+      const msg = new NetworkMessage(
+        message,
+        net_src, net_dst
+      );
+
+      for( const name in this.interfaces ) {
+        this.interfaces[name].sendPacket(msg);
+      }
+    }
+  }
+
+  public getNextHop(address: NetworkAddress|null): NetworkAddress|null {
+    if( address === null )
+      throw new Error("No address specified");
+
+
+    for(let name in this.interfaces) {
+      if( this.interfaces[name].getNetAddress().InSameNetwork(this.interfaces[name].getNetMask(), address) )
+        return address;
+    }
+
+    return this.gateway;
   }
 }

@@ -23,7 +23,7 @@
           <ng-template #headerTemplate>Desktop</ng-template>
           <ng-template #content>cc</ng-template>
         </e-tabitem>
-        <e-tabitem *ngIf="!IsServer(node)">
+        <e-tabitem>
           <ng-template #headerTemplate>Command-line</ng-template>
           <ng-template #content>
             <app-dialog-cli [node]="node"></app-dialog-cli>

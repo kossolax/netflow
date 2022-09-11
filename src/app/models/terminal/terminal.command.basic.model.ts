@@ -1,6 +1,6 @@
 import { IPAddress } from "../address.model";
 import { IPInterface } from "../layers/network.model";
-import { RouterHost } from "../node.model";
+import { NetworkHost, RouterHost, SwitchHost } from "../node.model";
 import { AdminCommand } from "./terminal.command.admin.model";
 import { Terminal } from "./terminal.model";
 import { TerminalCommand } from "./terminal.command.model";
@@ -10,7 +10,9 @@ export class RootCommand extends TerminalCommand {
     super(terminal, '', '$');
     this.parent = this;
 
-    this.registerCommand(new AdminCommand(this));
+    if( terminal.Node instanceof RouterHost || terminal.Node instanceof SwitchHost )
+      this.registerCommand(new AdminCommand(this));
+
     this.registerCommand(new PingCommand(this));
   }
 }
@@ -24,7 +26,7 @@ export class PingCommand extends TerminalCommand {
     if( args.length < 1 )
       throw new Error(`${this.name} requires a hostname`);
 
-    const nethost = this.terminal.Node as RouterHost;
+    const nethost = this.terminal.Node as NetworkHost;
     const ipface = nethost.getInterface(0) as IPInterface;
 
     ipface.sendIcmpRequest(new IPAddress(args[0]), 20).subscribe( (data) => {
