@@ -101,7 +101,7 @@ export class Network {
       node.y = parseFloat(y);
       node.type = type;
       network.nodes[key] = node;
-      network.parseModule(node, i.ENGINE, [], node instanceof RouterHost ? 0 : 1);
+      network.parseModule(node, i.ENGINE, [], node instanceof NetworkHost ? 0 : 1);
     });
 
     if( json.NETWORK.LINKS && json.NETWORK.LINKS.LINK ) {

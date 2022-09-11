@@ -359,7 +359,7 @@ export class ServerHost extends NetworkHost {
 
   private gateway: NetworkAddress = new IPAddress("0.0.0.0");
 
-  constructor(name: string = "", type: string="server", iface: number=1) {
+  constructor(name: string = "", type: string="server", iface: number=0) {
     super();
     if( name != "" )
       this.name = name;
