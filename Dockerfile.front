@@ -1,9 +1,14 @@
 # Build and compile the frontend
 FROM node:latest as build-stage
+ARG SYNCFUSION_LICENSE
+ENV SYNCFUSION_LICENSE=$SYNCFUSION_LICENSE
+
 WORKDIR /app
 COPY package*.json /app/
 RUN npm install --legacy-peer-deps
+
 COPY ./ /app/
+RUN npx syncfusion-license activate
 RUN npm run build -- --output-path=./dist/out --configuration production
 
 # Get the compiled app ready to be served with Nginx
