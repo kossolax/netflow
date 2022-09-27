@@ -1,0 +1,89 @@
+
+<div class="e-input-group">
+  <label for="check">
+    Service:
+    &nbsp;&nbsp;
+    <span *ngIf="isActive">ON&nbsp;&nbsp;</span>
+    <span *ngIf="!isActive">OFF</span>
+
+  </label>
+
+  <ejs-switch
+    id="check"
+    [checked]="isActive"
+    (change)="$event.checked ? isActive=true : isActive=false"
+  >
+  </ejs-switch>
+</div>
+
+<div class="e-input-group">
+  <ejs-textbox
+    placeholder="The name of the DHCP pool"
+    floatLabelType="Auto"
+    class="e-input"
+    value="serverPool"
+  >
+  </ejs-textbox>
+</div>
+
+<div class="e-input-group">
+  <ejs-textbox
+    placeholder="Default gateway"
+    floatLabelType="Auto"
+    class="e-input"
+    value="0.0.0.0"
+  >
+  </ejs-textbox>
+  <ejs-textbox
+    placeholder="Subnet MASK"
+    floatLabelType="Auto"
+    class="e-input"
+    value="0.0.0.0"
+  >
+  </ejs-textbox>
+</div>
+
+<div class="e-input-group">
+  <ejs-textbox
+    placeholder="Start IP Address"
+    floatLabelType="Auto"
+    class="e-input"
+    value="0.0.0.0"
+  >
+  </ejs-textbox>
+  <ejs-textbox
+    placeholder="End IP Address"
+    floatLabelType="Auto"
+    class="e-input"
+    value="0.0.0.0"
+  >
+  </ejs-textbox>
+</div>
+
+<div class="e-input-group">
+  <ejs-textbox
+    placeholder="DNS Server"
+    floatLabelType="Auto"
+    class="e-input"
+    value="0.0.0.0"
+  >
+  </ejs-textbox>
+</div>
+<div class="e-input-group">
+  <ejs-textbox
+    placeholder="TFTP Server"
+    floatLabelType="Auto"
+    class="e-input"
+    value="0.0.0.0"
+  >
+  </ejs-textbox>
+</div>
+<div class="e-input-group">
+  <ejs-textbox
+    placeholder="WLC Server"
+    floatLabelType="Auto"
+    class="e-input"
+    value="0.0.0.0"
+  >
+  </ejs-textbox>
+</div>

@@ -1,0 +1,10 @@
+<ejs-tab id="tab_service" #tab_config class="e-fill" headerPlacement="Left" headerStyle="Fill" *ngIf="node!==null">
+  <e-tabitems>
+    <e-tabitem>
+      <ng-template #headerTemplate>DHCP</ng-template>
+      <ng-template #content>
+        <app-dialog-service-dhcp  [node]="node"></app-dialog-service-dhcp>
+      </ng-template>
+    </e-tabitem>
+  </e-tabitems>
+</ejs-tab>

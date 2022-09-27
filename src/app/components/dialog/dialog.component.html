@@ -17,11 +17,9 @@
         </e-tabitem>
         <e-tabitem *ngIf="IsServer(node)">
           <ng-template #headerTemplate>Service</ng-template>
-          <ng-template #content>cc</ng-template>
-        </e-tabitem>
-        <e-tabitem *ngIf="IsServer(node)">
-          <ng-template #headerTemplate>Desktop</ng-template>
-          <ng-template #content>cc</ng-template>
+          <ng-template #content>
+            <app-dialog-service [node]="node"></app-dialog-service>
+          </ng-template>
         </e-tabitem>
         <e-tabitem>
           <ng-template #headerTemplate>Command-line</ng-template>

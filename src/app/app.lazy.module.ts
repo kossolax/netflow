@@ -16,6 +16,8 @@ import { CheckBoxModule, RadioButtonModule, SwitchModule } from '@syncfusion/ej2
 import { DialogComponent } from './components/dialog/dialog.component';
 import { DialogCliComponent } from './components/dialog-cli/dialog-cli.component';
 import { NgTerminalModule } from 'ng-terminal';
+import { DialogServiceComponent } from './components/dialog-service/dialog-service.component';
+import { DialogServiceDhcpComponent } from './components/dialog-service-dhcp/dialog-service-dhcp.component';
 
 const routes: Routes = [
   { path: 'logical', component: LogicalComponent },
@@ -30,6 +32,8 @@ const routes: Routes = [
     PhysicalComponent,
     DialogComponent,
     DialogConfigComponent,
+    DialogServiceComponent,
+    DialogServiceDhcpComponent,
     DialogCliComponent,
   ],
   imports: [

@@ -1,0 +1,21 @@
+.e-input-group {
+  padding: 1px 10px 1px 10px;
+
+  ejs-textbox {
+    width: 100%;
+  }
+
+  ejs-radiobutton {
+    padding: 10px;
+  }
+
+  ejs-switch {
+    margin: 10px;
+  }
+
+  label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
