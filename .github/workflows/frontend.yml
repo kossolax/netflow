@@ -28,6 +28,11 @@ jobs:
           username: nologin
           password: ${{ secrets.SECRET_KEY }}
 
+      - name: Activate Syncfusion License
+        run: npx syncfusion-license activate
+        env:
+          SYNCFUSION_LICENSE: ${{ secrets.SYNCFUSION_LICENSE }}
+
       - name: Build
         uses: docker/build-push-action@v3.0.0
         env:
