@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { NetworkHost, RouterHost, ServerHost, SwitchHost } from 'src/app/models/node.model';
+import { NetworkHost, ServerHost } from 'src/app/models/node.model';
 
 @Component({
   selector: 'app-dialog-service',
@@ -7,7 +7,10 @@ import { NetworkHost, RouterHost, ServerHost, SwitchHost } from 'src/app/models/
   styleUrls: ['./dialog-service.component.scss'],
 })
 export class DialogServiceComponent {
-  @Input() public node: SwitchHost|RouterHost|null = null;
+  @Input() public node: NetworkHost|null = null;
+  get Server(): ServerHost {
+    return this.node as ServerHost;
+  }
 
   constructor() { }
 

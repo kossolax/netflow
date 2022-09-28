@@ -15,10 +15,10 @@
             <app-dialog-config [node]="node"></app-dialog-config>
           </ng-template>
         </e-tabitem>
-        <e-tabitem *ngIf="IsServer(node)">
+        <e-tabitem *ngIf="IsServer">
           <ng-template #headerTemplate>Service</ng-template>
           <ng-template #content>
-            <app-dialog-service [node]="node"></app-dialog-service>
+            <app-dialog-service [node]="Host"></app-dialog-service>
           </ng-template>
         </e-tabitem>
         <e-tabitem>

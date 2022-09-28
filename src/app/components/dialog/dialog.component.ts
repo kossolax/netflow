@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { TabComponent } from '@syncfusion/ej2-angular-navigations';
 import { DialogComponent as SyncfusionDialogComponent } from '@syncfusion/ej2-angular-popups';
-import { GenericNode, RouterHost, ServerHost, SwitchHost } from 'src/app/models/node.model';
+import { NetworkHost, ServerHost, SwitchHost } from 'src/app/models/node.model';
 
 @Component({
   selector: 'app-dialog',
@@ -12,13 +12,16 @@ export class DialogComponent implements OnChanges {
   @ViewChild('dialog') public dialog!: SyncfusionDialogComponent;
   @ViewChild('tabs') public tabs!: TabComponent;
 
-  @Input() public node: SwitchHost|RouterHost|null = null;
+  @Input() public node: SwitchHost|NetworkHost|null = null;
   @Output() public exit: EventEmitter<void> = new EventEmitter<void>();
-
-  public IsServer(node: GenericNode|null): boolean {
-    return node instanceof ServerHost;
+  get Host(): NetworkHost {
+    return this.node as NetworkHost;
+  }
+  get IsServer(): boolean {
+    return this.node instanceof ServerHost;
   }
   constructor() { }
+
 
   public ngOnChanges(changes: SimpleChanges): void {
     try {

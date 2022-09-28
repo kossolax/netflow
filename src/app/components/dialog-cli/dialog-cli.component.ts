@@ -1,7 +1,7 @@
 import { AfterViewInit, Component, Input, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
 import { FunctionsUsingCSI, NgTerminal } from 'ng-terminal';
 import { Subject, takeUntil } from 'rxjs';
-import { RouterHost, SwitchHost } from 'src/app/models/node.model';
+import { NetworkHost, RouterHost, SwitchHost } from 'src/app/models/node.model';
 import { Terminal } from 'src/app/models/terminal/terminal.model';
 
 @Component({
@@ -16,7 +16,7 @@ export class DialogCliComponent implements AfterViewInit, OnChanges {
   public buffer: string[] = [];
   private bufferPosition: number = 0;
 
-  @Input() public node: SwitchHost|RouterHost|null = null;
+  @Input() public node: SwitchHost|NetworkHost|null = null;
   private onDestroy$: Subject<void> = new Subject<void>();
 
   constructor() { }

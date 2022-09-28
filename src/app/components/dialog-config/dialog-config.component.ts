@@ -3,7 +3,7 @@ import { Component, Input } from '@angular/core';
 import { IPAddress, MacAddress } from 'src/app/models/address.model';
 import { HardwareInterface } from 'src/app/models/layers/datalink.model';
 import { NetworkInterface } from 'src/app/models/layers/network.model';
-import { RouterHost, SwitchHost } from 'src/app/models/node.model';
+import { NetworkHost, SwitchHost } from 'src/app/models/node.model';
 
 @Component({
   selector: 'app-dialog-config',
@@ -11,7 +11,7 @@ import { RouterHost, SwitchHost } from 'src/app/models/node.model';
   styleUrls: ['./dialog-config.component.scss'],
 })
 export class DialogConfigComponent {
-  @Input() public node: SwitchHost|RouterHost|null = null;
+  @Input() public node: SwitchHost|NetworkHost|null = null;
 
   constructor() { }
 
