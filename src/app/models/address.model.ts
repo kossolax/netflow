@@ -146,6 +146,57 @@ export class IPAddress extends NetworkAddress {
       return new IPAddress("255.255.255.0", true);
   }
 
+  public getNetworkIP(mask: IPAddress): IPAddress {
+    const src = this.address.split('.').map(value => parseInt(value, 10).toString(2).padStart(8, '0')).join('');
+    const net = mask.address.split('.').map(value => parseInt(value, 10).toString(2).padStart(8, '0')).join('');
+
+    const src_and = src.split('').map((value, index) => value === '1' && net[index] === '1' ? '1' : '0').join('');
+    const blocks = [parseInt(src_and.slice(0, 8), 2), parseInt(src_and.slice(8, 16), 2), parseInt(src_and.slice(16, 24), 2), parseInt(src_and.slice(24, 32), 2)];
+
+    return new IPAddress(blocks.join("."));
+  }
+  public getBroadcastIP(mask: IPAddress): IPAddress {
+    const src = this.address.split('.').map(value => parseInt(value, 10).toString(2).padStart(8, '0')).join('');
+    const net = mask.address.split('.').map(value => parseInt(value, 10).toString(2).padStart(8, '0')).join('');
+    const net_reverse = net.split('').map(value => value === '1' ? '0' : '1').join('');
+
+    const src_or = src.split('').map((value, index) => value === '1' || net_reverse[index] === '1' ? '1' : '0').join('');
+    const blocks = [parseInt(src_or.slice(0, 8), 2), parseInt(src_or.slice(8, 16), 2), parseInt(src_or.slice(16, 24), 2), parseInt(src_or.slice(24, 32), 2)];
+
+    return new IPAddress(blocks.join("."));
+  }
+  public add(value: number): IPAddress {
+    const blocks = this.address.split('.').map(value => parseInt(value, 10));
+    for( let i = 3; i >= 0; i-- ) {
+      blocks[i] += value;
+
+
+      if( blocks[i] > 255 ) {
+        blocks[i] = blocks[i] % 256;
+        value = Math.ceil(value / 256);
+      }
+      else
+        break;
+    }
+
+    return new IPAddress(blocks.join("."));
+  }
+  public subtract(value: number): IPAddress {
+    const blocks = this.address.split('.').map(value => parseInt(value, 10));
+    for( let i = 3; i >= 0; i-- ) {
+      blocks[i] -= value;
+
+      if( blocks[i] < 0 ) {
+        blocks[i] = 256 - -blocks[i] % 256;
+        value = Math.ceil(value / 256);
+      }
+      else
+        break;
+    }
+
+    return new IPAddress(blocks.join("."));
+  }
+
   public InSameNetwork(mask: IPAddress, dest: IPAddress): boolean {
 
     const src = this.address.split('.').map(value => parseInt(value, 10).toString(2).padStart(8, '0')).join('');

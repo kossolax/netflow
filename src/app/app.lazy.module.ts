@@ -12,7 +12,8 @@ import { PhysicalComponent } from './components/physical/physical.component';
 import { FormsModule } from '@angular/forms';
 import { DialogConfigComponent } from './components/dialog-config/dialog-config.component';
 import { TextBoxModule } from '@syncfusion/ej2-angular-inputs';
-import { CheckBoxModule, RadioButtonModule, SwitchModule } from '@syncfusion/ej2-angular-buttons';
+import { ButtonModule, CheckBoxModule, RadioButtonModule, SwitchModule } from '@syncfusion/ej2-angular-buttons';
+import { DropDownListModule } from '@syncfusion/ej2-angular-dropdowns';
 import { DialogComponent } from './components/dialog/dialog.component';
 import { DialogCliComponent } from './components/dialog-cli/dialog-cli.component';
 import { NgTerminalModule } from 'ng-terminal';
@@ -46,9 +47,11 @@ const routes: Routes = [
     TabModule,
     DiagramModule,
     DialogModule,
+    ButtonModule,
     TextBoxModule,
     SwitchModule,
     RadioButtonModule,
+    DropDownListModule,
 
     NgTerminalModule,
   ],

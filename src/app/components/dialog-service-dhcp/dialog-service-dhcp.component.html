@@ -16,74 +16,94 @@
   </ejs-switch>
 </div>
 
-<div class="e-input-group">
-  <ejs-textbox
-    placeholder="The name of the DHCP pool"
-    floatLabelType="Auto"
-    class="e-input"
-    value="serverPool"
-  >
-  </ejs-textbox>
-</div>
 
 <div class="e-input-group">
-  <ejs-textbox
-    placeholder="Default gateway"
-    floatLabelType="Auto"
-    class="e-input"
-    value="0.0.0.0"
-  >
-  </ejs-textbox>
-  <ejs-textbox
-    placeholder="Subnet MASK"
-    floatLabelType="Auto"
-    class="e-input"
-    value="0.0.0.0"
-  >
-  </ejs-textbox>
+  <ejs-dropdownlist
+    #poolList
+    showClearButton="true"
+    [dataSource]="Pools"
+    [fields]="{text: 'name'}"
+    placeholder="Select a DHCP"
+    (change)="onSelect($event)"
+    ></ejs-dropdownlist>
+
+  <button ejs-button cssClass="e-danger" (click)="onRemove()">Remove</button>
+  <button ejs-button cssClass="e-info" (click)="onAdd()">Add</button>
 </div>
 
-<div class="e-input-group">
-  <ejs-textbox
-    placeholder="Start IP Address"
-    floatLabelType="Auto"
-    class="e-input"
-    value="0.0.0.0"
-  >
-  </ejs-textbox>
-  <ejs-textbox
-    placeholder="End IP Address"
-    floatLabelType="Auto"
-    class="e-input"
-    value="0.0.0.0"
-  >
-  </ejs-textbox>
-</div>
+<ng-container *ngIf="selectedPool">
 
-<div class="e-input-group">
-  <ejs-textbox
-    placeholder="DNS Server"
-    floatLabelType="Auto"
-    class="e-input"
-    value="0.0.0.0"
-  >
-  </ejs-textbox>
-</div>
-<div class="e-input-group">
-  <ejs-textbox
-    placeholder="TFTP Server"
-    floatLabelType="Auto"
-    class="e-input"
-    value="0.0.0.0"
-  >
-  </ejs-textbox>
-</div>
-<div class="e-input-group">
-  <ejs-textbox
-    placeholder="WLC Server"
-    floatLabelType="Auto"
-    class="e-input"
-    value="0.0.0.0"
-  >
-  </ejs-textbox>
-</div>
+  <div class="e-input-group">
+    <ejs-textbox
+      placeholder="The name of the DHCP pool"
+      floatLabelType="Auto"
+      class="e-input"
+      [(value)]="selectedPool.name"
+      (change)="onRefresh()"
+    >
+    </ejs-textbox>
+  </div>
+
+  <div class="e-input-group">
+    <ejs-textbox
+      placeholder="Default gateway"
+      floatLabelType="Auto"
+      class="e-input"
+      [value]="getData('gatewayAddress')"
+      (change)="setData('gatewayAddress', $event)"
+    >
+    </ejs-textbox>
+    <ejs-textbox
+      placeholder="Subnet MASK"
+      floatLabelType="Auto"
+      class="e-input"
+      [value]="getData('netmaskAddress')"
+      (change)="setData('netmaskAddress', $event)"
+    >
+    </ejs-textbox>
+    </div>
+    <div class="e-input-group">
+    <ejs-textbox
+      placeholder="Start IP Address"
+      floatLabelType="Auto"
+      class="e-input"
+      [value]="getData('startAddress')"
+      (change)="setData('startAddress', $event)"
+    >
+    </ejs-textbox>
+    <ejs-textbox
+      placeholder="End IP Address"
+      floatLabelType="Auto"
+      class="e-input"
+      [value]="getData('endAddress')"
+      (change)="setData('endAddress', $event)"
+    >
+    </ejs-textbox>
+  </div>
+  <div class="e-input-group">
+    <ejs-textbox
+      placeholder="DNS Server"
+      floatLabelType="Auto"
+      class="e-input"
+      [value]="getData('dns')"
+      (change)="setData('dns', $event)"
+    >
+    </ejs-textbox>
+    <ejs-textbox
+      placeholder="TFTP Server"
+      floatLabelType="Auto"
+      class="e-input"
+      [value]="getData('tftp')"
+      (change)="setData('tftp', $event)"
+    >
+    </ejs-textbox>
+    <ejs-textbox
+      placeholder="WLC Server"
+      floatLabelType="Auto"
+      class="e-input"
+      [value]="getData('wlc')"
+      (change)="setData('wlc', $event)"
+    >
+    </ejs-textbox>
+  </div>
+</ng-container>

@@ -98,6 +98,33 @@ describe('address test', () => {
     expect(ipv4_3.InSameNetwork(new IPAddress("255.255.0.0", true), new IPAddress("192.42.255.1"))).toBe(false);
     expect(ipv4_3.InSameNetwork(new IPAddress("255.255.0.0", true), new IPAddress("192.168.42.1"))).toBe(true);
     expect(ipv4_3.InSameNetwork(new IPAddress("0.0.0.0", true), new IPAddress("42.42.42.42"))).toBe(true);
+
   });
+
+  it( 'IPv4 math', () => {
+    const ipv4_1 = new IPAddress("10.0.0.1");
+    const ipv4_2 = new IPAddress("172.16.0.1");
+    const ipv4_3 = new IPAddress("192.168.0.1");
+
+    expect(ipv4_1.getNetworkIP(ipv4_1.generateMask()).equals(new IPAddress("10.0.0.0"))).toBe(true);
+    expect(ipv4_1.getNetworkIP(ipv4_1.generateMask()).add(2).equals(new IPAddress("10.0.0.2"))).toBe(true);
+    expect(ipv4_1.getNetworkIP(ipv4_1.generateMask()).add(256).equals(new IPAddress("10.0.1.0"))).toBe(true);
+    expect(ipv4_1.getNetworkIP(ipv4_1.generateMask()).add(256*256).equals(new IPAddress("10.1.0.0"))).toBe(true);
+
+    expect(ipv4_1.getBroadcastIP(ipv4_1.generateMask()).equals(new IPAddress("10.255.255.255"))).toBe(true);
+    expect(ipv4_1.getBroadcastIP(ipv4_1.generateMask()).subtract(1).equals(new IPAddress("10.255.255.254"))).toBe(true);
+    expect(ipv4_1.getBroadcastIP(ipv4_1.generateMask()).subtract(256).equals(new IPAddress("10.255.254.255"))).toBe(true);
+    expect(ipv4_1.getBroadcastIP(ipv4_1.generateMask()).subtract(256*256).equals(new IPAddress("10.254.255.255"))).toBe(true);
+
+    expect(ipv4_1.getBroadcastIP(ipv4_1.generateMask()).subtract(256*256).add(256*256+1).equals(new IPAddress("11.0.0.0"))).toBe(true);
+
+    expect(ipv4_2.getNetworkIP(ipv4_2.generateMask()).equals(new IPAddress("172.16.0.0"))).toBe(true);
+    expect(ipv4_2.getBroadcastIP(ipv4_2.generateMask()).equals(new IPAddress("172.16.255.255"))).toBe(true);
+
+    expect(ipv4_3.getNetworkIP(ipv4_3.generateMask()).equals(new IPAddress("192.168.0.0"))).toBe(true);
+    expect(ipv4_3.getBroadcastIP(ipv4_3.generateMask()).equals(new IPAddress("192.168.0.255"))).toBe(true);
+
+  });
+
 
 });

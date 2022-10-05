@@ -6,6 +6,7 @@ import { IPInterface, NetworkInterface } from "./layers/network.model";
 import { DatalinkMessage, Message, NetworkMessage } from "./message.model";
 import { Dot1QMessage } from "./protocols/ethernet.model";
 import { ActionHandle, DatalinkListener, NetworkListener, NetworkSender } from "./protocols/protocols.model";
+import { DhcpService } from "./services/dhcp.model";
 
 export abstract class GenericNode {
   public guid: string = Math.random().toString(36).substring(2, 9);
@@ -356,6 +357,10 @@ export class RouterHost extends NetworkHost implements NetworkListener {
 export class ServerHost extends NetworkHost {
   public override name = "Server";
   public override type = "server";
+
+  public services = {
+    "dhcp": new DhcpService(),
+  }
 
   private gateway: NetworkAddress = new IPAddress("0.0.0.0");
 
