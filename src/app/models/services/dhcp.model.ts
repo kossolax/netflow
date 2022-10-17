@@ -1,5 +1,14 @@
-import { IPAddress } from "../address.model";
+import { map, Observable, race, Subject, tap } from "rxjs";
+import { SchedulerService } from "src/app/services/scheduler.service";
+import { HardwareAddress, IPAddress, MacAddress, NetworkAddress } from "../address.model";
+import { Interface } from "../layers/datalink.model";
+import { NetworkInterface } from "../layers/network.model";
+import { NetworkMessage, Payload } from "../message.model";
+import { NetworkHost } from "../node.model";
+import { IPv4Message } from "../protocols/ipv4.model";
+import { ActionHandle, NetworkListener } from "../protocols/protocols.model";
 
+// https://www.rfc-editor.org/rfc/rfc2131
 export class NetworkServices {
   public enabled: boolean = false;
 }
@@ -61,7 +70,320 @@ export class DhcpPool {
   }
 
 }
+export enum DhcpType {
+  Unknown = 0,
+  Discover = 1,
+  Offer = 2,
+  Request = 3,
+  Decline = 4,
+  Ack = 5,
+  Nak = 6,
+  Release = 7,
+  Inform = 8,
+}
+export enum DhcpOpCode {
+  Request = 1,
+  Reply = 2,
+};
 
-export class DhcpService extends NetworkServices {
-  public pools: DhcpPool[] = [new DhcpPool()];
+export class DhcpMessage extends IPv4Message {
+  public op: DhcpOpCode = DhcpOpCode.Request;
+  public readonly htype: 1 = 1; // type of hardware address. 1 = MAC Address
+  public readonly hlen: number = 6;  // mac address length in bytes
+  public hops: number = 0;
+  public xid: number = 0;
+  public secs: number = 0;
+  public dhcp_flags: {
+    broadcast: boolean
+  } = { broadcast: false };
+
+  public ciaddr!: NetworkAddress;
+  public yiaddr!: NetworkAddress;
+  public siaddr!: NetworkAddress;
+  public giaddr!: NetworkAddress;
+
+  public chaddr!: HardwareAddress;
+  public sname: string = "";
+
+  public options: {
+    type: DhcpType,
+    subnetMask: IPAddress|null,
+    router: IPAddress|null,
+    leaseTime: number|null,
+    dhcpServer: IPAddress|null,
+    dnsServers: IPAddress[]|null,
+  } = {
+    type: DhcpType.Unknown,
+    subnetMask: null,
+    router: null,
+    leaseTime: null,
+    dhcpServer: null,
+    dnsServers: null,
+  };
+
+  protected constructor(payload: Payload|string,
+    src: IPAddress, dst: IPAddress) {
+    super(payload, src, dst);
+  }
+
+  public override toString(): string {
+    return "DHCP";
+  }
+
+  public static override Builder = class extends (IPv4Message.Builder) {
+    private type: DhcpType = DhcpType.Unknown;
+    public setType(type: DhcpType): this {
+      this.type = type;
+
+      switch(type) {
+        case DhcpType.Discover:
+        case DhcpType.Request:
+        case DhcpType.Decline:
+        case DhcpType.Release:
+        case DhcpType.Inform:
+          this.op = DhcpOpCode.Request;
+          break;
+        case DhcpType.Offer:
+        case DhcpType.Ack:
+        case DhcpType.Nak:
+          this.op = DhcpOpCode.Reply;
+          break;
+      }
+      return this;
+    }
+
+    private op: DhcpOpCode = DhcpOpCode.Request;
+    private hops: number = 0;
+    private xid: number = 0;
+    public setTransactionId(value: number): this {
+      this.xid = value;
+      return this;
+    }
+
+    private flags: { broadcast: boolean } = { broadcast: false };
+
+    private ciaddr: NetworkAddress = new IPAddress("0.0.0.0");
+    public setClientAddress(value: NetworkAddress): this {
+      this.ciaddr = value;
+      return this;
+    }
+    private yiaddr: NetworkAddress = new IPAddress("0.0.0.0");
+    public setYourAddress(value: NetworkAddress): this {
+      this.yiaddr = value;
+      return this;
+    }
+    private siaddr: NetworkAddress = new IPAddress("0.0.0.0");
+    public setServerAddress(value: NetworkAddress): this {
+      this.siaddr = value;
+      return this;
+    }
+    private giaddr: NetworkAddress = new IPAddress("0.0.0.0");
+    public setGatewayAddress(value: NetworkAddress): this {
+      this.giaddr = value;
+      return this;
+    }
+
+    private chaddr: HardwareAddress|null = null;
+    public setClientHardwareAddress(value: HardwareAddress): this {
+      this.chaddr = value;
+      return this;
+    }
+    private sname: string = "";
+    public setServerName(value: string): this {
+      this.sname = value;
+      return this;
+    }
+
+    public override build(): IPv4Message[] {
+      if( this.net_src === null )
+        throw new Error("No source address specified");
+      if( this.net_dst === null )
+        throw new Error("No destination address specified");
+      if( this.chaddr === null )
+        throw new Error("No client hardware address specified");
+
+      switch( this.type ) {
+        case DhcpType.Ack:
+        case DhcpType.Nak:
+        case DhcpType.Offer:
+          if( this.yiaddr.equals(new IPAddress("0.0.0.0")) )
+            throw new Error("No yiaddr specified");
+          if( this.siaddr.equals(new IPAddress("0.0.0.0")) )
+            throw new Error("No siaddr specified");
+          break;
+
+        case DhcpType.Request:
+          if( this.ciaddr.equals(new IPAddress("0.0.0.0")) )
+            throw new Error("No ciaddr specified");
+          if( this.siaddr.equals(new IPAddress("0.0.0.0")) )
+            throw new Error("No siaddr specified");
+          break;
+      }
+
+      let message = new DhcpMessage("", this.net_src, this.net_dst);
+      message.header_checksum = message.checksum();
+      message.protocol = 1;
+      message.TOS = 0;
+
+      message.op = this.op;
+      message.hops = this.hops;
+      message.xid = this.xid === 0 ? Math.floor(Math.random() * 0xFFFFFFFF) : this.xid;
+      message.secs = 0;
+      message.dhcp_flags = this.flags;
+      message.ciaddr = this.ciaddr;
+      message.yiaddr = this.yiaddr;
+      message.siaddr = this.siaddr;
+      message.giaddr = this.giaddr;
+      message.options.type = this.type;
+
+      return [message];
+    }
+  }
+}
+
+export class DhcpClient extends NetworkServices implements NetworkListener {
+  private iface: NetworkInterface;
+  private queue: Map<number, Subject<IPAddress>>;
+
+  constructor(iface: NetworkInterface) {
+    super();
+    this.iface = iface;
+    this.iface.addListener(this);
+    this.queue = new Map<number, Subject<IPAddress>>();
+  }
+
+  public negociate(timeout: number=20): Observable<IPAddress|null> {
+
+    const request = new DhcpMessage.Builder()
+      .setType(DhcpType.Discover)
+      .setNetSource(new IPAddress("0.0.0.0"))
+      .setNetDestination(IPAddress.generateBroadcast())
+      .setClientHardwareAddress(this.iface.getMacAddress())
+      .build()[0] as DhcpMessage;
+
+    const subject: Subject<IPAddress> = new Subject();
+    this.queue.set(request.xid, subject);
+
+    this.iface.sendPacket(request);
+    let timeout$ = SchedulerService.Instance.once(timeout).pipe(map(() => null));
+    return race(subject, timeout$).pipe(
+      tap(() => this.queue.delete(request.xid))
+    );
+
+  }
+
+
+  public receivePacket(message: NetworkMessage, from: Interface): ActionHandle {
+    if( message instanceof DhcpMessage && message.op === DhcpOpCode.Reply ) {
+
+      if( message.options.type === DhcpType.Offer ) {
+        // TODO: How to handle this without message.options.type ?
+      }
+
+      const iface = from as NetworkInterface;
+      const lookup = iface.getNetAddress() as IPAddress;
+
+      // Offer:
+      if( message.options.type === DhcpType.Offer ) {
+        console.log("DHCP: Offer received for ", message.xid);
+
+        const request = new DhcpMessage.Builder()
+          .setType(DhcpType.Request)
+          .setNetSource(new IPAddress("0.0.0.0"))
+          .setNetDestination(IPAddress.generateBroadcast())
+          .setClientHardwareAddress(message.chaddr)
+          .setTransactionId(message.xid)
+          .setClientAddress(message.yiaddr)
+          .setServerAddress(message.siaddr)
+          .build()[0] as DhcpMessage;
+
+        iface.sendPacket(request);
+      }
+
+      // Ack:
+      if( message.options.type === DhcpType.Ack ) {
+        console.log("DHCP: Got ACK for", message.xid);
+
+        iface.setNetAddress(message.yiaddr);
+        const subject = this.queue.get(message.xid);
+        if( subject !== undefined )
+          subject.next(message.yiaddr as IPAddress);
+      }
+
+
+      return ActionHandle.Stop;
+    }
+    return ActionHandle.Continue;
+  }
+}
+export class DhcpServer extends NetworkServices implements NetworkListener {
+  private ifaces: NetworkInterface[];
+  public pools: DhcpPool[] = [];
+
+  constructor(host: NetworkHost) {
+    super();
+
+    this.ifaces = [];
+    host.getInterfaces().map((i) => {
+      const iface = host.getInterface(i);
+      this.ifaces.push(iface);
+      iface.addListener(this);
+    });
+
+
+
+  }
+
+
+  public receivePacket(message: NetworkMessage, from: Interface): ActionHandle {
+    if( message instanceof DhcpMessage && message.op === DhcpOpCode.Request ) {
+
+
+      const iface = from as NetworkInterface;
+      const lookup = iface.getNetAddress() as IPAddress;
+      const pool = this.pools.find((p) => p.gatewayAddress.InSameNetwork(p.netmaskAddress, lookup));
+      if( pool ) {
+
+
+        if( message.options.type === DhcpType.Discover ) {
+          console.log("DHCP: Got discover for", message.xid);
+
+          const request = new DhcpMessage.Builder()
+            .setType(DhcpType.Offer)
+            .setNetSource(iface.getNetAddress() as IPAddress)
+            .setNetDestination(IPAddress.generateBroadcast())
+            .setClientHardwareAddress(message.chaddr)
+            .setTransactionId(message.xid)
+            .setYourAddress(pool.startAddress)
+            .setServerAddress(iface.getNetAddress())
+            .build()[0] as DhcpMessage;
+
+          iface.sendPacket(request);
+        }
+
+        if( message.options.type === DhcpType.Request ) {
+          console.log("DHCP: Got request for", message.xid);
+
+          const request = new DhcpMessage.Builder()
+            .setType(DhcpType.Ack)
+            .setNetSource(iface.getNetAddress() as IPAddress)
+            .setNetDestination(IPAddress.generateBroadcast())
+            .setClientHardwareAddress(message.chaddr)
+            .setTransactionId(message.xid)
+            .setYourAddress(pool.startAddress)
+            .setServerAddress(iface.getNetAddress())
+
+            .build()[0] as DhcpMessage;
+
+          iface.sendPacket(request);
+        }
+      }
+
+
+      return ActionHandle.Stop;
+    }
+
+    return ActionHandle.Continue;
+  }
+
 }
