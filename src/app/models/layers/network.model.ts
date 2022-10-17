@@ -85,7 +85,7 @@ export abstract class NetworkInterface extends Interface implements DatalinkList
   public receiveTrame(message: DatalinkMessage): ActionHandle {
     const mac_dst = message.mac_dst as HardwareAddress;
 
-    if( mac_dst.equals(this.datalink.getMacAddress()) && mac_dst.isBroadcast == false ) {
+    if( ( mac_dst.equals(this.datalink.getMacAddress()) && mac_dst.isBroadcast == false ) || mac_dst.isBroadcast ) {
 
       if( message.payload instanceof NetworkMessage)
         this.receivePacket(message.payload as NetworkMessage);
@@ -120,12 +120,15 @@ export abstract class NetworkInterface extends Interface implements DatalinkList
       return;
     }
 
-    let nextHop = (this.Host as unknown as NetworkHost).getNextHop(message.net_dst);
+    let nextHop = null;
+    if( message.net_dst?.isBroadcast == false )
+      nextHop = (this.Host as unknown as NetworkHost).getNextHop(message.net_dst);
+
     if( nextHop === null || this.hasNetAddress(nextHop) )
       nextHop = message.net_dst;
 
     if( nextHop === null )
-      throw new Error("No next hop found");
+        throw new Error("No next hop found");
 
     this.discovery.enqueueRequest(message, nextHop);
   }

@@ -75,7 +75,10 @@ export class ArpProtocol implements DatalinkListener {
   public enqueueRequest(message: NetworkMessage, nextHop: NetworkAddress): void {
     //const addr = message.net_dst as NetworkAddress;
 
-    if( this.table.has(nextHop) ) {
+    if( nextHop.isBroadcast ) {
+      this.sendTrame(message, MacAddress.generateBroadcast());
+    }
+    else if( this.table.has(nextHop) ) {
       this.sendTrame(message, this.table.get(nextHop)?.address!);
     }
     else if( this.queue.has(nextHop) ) {
