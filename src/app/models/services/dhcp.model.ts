@@ -14,6 +14,7 @@ export class NetworkServices {
 }
 export class DhcpPool {
   public name;
+  private IPReserved: Map<IPAddress, number> = new Map();
 
   constructor(name: string = 'poolName') {
     this.name = name;
@@ -67,6 +68,23 @@ export class DhcpPool {
 
   public toString(): string {
     return this.name;
+  }
+
+  public getFirstAvailableIP(): IPAddress|null {
+    let ip = this.startAddress;
+
+    while( this.IPReserved.has(ip) ) {
+      ip = ip.add(1);
+      if( ip.equals(this.endAddress) )
+        return null;
+    }
+    return ip;
+  }
+  public reserveIP(ip: IPAddress, howLong: number=20): void {
+    this.IPReserved.set(ip, howLong);
+  }
+  public releaseIP(ip: IPAddress): void {
+    this.IPReserved.delete(ip);
   }
 
 }
@@ -280,8 +298,6 @@ export class DhcpClient extends NetworkServices implements NetworkListener {
 
       // Offer:
       if( message.options.type === DhcpType.Offer ) {
-        console.log("DHCP: Offer received for ", message.xid);
-
         const request = new DhcpMessage.Builder()
           .setType(DhcpType.Request)
           .setNetSource(new IPAddress("0.0.0.0"))
@@ -297,8 +313,6 @@ export class DhcpClient extends NetworkServices implements NetworkListener {
 
       // Ack:
       if( message.options.type === DhcpType.Ack ) {
-        console.log("DHCP: Got ACK for", message.xid);
-
         iface.setNetAddress(message.yiaddr);
         const subject = this.queue.get(message.xid);
         if( subject !== undefined )
@@ -337,27 +351,31 @@ export class DhcpServer extends NetworkServices implements NetworkListener {
       const iface = from as NetworkInterface;
       const lookup = iface.getNetAddress() as IPAddress;
       const pool = this.pools.find((p) => p.gatewayAddress.InSameNetwork(p.netmaskAddress, lookup));
+
       if( pool ) {
 
-
         if( message.options.type === DhcpType.Discover ) {
-          console.log("DHCP: Got discover for", message.xid);
+          const ipAvailable = pool.getFirstAvailableIP();
 
-          const request = new DhcpMessage.Builder()
-            .setType(DhcpType.Offer)
-            .setNetSource(iface.getNetAddress() as IPAddress)
-            .setNetDestination(IPAddress.generateBroadcast())
-            .setClientHardwareAddress(message.chaddr)
-            .setTransactionId(message.xid)
-            .setYourAddress(pool.startAddress)
-            .setServerAddress(iface.getNetAddress())
-            .build()[0] as DhcpMessage;
+          if( ipAvailable ) {
+            pool.reserveIP(ipAvailable, 20);
 
-          iface.sendPacket(request);
+            const request = new DhcpMessage.Builder()
+              .setType(DhcpType.Offer)
+              .setNetSource(iface.getNetAddress() as IPAddress)
+              .setNetDestination(IPAddress.generateBroadcast())
+              .setClientHardwareAddress(message.chaddr)
+              .setTransactionId(message.xid)
+              .setYourAddress(ipAvailable as IPAddress)
+              .setServerAddress(iface.getNetAddress())
+              .build()[0] as DhcpMessage;
+
+            iface.sendPacket(request);
+          }
         }
 
         if( message.options.type === DhcpType.Request ) {
-          console.log("DHCP: Got request for", message.xid);
+          pool.reserveIP(message.ciaddr as IPAddress, 24 * 60 * 60);
 
           const request = new DhcpMessage.Builder()
             .setType(DhcpType.Ack)
@@ -365,7 +383,7 @@ export class DhcpServer extends NetworkServices implements NetworkListener {
             .setNetDestination(IPAddress.generateBroadcast())
             .setClientHardwareAddress(message.chaddr)
             .setTransactionId(message.xid)
-            .setYourAddress(pool.startAddress)
+            .setYourAddress(message.ciaddr)
             .setServerAddress(iface.getNetAddress())
 
             .build()[0] as DhcpMessage;
