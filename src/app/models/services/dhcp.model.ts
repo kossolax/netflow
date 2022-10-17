@@ -276,12 +276,7 @@ export class DhcpClient extends NetworkServices implements NetworkListener {
   public receivePacket(message: NetworkMessage, from: Interface): ActionHandle {
     if( message instanceof DhcpMessage && message.op === DhcpOpCode.Reply ) {
 
-      if( message.options.type === DhcpType.Offer ) {
-        // TODO: How to handle this without message.options.type ?
-      }
-
       const iface = from as NetworkInterface;
-      const lookup = iface.getNetAddress() as IPAddress;
 
       // Offer:
       if( message.options.type === DhcpType.Offer ) {
