@@ -1,6 +1,6 @@
 import { Injectable } from "@angular/core";
-import { HttpClient } from "@angular/common/http";
-import { Subject, map, Observable } from "rxjs";
+import { HttpClient, HttpHandler, HttpHeaders } from "@angular/common/http";
+import { Subject, map, Observable, catchError, of, tap } from "rxjs";
 import { environment } from "src/environments/environment";
 import { Network } from "../models/network.model";
 import { GenericNode } from "../models/node.model";
@@ -25,7 +25,12 @@ export class NetworkService {
     const formData = new FormData();
     formData.append("file", file);
 
-    return this.http.post<JSON>(`${environment.backend}/decode`, formData).pipe(
+    const headers = new HttpHeaders( {
+      "Content-Type": "multipart/form-data",
+      "X-Auth-Token": environment.apiToken,
+    });
+
+    return this.http.post<JSON>(`${environment.backend}/decode`, formData, { headers }).pipe(
       map(json => Network.fromPacketTracer(json))
     );
   }
