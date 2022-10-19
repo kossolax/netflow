@@ -26,7 +26,7 @@ illegal_xml_chars_re = re.compile(xml_illegal_character_regex)
 
 
 app = Flask(__name__)
-cors = CORS(app, origins=["http://localhost:4200", "https://cloud.netflow.dev"])
+cors = CORS(app, origins=["http://localhost:4200", "https://cloud.netflow.dev"], expose_headers=["X-Auth-Token"])
 app.config["COMPRESS_REGISTER"] = False
 compress = Compress()
 compress.init_app(app)
