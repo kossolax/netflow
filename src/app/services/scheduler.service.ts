@@ -1,5 +1,5 @@
 import { Injectable, Injector, Optional, SkipSelf } from "@angular/core";
-import { BehaviorSubject, map, Observable, switchMap, tap, timer } from "rxjs";
+import { BehaviorSubject, map, Observable, switchMap, take, tap, timer } from "rxjs";
 
 export enum SchedulerState {
   FASTER,
@@ -127,7 +127,8 @@ export class SchedulerService {
   }
 
   public once(delay: number): Observable<0> {
-    return timer(this.getDelay(delay));
+    return this.repeat(delay).pipe(take(1));
+    // return timer(this.getDelay(delay));
   }
   public repeat(delay: number, firstDelay: number=-1): Observable<0> {
     if( firstDelay === -1 )

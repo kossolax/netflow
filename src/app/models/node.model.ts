@@ -358,8 +358,7 @@ export class ServerHost extends NetworkHost {
   public override name = "Server";
   public override type = "server";
 
-  public services = {
-  }
+  public services: {dhcp: DhcpServer};
 
   private gateway: NetworkAddress = new IPAddress("0.0.0.0");
 
@@ -372,6 +371,10 @@ export class ServerHost extends NetworkHost {
 
     for(let i=0; i<iface; i++)
       this.addInterface();
+
+    this.services = {
+      "dhcp": new DhcpServer(this),
+    };
   }
 
   public clone(): ServerHost {

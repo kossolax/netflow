@@ -1,4 +1,4 @@
-import { map, Observable, race, Subject, tap } from "rxjs";
+import { map, Observable, race, Subject, Subscription, take, tap } from "rxjs";
 import { SchedulerService } from "src/app/services/scheduler.service";
 import { HardwareAddress, IPAddress, MacAddress, NetworkAddress } from "../address.model";
 import { Interface } from "../layers/datalink.model";
@@ -14,7 +14,7 @@ export class NetworkServices {
 }
 export class DhcpPool {
   public name;
-  private IPReserved: Map<IPAddress, number> = new Map();
+  private IPReserved: Map<IPAddress, Subscription> = new Map();
 
   constructor(name: string = 'poolName') {
     this.name = name;
@@ -81,9 +81,17 @@ export class DhcpPool {
     return ip;
   }
   public reserveIP(ip: IPAddress, howLong: number=20): void {
-    this.IPReserved.set(ip, howLong);
+
+    this.IPReserved.get(ip)?.unsubscribe();
+
+    let timeout$ = SchedulerService.Instance.once(howLong).subscribe(() => {
+      this.IPReserved.delete(ip);
+    });
+
+    this.IPReserved.set(ip, timeout$);
   }
   public releaseIP(ip: IPAddress): void {
+    this.IPReserved.get(ip)?.unsubscribe();
     this.IPReserved.delete(ip);
   }
 
