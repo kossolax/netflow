@@ -1,5 +1,6 @@
 import { map, Observable, race, Subject, Subscription, take, tap } from "rxjs";
 import { SchedulerService } from "src/app/services/scheduler.service";
+import { isFunction } from "util";
 import { HardwareAddress, IPAddress, MacAddress, NetworkAddress } from "../address.model";
 import { Interface } from "../layers/datalink.model";
 import { NetworkInterface } from "../layers/network.model";
@@ -10,7 +11,34 @@ import { ActionHandle, NetworkListener } from "../protocols/protocols.model";
 
 // https://www.rfc-editor.org/rfc/rfc2131
 export class NetworkServices {
-  public enabled: boolean = false;
+  private enabled: boolean = false;
+  get Enable(): boolean {
+    return this.enabled;
+  }
+  set Enable(enable: boolean) {
+    if( enable ) {
+      this.host.getInterfaces().map((i) => {
+        const iface = this.host.getInterface(i);
+        this.ifaces.push(iface);
+        iface.addListener(this);
+      });
+    }
+    else {
+      this.ifaces.map((i) => {
+        i.removeListener(this);
+      });
+      this.ifaces = [];
+    }
+  }
+
+  protected host: NetworkHost;
+  protected ifaces: NetworkInterface[];
+
+  constructor(host: NetworkHost) {
+    this.host = host;
+    this.ifaces = [];
+  }
+
 }
 export class DhcpPool {
   public name;
@@ -110,8 +138,7 @@ export enum DhcpType {
 export enum DhcpOpCode {
   Request = 1,
   Reply = 2,
-};
-
+}
 export class DhcpMessage extends IPv4Message {
   public op: DhcpOpCode = DhcpOpCode.Request;
   public readonly htype: 1 = 1; // type of hardware address. 1 = MAC Address
@@ -267,12 +294,11 @@ export class DhcpMessage extends IPv4Message {
   }
 }
 
-export class DhcpClient extends NetworkServices implements NetworkListener {
+export class DhcpClient implements NetworkListener {
   private iface: NetworkInterface;
   private queue: Map<number, Subject<IPAddress>>;
 
   constructor(iface: NetworkInterface) {
-    super();
     this.iface = iface;
     this.iface.addListener(this);
     this.queue = new Map<number, Subject<IPAddress>>();
@@ -317,6 +343,7 @@ export class DhcpClient extends NetworkServices implements NetworkListener {
           .build()[0] as DhcpMessage;
 
         iface.sendPacket(request);
+        return ActionHandle.Stop;
       }
 
       // Ack:
@@ -325,83 +352,125 @@ export class DhcpClient extends NetworkServices implements NetworkListener {
         const subject = this.queue.get(message.xid);
         if( subject !== undefined )
           subject.next(message.yiaddr as IPAddress);
+
+        return ActionHandle.Stop;
       }
 
 
-      return ActionHandle.Stop;
     }
     return ActionHandle.Continue;
   }
 }
+
 export class DhcpServer extends NetworkServices implements NetworkListener {
-  private ifaces: NetworkInterface[];
   public pools: DhcpPool[] = [];
+  public forwarder: IPAddress|null = null;
 
   constructor(host: NetworkHost) {
-    super();
-
-    this.ifaces = [];
-    host.getInterfaces().map((i) => {
-      const iface = host.getInterface(i);
-      this.ifaces.push(iface);
-      iface.addListener(this);
-    });
-
-
-
+    super(host);
   }
 
 
   public receivePacket(message: NetworkMessage, from: Interface): ActionHandle {
-    if( message instanceof DhcpMessage && message.op === DhcpOpCode.Request ) {
 
+    if( message instanceof DhcpMessage ) {
 
-      const iface = from as NetworkInterface;
-      const lookup = iface.getNetAddress() as IPAddress;
-      const pool = this.pools.find((p) => p.gatewayAddress.InSameNetwork(p.netmaskAddress, lookup));
+      if( message.op === DhcpOpCode.Request ) {
 
-      if( pool ) {
+        const iface = from as NetworkInterface;
+        const selfIP = iface.getNetAddress() as IPAddress;
+        const loolupIP = message.giaddr.equals(new IPAddress("0.0.0.0")) ? selfIP : message.giaddr as IPAddress;
+        const dstIP = message.giaddr.equals(new IPAddress("0.0.0.0")) ? IPAddress.generateBroadcast() : message.giaddr as IPAddress;
 
-        if( message.options.type === DhcpType.Discover ) {
-          const ipAvailable = pool.getFirstAvailableIP();
+        const pool = this.pools.find((p) => p.gatewayAddress.InSameNetwork(p.netmaskAddress, loolupIP as IPAddress));
 
-          if( ipAvailable ) {
-            pool.reserveIP(ipAvailable, 20);
+        if( pool ) {
+
+          if( message.options.type === DhcpType.Discover ) {
+            const ipAvailable = pool.getFirstAvailableIP();
+
+            if( ipAvailable ) {
+              pool.reserveIP(ipAvailable, 20);
+
+              const request = new DhcpMessage.Builder()
+                .setType(DhcpType.Offer)
+                .setNetSource(selfIP)
+                .setNetDestination( dstIP )
+                .setClientHardwareAddress(message.chaddr)
+                .setTransactionId(message.xid)
+                .setYourAddress(ipAvailable)
+                .setServerAddress(selfIP)
+                .setGatewayAddress(message.giaddr)
+                .build()[0] as DhcpMessage;
+
+              iface.sendPacket(request);
+              return ActionHandle.Stop;
+            }
+          }
+
+          if( message.options.type === DhcpType.Request ) {
+            pool.reserveIP(message.ciaddr as IPAddress, 24 * 60 * 60);
 
             const request = new DhcpMessage.Builder()
-              .setType(DhcpType.Offer)
-              .setNetSource(iface.getNetAddress() as IPAddress)
-              .setNetDestination(IPAddress.generateBroadcast())
+              .setType(DhcpType.Ack)
+              .setNetSource(selfIP)
+              .setNetDestination(dstIP)
               .setClientHardwareAddress(message.chaddr)
               .setTransactionId(message.xid)
-              .setYourAddress(ipAvailable as IPAddress)
-              .setServerAddress(iface.getNetAddress())
+              .setYourAddress(message.ciaddr)
+              .setServerAddress(selfIP)
+              .setGatewayAddress(message.giaddr)
+
               .build()[0] as DhcpMessage;
 
             iface.sendPacket(request);
+            return ActionHandle.Stop;
           }
+
         }
 
-        if( message.options.type === DhcpType.Request ) {
-          pool.reserveIP(message.ciaddr as IPAddress, 24 * 60 * 60);
-
+        if( message.net_dst?.isBroadcast && this.forwarder ) {
           const request = new DhcpMessage.Builder()
-            .setType(DhcpType.Ack)
+            .setType(message.options.type)
             .setNetSource(iface.getNetAddress() as IPAddress)
+            .setNetDestination(this.forwarder)
+            .setClientHardwareAddress(message.chaddr)
+            .setTransactionId(message.xid)
+            .setYourAddress(message.yiaddr)
+            .setServerAddress(message.siaddr)
+            .setClientAddress(message.ciaddr)
+            .setGatewayAddress(iface.getNetAddress() as IPAddress)
+            .build()[0] as DhcpMessage;
+
+          this.host.send(request);
+          return ActionHandle.Stop;
+        }
+
+      }
+
+      // Handle response from forwarder:
+      if( message.op === DhcpOpCode.Reply && message.net_dst?.isBroadcast == false ) {
+        const iface = this.ifaces.find( i => i.hasNetAddress(message.giaddr) );
+
+        if( iface ) {
+          const request = new DhcpMessage.Builder()
+            .setType(message.options.type)
+            .setNetSource(message.giaddr as IPAddress)
             .setNetDestination(IPAddress.generateBroadcast())
             .setClientHardwareAddress(message.chaddr)
             .setTransactionId(message.xid)
-            .setYourAddress(message.ciaddr)
-            .setServerAddress(iface.getNetAddress())
-
+            .setYourAddress(message.yiaddr)
+            .setServerAddress(message.siaddr)
+            .setClientAddress(message.ciaddr)
+            .setGatewayAddress(new IPAddress("0.0.0.0"))
             .build()[0] as DhcpMessage;
 
           iface.sendPacket(request);
+          return ActionHandle.Stop;
         }
       }
 
-
-      return ActionHandle.Stop;
+      return ActionHandle.Continue;
     }
 
     return ActionHandle.Continue;

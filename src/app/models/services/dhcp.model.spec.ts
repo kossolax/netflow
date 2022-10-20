@@ -18,6 +18,7 @@ describe('IPv4 protocol', () => {
     A.name = "A";
     A.addInterface().up();
     A.getInterface(0).setNetAddress(new IPAddress("192.168.0.1"));
+    A.gateway = new IPAddress("192.168.0.254");
 
     B = new ServerHost();
     B.name = "B";
@@ -36,7 +37,7 @@ describe('IPv4 protocol', () => {
     R.addInterface().up();
     R.getInterface(0).setNetAddress(new IPAddress("192.168.0.254"));
     R.addInterface().up();
-    R.getInterface(0).setNetAddress(new IPAddress("192.168.1.254"));
+    R.getInterface(1).setNetAddress(new IPAddress("192.168.1.254"));
 
     let pool0 = new DhcpPool();
     pool0.gatewayAddress = new IPAddress("192.168.0.254");
@@ -50,9 +51,9 @@ describe('IPv4 protocol', () => {
     pool1.startAddress = new IPAddress("192.168.1.1");
     pool1.endAddress = new IPAddress("192.168.1.254");
 
-    const dhcpServer = new DhcpServer(A);
-    dhcpServer.pools.push(pool0);
-    dhcpServer.pools.push(pool1);
+    A.services.dhcp.pools.push(pool0);
+    A.services.dhcp.pools.push(pool1);
+    A.services.dhcp.Enable = true;
 
     listener = new SimpleListener();
 
@@ -60,10 +61,8 @@ describe('IPv4 protocol', () => {
   });
 
   it('PC-->Server', (done) => {
-
     let AB = new Link(A.getInterface(0), B.getInterface(0));
 
-    const dhcpServer = new DhcpServer(A);
     const dhcpClient = new DhcpClient(B.getInterface(0));
 
     dhcpClient.negociate().subscribe((msg) => {
@@ -76,11 +75,9 @@ describe('IPv4 protocol', () => {
   });
 
   it('PC-->Switch-->Server', (done) => {
-
     let AS = new Link(A.getInterface(0), S.getInterface(0));
     let SB = new Link(S.getInterface(1), B.getInterface(0));
 
-    const dhcpServer = new DhcpServer(A);
     const dhcpClient = new DhcpClient(B.getInterface(0));
 
     dhcpClient.negociate().subscribe((msg) => {
@@ -92,15 +89,12 @@ describe('IPv4 protocol', () => {
   });
 
   it('[2PC]-->Switch-->Server', (done) => {
-
     let AS = new Link(A.getInterface(0), S.getInterface(0));
     let SB = new Link(S.getInterface(1), B.getInterface(0));
     let SC = new Link(S.getInterface(2), C.getInterface(0));
 
-
     const dhcpClient1 = new DhcpClient(B.getInterface(0));
     const dhcpClient2 = new DhcpClient(C.getInterface(0));
-
 
     zip([dhcpClient1.negociate(), dhcpClient2.negociate()]).subscribe((msg) => {
       expect(msg[0]).toBeInstanceOf(IPAddress);
@@ -115,5 +109,23 @@ describe('IPv4 protocol', () => {
 
   });
 
+  it('PC-->Router-->Server', (done) => {
+    let AR = new Link(A.getInterface(0), R.getInterface(0));
+    let RB = new Link(R.getInterface(1), B.getInterface(0));
+
+    const dhcpRelay = new DhcpServer(R);
+    dhcpRelay.forwarder = new IPAddress("192.168.0.1");
+    dhcpRelay.Enable = true;
+
+    const dhcpClient = new DhcpClient(B.getInterface(0));
+
+    dhcpClient.negociate().subscribe((msg) => {
+      expect(msg).toBeInstanceOf(IPAddress);
+      expect(msg as IPAddress).not.toEqual(new IPAddress("0.0.0.0"));
+      expect(new IPAddress("192.168.1.0").InSameNetwork(new IPAddress("255.255.255.0"), msg as IPAddress)).toBeTruthy();
+      done();
+    });
+
+  });
 
 });

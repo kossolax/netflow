@@ -78,6 +78,9 @@ export abstract class Interface {
   public addListener(listener: GenericListener): void {
     this.listener.push(listener);
   }
+  public removeListener(listener: GenericListener): void {
+    this.listener = this.listener.filter( (l) => l != listener );
+  }
   get getListener(): GenericListener[] {
     return this.listener;
   }

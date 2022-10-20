@@ -224,6 +224,7 @@ export abstract class NetworkHost extends Node<NetworkInterface> {
     return iface;
   }
 
+  public abstract override send(message: string|NetworkMessage, net_dst?: NetworkAddress): void;
   public abstract getNextHop(address: NetworkAddress|null): NetworkAddress|null;
 }
 export class RouterHost extends NetworkHost implements NetworkListener {
@@ -233,6 +234,8 @@ export class RouterHost extends NetworkHost implements NetworkListener {
   get RoutingTable(): {network: NetworkAddress, mask: NetworkAddress, gateway: NetworkAddress}[] {
     return this.routingTable;
   }
+
+  public services: {dhcp: DhcpServer};
 
   public receivePacket$: Subject<NetworkMessage> = new Subject<NetworkMessage>();
 
@@ -244,6 +247,10 @@ export class RouterHost extends NetworkHost implements NetworkListener {
 
     for(let i=0; i<iface; i++)
       this.addInterface();
+
+    this.services = {
+      "dhcp": new DhcpServer(this),
+    };
   }
 
   public clone(): RouterHost {
@@ -359,8 +366,7 @@ export class ServerHost extends NetworkHost {
   public override type = "server";
 
   public services: {dhcp: DhcpServer};
-
-  private gateway: NetworkAddress = new IPAddress("0.0.0.0");
+  public gateway: NetworkAddress = new IPAddress("0.0.0.0");
 
   constructor(name: string = "", type: string="server", iface: number=0) {
     super();
