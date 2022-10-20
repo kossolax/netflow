@@ -19,11 +19,11 @@ export class DialogServiceDhcpComponent {
   public selectedPool: DhcpPool|null = null;
 
   get isActive(): boolean {
-    return this.node?.services.dhcp.enabled as boolean;
+    return this.node?.services.dhcp.Enable as boolean;
   }
   set isActive(value: boolean) {
     if (this.node) {
-      this.node.services.dhcp.enabled = value;
+      this.node.services.dhcp.Enable = value;
     }
   }
   get Pools(): DhcpPool[] {
