@@ -6,6 +6,7 @@ import { ArpProtocol } from "../protocols/arp.model";
 import { ICMPProtocol } from "../protocols/icmp.model";
 import { IPv4Message, IPv4Protocol } from "../protocols/ipv4.model";
 import { ActionHandle, DatalinkListener, handleChain, NetworkListener, NetworkSender } from "../protocols/protocols.model";
+import { DhcpClient } from "../services/dhcp.model";
 import { HardwareInterface, Interface } from "./datalink.model";
 
 
@@ -13,14 +14,30 @@ export abstract class NetworkInterface extends Interface implements DatalinkList
   private addresses: {addr: NetworkAddress, mask: NetworkAddress}[] = [];
   protected datalink: HardwareInterface;
   protected discovery: ArpProtocol;
+  protected dhcp: DhcpClient|null;
 
   constructor(node: GenericNode, name: string, datalink: HardwareInterface) {
     super(node, name);
     this.datalink = datalink;
     this.datalink.addListener(this);
     this.discovery = new ArpProtocol(this, datalink);
+    this.dhcp = null;
   }
 
+  get AutoNegociateAddress(): boolean {
+    return this.dhcp !== null;
+  }
+  set AutoNegociateAddress(value: boolean) {
+    if( value ) {
+      this.dhcp?.destroy();
+      this.dhcp = new DhcpClient(this);
+      this.dhcp.negociate();
+    }
+    else if( !value ) {
+      this.dhcp?.destroy();
+      this.dhcp = null;
+    }
+  }
   public hasNetAddress(ip: NetworkAddress): boolean {
     if( ip.isBroadcast )
       return true;

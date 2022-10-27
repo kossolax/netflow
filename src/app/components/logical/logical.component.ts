@@ -8,9 +8,10 @@ import { NetworkInterface } from 'src/app/models/layers/network.model';
 import { AbstractLink, Link } from 'src/app/models/layers/physical.model';
 import { PhysicalMessage } from 'src/app/models/message.model';
 import { Network } from 'src/app/models/network.model';
-import { GenericNode, RouterHost, ServerHost, SwitchHost } from 'src/app/models/node.model';
+import { ComputerHost, GenericNode, L4Host, RouterHost, ServerHost, SwitchHost } from 'src/app/models/node.model';
 import { ICMPMessage, ICMPType } from 'src/app/models/protocols/icmp.model';
 import { LinkLayerSpy } from 'src/app/models/protocols/protocols.model';
+import { DhcpPool } from 'src/app/models/services/dhcp.model';
 import { NetworkService } from 'src/app/services/network.service';
 import { SchedulerService } from 'src/app/services/scheduler.service';
 
@@ -41,15 +42,17 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
 
   private debug(): void {
     let net = new Network();
-    let nodes: (RouterHost|SwitchHost|ServerHost)[] = [];
+    let nodes: (RouterHost|SwitchHost|L4Host)[] = [];
     nodes.push(new RouterHost("Router-1A", 2));
     nodes.push(new SwitchHost("Switch-1", 24));
     nodes.push(new RouterHost("Router-1B", 2));
     nodes.push(new RouterHost("Router-2", 1));
     nodes.push(new ServerHost("Server-1", "server", 1));
+    nodes.push(new ComputerHost("Computer-1", "pc", 1));
 
     let i = 0;
 
+    // Router-1A:
     (nodes[i] as RouterHost).getInterface(0).setNetAddress(new IPAddress("192.168.0.1"));
     (nodes[i] as RouterHost).addRoute("192.168.0.0", "255.255.255.0", "192.168.0.1");
     (nodes[i] as RouterHost).addRoute("0.0.0.0", "0.0.0.0", "192.168.0.2");
@@ -57,10 +60,12 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
     nodes[i].y = 200;
     net.nodes[nodes[i].guid] = nodes[i++];
 
+    // Switch-1:
     nodes[i].x = 400;
     nodes[i].y = 200;
     net.nodes[nodes[i].guid] = nodes[i++];
 
+    // Router-1B:
     (nodes[i] as RouterHost).getInterface(0).setNetAddress(new IPAddress("192.168.0.2"));
     (nodes[i] as RouterHost).getInterface(1).setNetAddress(new IPAddress("192.168.1.2"));
     (nodes[i] as RouterHost).addRoute("192.168.0.0", "255.255.255.0", "192.168.0.2");
@@ -69,24 +74,39 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
     nodes[i].y = 200;
     net.nodes[nodes[i].guid] = nodes[i++];
 
+    // Router-2:
     (nodes[i] as RouterHost).getInterface(0).setNetAddress(new IPAddress("192.168.1.1"));
     (nodes[i] as RouterHost).addRoute("192.168.1.0", "255.255.255.0", "192.168.1.1");
     (nodes[i] as RouterHost).addRoute("0.0.0.0", "0.0.0.0", "192.168.1.2");
-    nodes[i].x = 600;
-    nodes[i].y = 400;
+    nodes[i].x = 800;
+    nodes[i].y = 200;
     net.nodes[nodes[i].guid] = nodes[i++];
 
-
+    // Server-1:
     (nodes[i] as ServerHost).getInterface(0).setNetAddress(new IPAddress("192.168.0.3"));
-    nodes[i].x = 400;
+    nodes[i].x = 300;
+    nodes[i].y = 400;
+    (nodes[i] as ServerHost).services.dhcp.Enable = true;
+
+    (nodes[i] as ServerHost).services.dhcp.pools.push(new DhcpPool("pool1",
+    new IPAddress("192.168.0.2"), new IPAddress("255.255.255.0"),
+    new IPAddress("192.168.0.10"), new IPAddress("192.168.0.254")
+    ));
+    net.nodes[nodes[i].guid] = nodes[i++];
+
+    // Computer-1:
+    nodes[i].x = 500;
     nodes[i].y = 400;
     net.nodes[nodes[i].guid] = nodes[i++];
+
 
     let links = [];
     links.push(new Link(nodes[0].getFirstAvailableInterface(), nodes[1].getFirstAvailableInterface(), 10));
     links.push(new Link(nodes[1].getFirstAvailableInterface(), nodes[2].getFirstAvailableInterface(), 10));
     links.push(new Link(nodes[2].getFirstAvailableInterface(), nodes[3].getFirstAvailableInterface(), 10));
     links.push(new Link(nodes[4].getFirstAvailableInterface(), nodes[1].getFirstAvailableInterface(), 10));
+    links.push(new Link(nodes[5].getFirstAvailableInterface(), nodes[1].getFirstAvailableInterface(), 10));
+
     links.map( i => {
       net.links.push(i);
     });

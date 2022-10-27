@@ -42,18 +42,33 @@ export class NetworkServices {
 }
 export class DhcpPool {
   public name;
-  private IPReserved: Map<IPAddress, Subscription> = new Map();
+  public IPReserved: Map<string, Subscription> = new Map();
 
-  constructor(name: string = 'poolName') {
+  constructor(name: string = 'poolName', gateway: IPAddress|null = null, netmask: IPAddress|null = null, start: IPAddress|null = null, end: IPAddress|null = null) {
     this.name = name;
+
+    if( gateway )
+      this.gatewayAddress = gateway;
+
+    if( netmask )
+      this.netmaskAddress = netmask;
+
+    if( start )
+      this.startAddress = start;
+
+    if( end )
+      this.endAddress = end;
   }
 
   private gateway: IPAddress = new IPAddress("0.0.0.0");
   set gatewayAddress(value: IPAddress) {
+    this.IPReserved.delete(this.gateway.toString());
     this.gateway = value;
+    this.IPReserved.set(this.gateway.toString(), Subscription.EMPTY);
     this.netmaskAddress = value.generateMask();
     this.startAddress = value.getNetworkIP(this.netmask).add(1);
     this.endAddress = value.getBroadcastIP(this.netmask).subtract(1);
+
   }
   get gatewayAddress(): IPAddress {
     return this.gateway;
@@ -101,7 +116,7 @@ export class DhcpPool {
   public getFirstAvailableIP(): IPAddress|null {
     let ip = this.startAddress;
 
-    while( this.IPReserved.has(ip) ) {
+    while( this.IPReserved.has(ip.toString()) ) {
       ip = ip.add(1);
       if( ip.equals(this.endAddress) )
         return null;
@@ -110,17 +125,17 @@ export class DhcpPool {
   }
   public reserveIP(ip: IPAddress, howLong: number=20): void {
 
-    this.IPReserved.get(ip)?.unsubscribe();
+    this.IPReserved.get(ip.toString())?.unsubscribe();
 
     let timeout$ = SchedulerService.Instance.once(howLong).subscribe(() => {
-      this.IPReserved.delete(ip);
+      this.IPReserved.delete(ip.toString());
     });
 
-    this.IPReserved.set(ip, timeout$);
+    this.IPReserved.set(ip.toString(), timeout$);
   }
   public releaseIP(ip: IPAddress): void {
-    this.IPReserved.get(ip)?.unsubscribe();
-    this.IPReserved.delete(ip);
+    this.IPReserved.get(ip.toString())?.unsubscribe();
+    this.IPReserved.delete(ip.toString());
   }
 
 }
@@ -297,15 +312,19 @@ export class DhcpMessage extends IPv4Message {
 export class DhcpClient implements NetworkListener {
   private iface: NetworkInterface;
   private queue: Map<number, Subject<IPAddress>>;
+  private successFull: boolean = false;
 
   constructor(iface: NetworkInterface) {
     this.iface = iface;
     this.iface.addListener(this);
     this.queue = new Map<number, Subject<IPAddress>>();
   }
+  public destroy(): void {
+    this.release();
+    this.iface.removeListener(this);
+  }
 
-  public negociate(timeout: number=20): Observable<IPAddress|null> {
-
+  public negociate(timeout: number=20, repeat: boolean=false): Observable<IPAddress|null> {
     const request = new DhcpMessage.Builder()
       .setType(DhcpType.Discover)
       .setNetSource(new IPAddress("0.0.0.0"))
@@ -322,6 +341,22 @@ export class DhcpClient implements NetworkListener {
       tap(() => this.queue.delete(request.xid))
     );
 
+  }
+  public release(): void {
+    if( this.successFull ) {
+      this.successFull = false;
+
+      const request = new DhcpMessage.Builder()
+        .setType(DhcpType.Release)
+        .setNetSource(this.iface.getNetAddress() as IPAddress)
+        .setClientAddress(this.iface.getNetAddress() as IPAddress)
+        .setNetDestination(IPAddress.generateBroadcast())
+        .setClientHardwareAddress(this.iface.getMacAddress())
+        .build()[0] as DhcpMessage;
+
+      this.iface.sendPacket(request);
+      this.iface.setNetAddress(new IPAddress("0.0.0.0"));
+    }
   }
 
 
@@ -349,6 +384,7 @@ export class DhcpClient implements NetworkListener {
       // Ack:
       if( message.options.type === DhcpType.Ack ) {
         iface.setNetAddress(message.yiaddr);
+        this.successFull = true;
         const subject = this.queue.get(message.xid);
         if( subject !== undefined )
           subject.next(message.yiaddr as IPAddress);
@@ -385,6 +421,8 @@ export class DhcpServer extends NetworkServices implements NetworkListener {
         const pool = this.pools.find((p) => p.gatewayAddress.InSameNetwork(p.netmaskAddress, loolupIP as IPAddress));
 
         if( pool ) {
+
+          console.log(pool.IPReserved)
 
           if( message.options.type === DhcpType.Discover ) {
             const ipAvailable = pool.getFirstAvailableIP();
@@ -424,6 +462,13 @@ export class DhcpServer extends NetworkServices implements NetworkListener {
               .build()[0] as DhcpMessage;
 
             iface.sendPacket(request);
+            return ActionHandle.Stop;
+          }
+
+          if( message.options.type === DhcpType.Release ) {
+            pool.releaseIP(message.ciaddr as IPAddress);
+            console.log("Release IP: " + message.ciaddr.toString(), pool.IPReserved);
+
             return ActionHandle.Stop;
           }
 

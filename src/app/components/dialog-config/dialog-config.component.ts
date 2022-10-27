@@ -15,6 +15,28 @@ export class DialogConfigComponent {
 
   constructor() { }
 
+  public hasDHCP(iface: HardwareInterface|NetworkInterface): boolean {
+    if( iface instanceof NetworkInterface ) {
+      return true;
+    }
+    return false;
+  }
+  public setDhcp(iface: HardwareInterface|NetworkInterface, evt: any): void {
+    try {
+      if( iface instanceof NetworkInterface ) {
+        iface.AutoNegociateAddress = evt.checked;
+      }
+    } catch( e ) {
+      console.log(evt, evt.event.target.value);
+    }
+  }
+  public getDhcp(iface: HardwareInterface|NetworkInterface): boolean {
+    if( iface instanceof NetworkInterface ) {
+      return iface.AutoNegociateAddress;
+    }
+    return false;
+  }
+
   public setSpeed(iface: HardwareInterface|NetworkInterface, evt: any): void {
     try {
       iface.Speed = evt.value;

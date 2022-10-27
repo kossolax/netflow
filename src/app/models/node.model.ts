@@ -361,11 +361,11 @@ export class RouterHost extends NetworkHost implements NetworkListener {
     return bestRoute;
   }
 }
-export class ServerHost extends NetworkHost {
+
+export abstract class L4Host extends NetworkHost {
   public override name = "Server";
   public override type = "server";
 
-  public services: {dhcp: DhcpServer};
   public gateway: NetworkAddress = new IPAddress("0.0.0.0");
 
   constructor(name: string = "", type: string="server", iface: number=0) {
@@ -377,17 +377,8 @@ export class ServerHost extends NetworkHost {
 
     for(let i=0; i<iface; i++)
       this.addInterface();
-
-    this.services = {
-      "dhcp": new DhcpServer(this),
-    };
   }
 
-  public clone(): ServerHost {
-    const clone = new ServerHost();
-    this.cloneInto(clone);
-    return clone;
-  }
 
   public send(message: string|NetworkMessage, net_dst?: NetworkAddress): void {
 
@@ -426,4 +417,37 @@ export class ServerHost extends NetworkHost {
 
     return this.gateway;
   }
+}
+
+export class ServerHost extends L4Host {
+
+  public services: {dhcp: DhcpServer};
+
+  constructor(name: string = "", type: string="server", iface: number=0) {
+    super(name, type, iface);
+    this.services = {
+      "dhcp": new DhcpServer(this),
+    };
+  }
+
+  public clone(): ServerHost {
+    const clone = new ServerHost();
+    this.cloneInto(clone);
+    return clone;
+  }
+
+}
+export class ComputerHost extends L4Host {
+
+  constructor(name: string = "", type: string="server", iface: number=0) {
+    super(name, type, iface);
+  }
+
+
+  public clone(): ComputerHost {
+    const clone = new ComputerHost();
+    this.cloneInto(clone);
+    return clone;
+  }
+
 }

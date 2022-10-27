@@ -19,18 +19,35 @@
         <ng-container *ngIf="node.getInterface(item) as iface">
 
           <div class="e-input-group">
+            <ng-container>
+              <label for="check">
+                Interface:
+                <span *ngIf="iface.isActive()">ON&nbsp;&nbsp;</span>
+                <span *ngIf="!iface.isActive()">OFF</span>
+              </label>
 
-            <label for="check">
-              <span *ngIf="iface.isActive()">ON&nbsp;&nbsp;</span>
-              <span *ngIf="!iface.isActive()">OFF</span>
-            </label>
+              <ejs-switch
+                id="check"
+                [checked]="iface.isActive()"
+                (change)="$event.checked ? iface.up() : iface.down()"
+              >
+              </ejs-switch>
+            </ng-container>
 
-            <ejs-switch
-              id="check"
-              [checked]="iface.isActive()"
-              (change)="$event.checked ? iface.up() : iface.down()"
-            >
-            </ejs-switch>
+            <ng-container *ngIf="hasDHCP(iface)">
+              <label for="dhcp">
+                DHCP:
+                <span *ngIf="getDhcp(iface)">ON&nbsp;&nbsp;</span>
+                <span *ngIf="!getDhcp(iface)">OFF</span>
+              </label>
+
+              <ejs-switch
+                id="dhcp"
+                [checked]="getDhcp(iface)"
+                (change)="setDhcp(iface, $event)"
+              >
+              </ejs-switch>
+            </ng-container>
           </div>
 
           <div class="e-input-group">
@@ -56,6 +73,7 @@
             </ejs-textbox>
           </div>
           <div class="e-input-group">
+
             <ejs-textbox
               *ngIf="$any(iface).getNetAddress"
               placeholder="The NET address"
@@ -63,6 +81,7 @@
               class="e-input"
               [value]="$any(iface).getNetAddress().toString()"
               (change)="setNetAddress($any(iface), $event)"
+              [enabled]="!(hasDHCP(iface) && getDhcp(iface))"
             >
             </ejs-textbox>
             <ejs-textbox
@@ -72,6 +91,7 @@
               class="e-input"
               [value]="$any(iface).getNetMask().toString()"
               (change)="setNetMask($any(iface), $event)"
+              [enabled]="!(hasDHCP(iface) && getDhcp(iface))"
             >
             </ejs-textbox>
           </div>
