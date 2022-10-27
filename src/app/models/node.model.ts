@@ -73,7 +73,7 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
   public receiveTrame$: Subject<DatalinkMessage> = new Subject<DatalinkMessage>();
   public knownVlan: Record<number, string> = {};
 
-  private ARPTable: Map<HardwareAddress, {iface: HardwareInterface, lastSeen: number}[]> = new Map<HardwareAddress, {iface: HardwareInterface, lastSeen: number}[]>();
+  private ARPTable: Map<string, {iface: HardwareInterface, lastSeen: number}[]> = new Map<string, {iface: HardwareInterface, lastSeen: number}[]>();
 
   constructor(name: string="", iface: number=0) {
     super();
@@ -136,7 +136,7 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
     const dst = message.mac_dst as HardwareAddress;
 
     let found = false;
-    this.ARPTable.get(src)?.map( i => {
+    this.ARPTable.get(src.toString())?.map( i => {
       if( i.iface.getMacAddress().equals(from.getMacAddress()) ) {
         found = true;
         i.lastSeen = SchedulerService.Instance.getDeltaTime();
@@ -144,9 +144,9 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
     });
 
     if( !found ) {
-      if( !this.ARPTable.get(src) )
-        this.ARPTable.set(src, []);
-      this.ARPTable.get(src)?.push({iface: from, lastSeen: SchedulerService.Instance.getDeltaTime()});
+      if( !this.ARPTable.get(src.toString()) )
+        this.ARPTable.set(src.toString(), []);
+      this.ARPTable.get(src.toString())?.push({iface: from, lastSeen: SchedulerService.Instance.getDeltaTime()});
     }
 
     let vlan_id = 0;
@@ -155,7 +155,7 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
     else
       vlan_id = (from as Dot1QInterface).Vlan[0];
 
-    if( dst.isBroadcast || this.ARPTable.get(dst) === undefined ) {
+    if( dst.isBroadcast || this.ARPTable.get(dst.toString()) === undefined ) {
       for( const name in this.interfaces ) {
         if( this.interfaces[name] !== from ) {
           if( (this.interfaces[name] as Dot1QInterface).Vlan.indexOf(vlan_id) !== -1 )
@@ -164,7 +164,7 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
       }
     }
     else {
-      this.ARPTable.get(dst)?.map( i => {
+      this.ARPTable.get(dst.toString())?.map( i => {
         if( i.iface !== from )
           if( (i.iface as Dot1QInterface).Vlan.indexOf(vlan_id) !== -1 )
             i.iface.sendTrame(message);

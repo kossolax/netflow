@@ -53,13 +53,11 @@ export class ArpMessage implements Payload {
 }
 
 export class ArpProtocol implements DatalinkListener {
-  private table: Map<NetworkAddress, {address: HardwareAddress, lastSeen: number}>;
-  private queue: Map<NetworkAddress, NetworkMessage[]>;
+  private table: Map<string, {address: HardwareAddress, lastSeen: number}> = new Map<string, {address: HardwareAddress, lastSeen: number}>()
+  private queue: Map<string, NetworkMessage[]> = new Map<string, NetworkMessage[]>();
   private interface: NetworkInterface;
 
   constructor(netface: NetworkInterface, hardface: HardwareInterface) {
-    this.table = new Map<NetworkAddress, {address: HardwareAddress, lastSeen: number}>();
-    this.queue = new Map<NetworkAddress, NetworkMessage[]>();
     this.interface = netface;
     hardface.addListener(this);
 
@@ -69,7 +67,7 @@ export class ArpProtocol implements DatalinkListener {
   }
 
   public getMapping(addr: NetworkAddress): HardwareAddress|undefined {
-    return this.table.get(addr)?.address;
+    return this.table.get(addr.toString())?.address;
   }
 
   public enqueueRequest(message: NetworkMessage, nextHop: NetworkAddress): void {
@@ -78,14 +76,14 @@ export class ArpProtocol implements DatalinkListener {
     if( nextHop.isBroadcast ) {
       this.sendTrame(message, MacAddress.generateBroadcast());
     }
-    else if( this.table.has(nextHop) ) {
-      this.sendTrame(message, this.table.get(nextHop)?.address!);
+    else if( this.table.has(nextHop.toString()) ) {
+      this.sendTrame(message, this.table.get(nextHop.toString())?.address!);
     }
-    else if( this.queue.has(nextHop) ) {
-      this.queue.get(nextHop)?.push(message);
+    else if( this.queue.has(nextHop.toString()) ) {
+      this.queue.get(nextHop.toString())?.push(message);
     }
     else {
-      this.queue.set(nextHop, [message]);
+      this.queue.set(nextHop.toString(), [message]);
       this.sendArpRequest(nextHop);
     }
   }
@@ -113,13 +111,13 @@ export class ArpProtocol implements DatalinkListener {
         this.interface.getInterface(0).sendTrame(replyMessage);
       }
       else if( arp.type == "reply" && arp.response != null ) {
-        this.table.set(arp.request, {address: arp.response, lastSeen: SchedulerService.Instance.getDeltaTime()});
+        this.table.set(arp.request.toString(), {address: arp.response, lastSeen: SchedulerService.Instance.getDeltaTime()});
 
-        if( this.queue.has(arp.request) ) {
-          this.queue.get(arp.request)?.map( i => {
+        if( this.queue.has(arp.request.toString()) ) {
+          this.queue.get(arp.request.toString())?.map( i => {
             this.sendTrame(i, arp.response!);
           });
-          this.queue.delete(arp.request);
+          this.queue.delete(arp.request.toString());
         }
       }
 

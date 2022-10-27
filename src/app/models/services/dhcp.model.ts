@@ -422,8 +422,6 @@ export class DhcpServer extends NetworkServices implements NetworkListener {
 
         if( pool ) {
 
-          console.log(pool.IPReserved)
-
           if( message.options.type === DhcpType.Discover ) {
             const ipAvailable = pool.getFirstAvailableIP();
 
@@ -467,8 +465,6 @@ export class DhcpServer extends NetworkServices implements NetworkListener {
 
           if( message.options.type === DhcpType.Release ) {
             pool.releaseIP(message.ciaddr as IPAddress);
-            console.log("Release IP: " + message.ciaddr.toString(), pool.IPReserved);
-
             return ActionHandle.Stop;
           }
 
