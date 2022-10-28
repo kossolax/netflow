@@ -1,4 +1,4 @@
-import { buffer, bufferCount, take, tap, zip } from "rxjs";
+import { buffer, bufferCount, delay, switchMap, take, tap, zip } from "rxjs";
 import { SchedulerService, SchedulerState } from "src/app/services/scheduler.service";
 import { IPAddress } from "../address.model";
 import { Link } from "../layers/physical.model";
@@ -10,8 +10,6 @@ describe('IPv4 protocol', () => {
   let A: ServerHost, B: ServerHost, C: ServerHost;
   let R: RouterHost;
   let S: SwitchHost;
-
-  let listener: SimpleListener;
 
   beforeEach(async () => {
     A = new ServerHost();
@@ -55,12 +53,10 @@ describe('IPv4 protocol', () => {
     A.services.dhcp.pools.push(pool1);
     A.services.dhcp.Enable = true;
 
-    listener = new SimpleListener();
-
     SchedulerService.Instance.Speed = SchedulerState.FASTER;
   });
 
-  it('PC-->Server', (done) => {
+  it('Request: PC-->Server', (done) => {
     let AB = new Link(A.getInterface(0), B.getInterface(0));
 
     const dhcpClient = new DhcpClient(B.getInterface(0));
@@ -74,7 +70,7 @@ describe('IPv4 protocol', () => {
 
   });
 
-  it('PC-->Switch-->Server', (done) => {
+  it('Request: PC-->Switch-->Server', (done) => {
     let AS = new Link(A.getInterface(0), S.getInterface(0));
     let SB = new Link(S.getInterface(1), B.getInterface(0));
 
@@ -88,7 +84,7 @@ describe('IPv4 protocol', () => {
 
   });
 
-  it('[2PC]-->Switch-->Server', (done) => {
+  it('Request: [2PC]-->Switch-->Server', (done) => {
     let AS = new Link(A.getInterface(0), S.getInterface(0));
     let SB = new Link(S.getInterface(1), B.getInterface(0));
     let SC = new Link(S.getInterface(2), C.getInterface(0));
@@ -109,7 +105,7 @@ describe('IPv4 protocol', () => {
 
   });
 
-  it('PC-->Router-->Server', (done) => {
+  it('Request: PC-->Router-->Server', (done) => {
     let AR = new Link(A.getInterface(0), R.getInterface(0));
     let RB = new Link(R.getInterface(1), B.getInterface(0));
 
@@ -128,4 +124,35 @@ describe('IPv4 protocol', () => {
 
   });
 
+  it('Release: [2PC]-->Switch-->Server', (done) => {
+    let AS = new Link(A.getInterface(0), S.getInterface(0));
+    let SB = new Link(S.getInterface(1), B.getInterface(0));
+    let SC = new Link(S.getInterface(2), C.getInterface(0));
+
+    const dhcpClient1 = new DhcpClient(B.getInterface(0));
+    const dhcpClient2 = new DhcpClient(C.getInterface(0));
+
+    let ip: IPAddress | null;
+    dhcpClient1.negociate().pipe(
+      tap( msg => {
+        expect(msg).toBeInstanceOf(IPAddress);
+        dhcpClient1.release();
+        ip = msg;
+      }),
+      delay(100),
+      switchMap( msg => dhcpClient2.negociate()  ),
+      tap( msg => {
+        expect(msg).toBeInstanceOf(IPAddress);
+        expect((msg as IPAddress).equals(ip as IPAddress)).toBeTruthy();
+      }),
+      delay(100),
+      switchMap( msg => dhcpClient1.negociate()  ),
+      tap( msg => {
+        expect(msg).toBeInstanceOf(IPAddress);
+        expect((msg as IPAddress).equals(ip as IPAddress)).toBeFalsy();
+        done();
+      })
+    ).subscribe();
+
+  });
 });

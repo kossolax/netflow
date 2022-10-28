@@ -286,6 +286,11 @@ export class DhcpMessage extends IPv4Message {
           if( this.siaddr.equals(new IPAddress("0.0.0.0")) )
             throw new Error("No siaddr specified");
           break;
+
+        case DhcpType.Release:
+          if( this.ciaddr.equals(new IPAddress("0.0.0.0")) )
+            throw new Error("No ciaddr specified");
+          break;
       }
 
       let message = new DhcpMessage("", this.net_src, this.net_dst);
