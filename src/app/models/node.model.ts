@@ -4,7 +4,7 @@ import { Address, MacAddress, IPAddress, NetworkAddress, HardwareAddress } from 
 import { Dot1QInterface, EthernetInterface, HardwareInterface, Interface } from "./layers/datalink.model";
 import { IPInterface, NetworkInterface } from "./layers/network.model";
 import { DatalinkMessage, Message, NetworkMessage } from "./message.model";
-import { Dot1QMessage } from "./protocols/ethernet.model";
+import { Dot1QMessage, EthernetMessage, VlanMode } from "./protocols/ethernet.model";
 import { ActionHandle, DatalinkListener, NetworkListener, NetworkSender } from "./protocols/protocols.model";
 import { DhcpServer } from "./services/dhcp.model";
 
@@ -108,7 +108,6 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
   }
 
   public send(message: string|DatalinkMessage, dst?: HardwareAddress): void {
-
     if( message instanceof DatalinkMessage ) {
       for( const name in this.interfaces ) {
         this.interfaces[name].sendTrame(message);
@@ -149,17 +148,18 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
       this.ARPTable.get(src.toString())?.push({iface: from, lastSeen: SchedulerService.Instance.getDeltaTime()});
     }
 
-    let vlan_id = 0;
+    let vlan_id = (from as Dot1QInterface).NativeVlan;
     if( message instanceof Dot1QMessage )
       vlan_id = message.vlan_id;
     else
       vlan_id = (from as Dot1QInterface).Vlan[0];
 
+    let interfaces: Dot1QInterface[] = [];
     if( dst.isBroadcast || this.ARPTable.get(dst.toString()) === undefined ) {
       for( const name in this.interfaces ) {
         if( this.interfaces[name] !== from ) {
           if( (this.interfaces[name] as Dot1QInterface).Vlan.indexOf(vlan_id) !== -1 )
-            this.interfaces[name].sendTrame(message);
+            interfaces.push(this.interfaces[name] as Dot1QInterface);
         }
       }
     }
@@ -167,9 +167,35 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
       this.ARPTable.get(dst.toString())?.map( i => {
         if( i.iface !== from )
           if( (i.iface as Dot1QInterface).Vlan.indexOf(vlan_id) !== -1 )
-            i.iface.sendTrame(message);
+            interfaces.push(i.iface as Dot1QInterface);
       });
     }
+
+    interfaces.map( iface => {
+      let msg = message;
+
+      if( iface.VlanMode == VlanMode.Trunk ) {
+        if( !(message instanceof Dot1QMessage) ) {
+          msg = new Dot1QMessage.Builder()
+            .setMacSource(msg.mac_src as MacAddress)
+            .setMacDestination(msg.mac_dst as MacAddress)
+            .setVlan(vlan_id)
+            .setPayload(msg.payload)
+            .build();
+        }
+      }
+      if( iface.VlanMode == VlanMode.Access ) {
+        if( (message instanceof Dot1QMessage) ) {
+          msg = new EthernetMessage.Builder()
+            .setMacSource(msg.mac_src as MacAddress)
+            .setMacDestination(msg.mac_dst as MacAddress)
+            .setPayload(msg.payload)
+            .build();
+        }
+      }
+
+      iface.sendTrame(msg);
+    });
 
     this.receiveTrame$.next(message);
     return ActionHandle.Continue;

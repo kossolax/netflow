@@ -72,6 +72,10 @@ export class Dot1QMessage extends EthernetMessage {
     super(payload, mac_src, mac_dst);
   }
 
+  public override toString(): string {
+    return `Dot1Q\n${this.payload.toString()}`;
+  }
+
   public static override Builder = class extends (EthernetMessage.Builder) {
     public vlan_id: number = 0;
 
@@ -112,12 +116,6 @@ export class EthernetProtocol implements DatalinkListener {
       if( message instanceof Dot1QMessage )
         return ActionHandle.Continue;
 
-      if( message.IsReadyAtEndPoint(this.iface) ) {
-        const msg = new DatalinkMessage(message.payload, message.mac_src, message.mac_dst);
-        this.iface.receiveTrame(msg);
-        return ActionHandle.Stop;
-      }
-
       return ActionHandle.Continue;
     }
 
@@ -132,12 +130,6 @@ export class Dot1QProtocol extends EthernetProtocol {
     if( message instanceof Dot1QMessage ) {
       if( (this.iface as Dot1QInterface).Vlan.indexOf(message.vlan_id) === -1 )
         return ActionHandle.Stop;
-
-      if( message.IsReadyAtEndPoint(this.iface) ) {
-        const msg = new DatalinkMessage(message.payload, message.mac_src, message.mac_dst);
-        this.iface.receiveTrame(msg);
-        return ActionHandle.Stop;
-      }
     }
 
     return ActionHandle.Continue;

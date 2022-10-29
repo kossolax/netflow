@@ -1,7 +1,7 @@
 import { Component, Input } from '@angular/core';
 
 import { IPAddress, MacAddress } from 'src/app/models/address.model';
-import { HardwareInterface } from 'src/app/models/layers/datalink.model';
+import { Dot1QInterface, HardwareInterface } from 'src/app/models/layers/datalink.model';
 import { NetworkInterface } from 'src/app/models/layers/network.model';
 import { NetworkHost, SwitchHost } from 'src/app/models/node.model';
 
