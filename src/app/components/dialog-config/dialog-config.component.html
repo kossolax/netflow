@@ -11,6 +11,17 @@
           >
         </ejs-textbox>
         </div>
+        <div class="e-input-group" *ngIf="hasGateway()">
+          <ejs-textbox
+            placeholder="The gateway"
+            floatLabelType="Auto"
+            class="e-input"
+            [value]="getGateway()"
+            (change)="setGateway($event)"
+            [enabled]="!(hasDHCP(node.getInterface(0)) && getDhcp(node.getInterface(0)))"
+          >
+          </ejs-textbox>
+        </div>
       </ng-template>
     </e-tabitem>
     <e-tabitem *ngFor="let item of node.getInterfaces(); let idx=index">

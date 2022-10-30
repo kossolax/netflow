@@ -3,7 +3,7 @@ import { Component, Input } from '@angular/core';
 import { IPAddress, MacAddress } from 'src/app/models/address.model';
 import { Dot1QInterface, HardwareInterface } from 'src/app/models/layers/datalink.model';
 import { NetworkInterface } from 'src/app/models/layers/network.model';
-import { NetworkHost, SwitchHost } from 'src/app/models/node.model';
+import { L4Host, NetworkHost, SwitchHost } from 'src/app/models/node.model';
 
 @Component({
   selector: 'app-dialog-config',
@@ -16,9 +16,8 @@ export class DialogConfigComponent {
   constructor() { }
 
   public hasDHCP(iface: HardwareInterface|NetworkInterface): boolean {
-    if( iface instanceof NetworkInterface ) {
+    if( iface instanceof NetworkInterface )
       return true;
-    }
     return false;
   }
   public setDhcp(iface: HardwareInterface|NetworkInterface, evt: any): void {
@@ -35,6 +34,26 @@ export class DialogConfigComponent {
       return iface.AutoNegociateAddress;
     }
     return false;
+  }
+
+  public hasGateway(): boolean {
+    if( this.node instanceof L4Host )
+      return true;
+    return false;
+  }
+  public setGateway(evt: any): void {
+    evt.container.classList.remove("e-error");
+
+    try {
+      (this.node as L4Host).gateway = new IPAddress(evt.value);
+    } catch( e ) {
+      evt.container.classList.add("e-error");
+    }
+  }
+  public getGateway(): string {
+    if( this.node instanceof L4Host )
+      return (this.node as L4Host).gateway.toString();
+    return "";
   }
 
   public setSpeed(iface: HardwareInterface|NetworkInterface, evt: any): void {
