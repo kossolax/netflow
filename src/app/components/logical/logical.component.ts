@@ -1,6 +1,6 @@
 import { AfterViewInit, Component, Host, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
-import { AnnotationConstraints, ConnectorConstraints, DiagramComponent, DiagramConstraints, NodeConstraints, SnapConstraints, ConnectorModel, DiagramTools, ConnectorDrawingTool, MouseEventArgs, Connector, ToolBase, CommandHandler, BasicShape, BasicShapeModel, NodeModel } from '@syncfusion/ej2-angular-diagrams';
-import { Subject, takeUntil, timer } from 'rxjs';
+import { AnnotationConstraints, ConnectorConstraints, DiagramComponent, DiagramConstraints, NodeConstraints, SnapConstraints, ConnectorModel, DiagramTools, ConnectorDrawingTool, MouseEventArgs, Connector, ToolBase, CommandHandler, BasicShape, BasicShapeModel, NodeModel, DecoratorModel } from '@syncfusion/ej2-angular-diagrams';
+import { ignoreElements, Subject, takeUntil, timer } from 'rxjs';
 import { IPAddress } from 'src/app/models/address.model';
 
 import { Dot1QInterface, EthernetInterface, HardwareInterface, Interface } from 'src/app/models/layers/datalink.model';
@@ -14,7 +14,7 @@ import { ICMPMessage, ICMPType } from 'src/app/models/protocols/icmp.model';
 import { LinkLayerSpy } from 'src/app/models/protocols/protocols.model';
 import { DhcpPool } from 'src/app/models/services/dhcp.model';
 import { NetworkService } from 'src/app/services/network.service';
-import { SchedulerService } from 'src/app/services/scheduler.service';
+import { SchedulerService, SchedulerState } from 'src/app/services/scheduler.service';
 
 @Component({
   selector: 'app-logical',
@@ -201,10 +201,6 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
     this.networkSpy.sendBits$.pipe(
       takeUntil(this.onDestroy$)
     ).subscribe( data => {
-
-      if( data.delay < 0.01 ) // this packet is too fast, we don't need to show it
-        return;
-
       this.animate(
         data.source.Host,
         data.destination.Host,
@@ -297,19 +293,59 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
     });
   }
   private addLink(link: Link, src_guid?: string, dst_guid?: string): void {
-    this.diagram.addConnector({
+    const red = '#4caf50';
+    const green = '#f44336';
+
+    const connector = this.diagram.addConnector({
       sourceID: src_guid ?? link.getInterface(0)?.Host.guid,
       targetID: dst_guid ?? link.getInterface(1)?.Host.guid,
-      sourceDecorator: { shape: "None" },
-      targetDecorator: { shape: "None" },
+      sourceDecorator: { shape: "Square", style: { fill: link.getInterface(0)?.isActive() ? red : green } },
+      targetDecorator: { shape: "Square", style: { fill: link.getInterface(1)?.isActive() ? red : green } },
       constraints: ConnectorConstraints.Default & ~ConnectorConstraints.Select,
       annotations: [{ constraints: AnnotationConstraints.ReadOnly  }],
     });
+
+    function OnInterfaceEvent(iface: Interface, decorator: DecoratorModel, message: string): void {
+      if( decorator.style )
+        decorator.style.fill = iface.isActive() ? red : green;
+    }
+
+    link.getInterface(0)?.addListener((msg, iface) => OnInterfaceEvent(iface as Interface, connector.sourceDecorator, msg));
+    link.getInterface(1)?.addListener((msg, iface) => OnInterfaceEvent(iface as Interface, connector.targetDecorator, msg));
   }
 
 
-
   private animate(source: GenericNode, target: GenericNode, delay: number, message: string=""): void {
+    function blink(decorator: DecoratorModel|undefined, delay: number): void {
+      if( decorator === undefined )
+        return;
+
+      if( decorator.style )
+        decorator.style.opacity = 0.5;
+
+      setTimeout(() => {
+        if( decorator.style )
+          decorator.style.opacity = 1.0;
+      }, 10);
+    }
+
+    if( delay < 0.01 ) { // this packet is too fast, we don't need to show it
+      const connector = this.diagram.connectors.find( i => {
+        if( (i.sourceID == source.guid || i.sourceID == target.guid ) &&
+            (i.targetID == source.guid || i.targetID == target.guid )
+        ) {
+          return true;
+        }
+        return false;
+      });
+      const sourceDecorator = connector?.sourceID == source.guid ? connector.sourceDecorator : connector?.targetDecorator;
+      const targetDecorator = connector?.sourceID == target.guid ? connector.sourceDecorator : connector?.targetDecorator;
+
+      blink(sourceDecorator, delay);
+      blink(targetDecorator, delay);
+      return;
+    }
+
     const start = new Date().getTime() / 1000 * this.scheduler.SpeedOfLight;
 
     const node = this.diagram.addNode({

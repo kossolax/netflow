@@ -5,6 +5,7 @@ import { SimpleListener } from '../protocols/protocols.model';
 import { MacAddress } from '../address.model';
 import { SchedulerService, SchedulerState } from 'src/app/services/scheduler.service';
 import { AutonegotiationMessage } from '../protocols/autonegotiation.model';
+import { HardwareInterface } from './datalink.model';
 
 describe('Datalink layer test', () => {
   let A: SwitchHost;
@@ -189,6 +190,19 @@ describe('Datalink layer test', () => {
   it( 'L2 other function ', () => {
     expect(A.getInterface(0).Host).toEqual(A);
     expect( () => A.getInterface(2) ).toThrow();
+  });
+
+
+
+  it('L2 up/down event', (done) => {
+
+    A.getInterface(0).addListener( (message, iface) => {
+      expect(message).toBe("OnInterfaceDown");
+      expect(iface).toBe(A.getInterface(0));
+      done();
+    });
+
+    setTimeout(() => A.getInterface(0).down(), 10);
   });
 
 });

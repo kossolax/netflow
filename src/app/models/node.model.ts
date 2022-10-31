@@ -5,7 +5,7 @@ import { Dot1QInterface, EthernetInterface, HardwareInterface, Interface } from 
 import { IPInterface, NetworkInterface } from "./layers/network.model";
 import { DatalinkMessage, Message, NetworkMessage } from "./message.model";
 import { Dot1QMessage, EthernetMessage, VlanMode } from "./protocols/ethernet.model";
-import { ActionHandle, DatalinkListener, NetworkListener, NetworkSender } from "./protocols/protocols.model";
+import { ActionHandle, DatalinkListener, GenericEventListener, handleChain, NetworkListener, NetworkSender } from "./protocols/protocols.model";
 import { DhcpServer } from "./services/dhcp.model";
 
 export abstract class GenericNode {
@@ -25,6 +25,20 @@ export abstract class GenericNode {
     node.type = this.type;
     node.x = this.x;
     node.y = this.y;
+  }
+
+
+
+  // ---
+  private listener: GenericEventListener[] = [];
+  public addListener(listener: GenericEventListener): void {
+    this.listener.push(listener);
+  }
+  public removeListener(listener: GenericEventListener): void {
+    this.listener = this.listener.filter( (l) => l != listener );
+  }
+  get getListener(): GenericEventListener[] {
+    return this.listener;
   }
 
 }
@@ -97,6 +111,7 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
     const iface = new Dot1QInterface(this, mac, name, 10, 1000, true);
     iface.addListener(this);
     this.interfaces[name] = iface;
+    handleChain("on", this.getListener, "onInterfaceAdded", iface);
 
     return iface;
   }
@@ -244,6 +259,7 @@ export abstract class NetworkHost extends Node<NetworkInterface> {
     const iface = new IPInterface(this, name, eth);
     iface.addNetAddress(ip);
     iface.addListener(this);
+    handleChain("on", this.getListener, "onInterfaceAdded", iface);
 
     this.interfaces[name] = iface;
 

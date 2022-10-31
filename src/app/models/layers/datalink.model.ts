@@ -29,9 +29,11 @@ export abstract class Interface {
   // ---
   public up(): void {
     this.status = true;
+    handleChain("on", this.getListener, "OnInterfaceUp", this);
   }
   public down(): void {
     this.status = false;
+    handleChain("on", this.getListener, "OnInterfaceDown", this);
   }
   public isActive() : boolean {
     return this.status;

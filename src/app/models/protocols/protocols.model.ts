@@ -3,6 +3,7 @@ import { HardwareInterface, Interface } from "../layers/datalink.model";
 import { NetworkInterface } from "../layers/network.model";
 import { AbstractLink, Link } from "../layers/physical.model";
 import { DatalinkMessage, NetworkMessage, PhysicalMessage, Message } from "../message.model";
+import { GenericNode } from "../node.model";
 
 export enum ActionHandle {
   Continue, // Continue with the original action
@@ -12,10 +13,10 @@ export enum ActionHandle {
 
 
 export function handleChain(
-  handler: "receiveBits"|"sendBits"|"receiveTrame"|"sendTrame"|"receivePacket"|"sendPacket",
+  handler: "receiveBits"|"sendBits"|"receiveTrame"|"sendTrame"|"receivePacket"|"sendPacket"|"on",
   listeners: GenericListener[],
-  message: Message,
-  sender: Interface,
+  message: Message|string,
+  sender: Interface|GenericNode,
   receiver?: Interface,
   delay: number=0
   ): ActionHandle {
@@ -27,28 +28,28 @@ export function handleChain(
     if( i === sender)
       continue;
 
-    if( handler in i ) {
+    if( handler in i && handler != "on" ) {
       switch( handler ) {
         case "receiveTrame": {
-          ret = (i as DatalinkListener).receiveTrame(message as DatalinkMessage, sender);
+          ret = (i as DatalinkListener).receiveTrame(message as DatalinkMessage, sender as Interface);
           if( ret > action ) action = ret;
           break;
         }
         case "sendTrame": {
           if( i instanceof HardwareInterface )
-            (i as DatalinkSender).sendTrame(message as DatalinkMessage, sender);
+            (i as DatalinkSender).sendTrame(message as DatalinkMessage, sender as Interface);
           break;
         }
 
 
         case "receivePacket": {
-          ret = (i as NetworkListener).receivePacket(message as NetworkMessage, sender);
+          ret = (i as NetworkListener).receivePacket(message as NetworkMessage, sender as Interface);
           if( ret > action ) action = ret;
           break;
         }
         case "sendPacket": {
           if( i instanceof NetworkInterface )
-            (i as NetworkSender).sendPacket(message as NetworkMessage, sender);
+            (i as NetworkSender).sendPacket(message as NetworkMessage, sender as Interface);
           break;
         }
 
@@ -57,7 +58,7 @@ export function handleChain(
           if( !receiver )
             throw new Error("receiver is required for receiveBits");
 
-            ret = (i as PhysicalListener).receiveBits(message as NetworkMessage, sender, receiver);
+            ret = (i as PhysicalListener).receiveBits(message as NetworkMessage, sender as Interface, receiver);
           if( ret > action ) action = ret;
           break;
         }
@@ -65,10 +66,15 @@ export function handleChain(
           if( !receiver )
             throw new Error("receiver is required for sendBits");
 
-          (i as PhysicalSender).sendBits(message as NetworkMessage, sender, receiver, delay);
+          (i as PhysicalSender).sendBits(message as NetworkMessage, sender as Interface, receiver, delay);
           break;
         }
+
       }
+    }
+    if( typeof i === 'function' && handler == "on" ) {
+      (i as GenericEventListener)(message as string, sender);
+
     }
 
     if( action === ActionHandle.Stop )
@@ -78,13 +84,15 @@ export function handleChain(
   return action;
 }
 
-export abstract class GenericListener {
+export type GenericEventListener = (message: string, sender: Interface|GenericNode) => void;
+export type GenericListener = GenericClassListener|GenericEventListener;
+
+abstract class GenericClassListener {
   public toString(): string {
     return this.constructor.name.toString();
   }
-
 }
-export interface Listener<T extends Interface|Message|Link> extends GenericListener {
+interface Listener<T extends Interface|Message|Link> extends GenericClassListener {
 }
 export interface PhysicalListener extends Listener<PhysicalMessage> {
   receiveBits(message: PhysicalMessage, from: Interface, to: Interface): ActionHandle;
@@ -92,14 +100,12 @@ export interface PhysicalListener extends Listener<PhysicalMessage> {
 export interface PhysicalSender extends Listener<Link> {
   sendBits(message: PhysicalMessage, from: Interface, to: Interface, delay: number): void;
 }
-
 export interface DatalinkListener extends Listener<HardwareInterface> {
   receiveTrame(message: DatalinkMessage, from: Interface): ActionHandle;
 }
 export interface DatalinkSender extends Listener<HardwareInterface> {
   sendTrame(message: DatalinkMessage, from: Interface): void;
 }
-
 export interface NetworkListener extends Listener<NetworkInterface> {
   receivePacket(message: NetworkMessage, from: Interface): ActionHandle;
 }
