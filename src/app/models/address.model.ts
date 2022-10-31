@@ -1,3 +1,5 @@
+import { cpuUsage } from "process";
+
 export abstract class Address {
   protected address: string;
   protected broadcast: boolean = false;
@@ -21,6 +23,7 @@ export abstract class Address {
   abstract get length(): number;
 
   protected abstract IsValid(): boolean;
+  public abstract compareTo(other: Address): number;
 
 }
 export abstract class HardwareAddress extends Address {
@@ -45,7 +48,7 @@ export class MacAddress extends HardwareAddress {
 
     for( let i = 0; i < 6; i++ ) {
       const value = parseInt(mac[i], 16);
-      if( mac[i].length === 0 || value.toString(16).toUpperCase() !== mac[i] || isNaN(value) || value < 0 || value > 255 )
+      if( mac[i].length === 0 || value.toString(16).padStart(2, '0').toUpperCase() !== mac[i].padStart(2, '0') || isNaN(value) || value < 0 || value > 255 )
         return false;
     }
 
@@ -53,6 +56,23 @@ export class MacAddress extends HardwareAddress {
   }
   get length(): number {
     return 6;
+  }
+
+  public compareTo(other: MacAddress): number {
+    const mac = this.address.split(':');
+    const other_mac = other.address.split(':');
+
+    for( let i = 0; i < 6; i++ ) {
+      const value = parseInt(mac[i], 16);
+      const other_value = parseInt(other_mac[i], 16);
+
+      if( value < other_value )
+        return -1;
+      else if( value > other_value )
+        return 1;
+    }
+
+    return 0;
   }
 
   public static generateAddress(): MacAddress {
@@ -123,6 +143,22 @@ export class IPAddress extends NetworkAddress {
   }
   get length(): number {
     return 4;
+  }
+  public compareTo(other: IPAddress): number {
+    const ip = this.address.split('.');
+    const other_ip = other.address.split('.');
+
+    for( let i = 0; i < 4; i++ ) {
+      const value = parseInt(ip[i], 10);
+      const other_value = parseInt(other_ip[i], 10);
+
+      if( value < other_value )
+        return -1;
+      else if( value > other_value )
+        return 1;
+    }
+
+    return 0;
   }
 
   public static generateAddress(): IPAddress {
