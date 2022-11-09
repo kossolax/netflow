@@ -1,17 +1,16 @@
 import { map, Observable, race, Subject, Subscription, take, tap } from "rxjs";
 import { SchedulerService } from "src/app/services/scheduler.service";
-import { isFunction } from "util";
 import { HardwareAddress, IPAddress, MacAddress, NetworkAddress } from "../address.model";
-import { Interface } from "../layers/datalink.model";
+import { HardwareInterface, Interface } from "../layers/datalink.model";
 import { NetworkInterface } from "../layers/network.model";
 import { NetworkMessage, Payload } from "../message.model";
-import { NetworkHost } from "../node.model";
+import { GenericNode, NetworkHost, SwitchHost } from "../node.model";
 import { IPv4Message } from "../protocols/ipv4.model";
 import { ActionHandle, NetworkListener } from "../protocols/protocols.model";
 
 // https://www.rfc-editor.org/rfc/rfc2131
-export class NetworkServices {
-  private enabled: boolean = false;
+export class NetworkServices<T extends NetworkHost|SwitchHost > {
+  protected enabled: boolean = false;
   get Enable(): boolean {
     return this.enabled;
   }
@@ -19,8 +18,11 @@ export class NetworkServices {
     if( enable ) {
       this.host.getInterfaces().map((i) => {
         const iface = this.host.getInterface(i);
-        this.ifaces.push(iface);
-        iface.addListener(this);
+
+        if( this.ifaces.indexOf(iface) < 0 ) {
+          this.ifaces.push(iface);
+          iface.addListener(this);
+        }
       });
     }
     else {
@@ -29,12 +31,13 @@ export class NetworkServices {
       });
       this.ifaces = [];
     }
+    this.enabled = enable;
   }
 
-  protected host: NetworkHost;
-  protected ifaces: NetworkInterface[];
+  protected host: T;
+  protected ifaces: Interface[];
 
-  constructor(host: NetworkHost) {
+  constructor(host: T) {
     this.host = host;
     this.ifaces = [];
   }
@@ -139,7 +142,7 @@ export class DhcpPool {
   }
 
 }
-export enum DhcpType {
+enum DhcpType {
   Unknown = 0,
   Discover = 1,
   Offer = 2,
@@ -150,11 +153,11 @@ export enum DhcpType {
   Release = 7,
   Inform = 8,
 }
-export enum DhcpOpCode {
+enum DhcpOpCode {
   Request = 1,
   Reply = 2,
 }
-export class DhcpMessage extends IPv4Message {
+class DhcpMessage extends IPv4Message {
   public op: DhcpOpCode = DhcpOpCode.Request;
   public readonly htype: 1 = 1; // type of hardware address. 1 = MAC Address
   public readonly hlen: number = 6;  // mac address length in bytes
@@ -403,7 +406,7 @@ export class DhcpClient implements NetworkListener {
   }
 }
 
-export class DhcpServer extends NetworkServices implements NetworkListener {
+export class DhcpServer extends NetworkServices<NetworkHost> implements NetworkListener {
   public pools: DhcpPool[] = [];
   public forwarder: IPAddress|null = null;
 
@@ -496,7 +499,7 @@ export class DhcpServer extends NetworkServices implements NetworkListener {
 
       // Handle response from forwarder:
       if( message.op === DhcpOpCode.Reply && message.net_dst?.isBroadcast == false ) {
-        const iface = this.ifaces.find( i => i.hasNetAddress(message.giaddr) );
+        const iface = this.ifaces.find( i => (i as NetworkInterface).hasNetAddress(message.giaddr) ) as NetworkInterface|undefined;
 
         if( iface ) {
           const request = new DhcpMessage.Builder()

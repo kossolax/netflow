@@ -1,7 +1,8 @@
 import { AfterViewInit, Component, Host, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { AnnotationConstraints, ConnectorConstraints, DiagramComponent, DiagramConstraints, NodeConstraints, SnapConstraints, ConnectorModel, DiagramTools, ConnectorDrawingTool, MouseEventArgs, Connector, ToolBase, CommandHandler, BasicShape, BasicShapeModel, NodeModel, DecoratorModel } from '@syncfusion/ej2-angular-diagrams';
+import { resetIncrementalSearchValues } from '@syncfusion/ej2-angular-dropdowns';
 import { ignoreElements, Subject, takeUntil, timer } from 'rxjs';
-import { IPAddress } from 'src/app/models/address.model';
+import { IPAddress, MacAddress } from 'src/app/models/address.model';
 
 import { Dot1QInterface, EthernetInterface, HardwareInterface, Interface } from 'src/app/models/layers/datalink.model';
 import { NetworkInterface } from 'src/app/models/layers/network.model';
@@ -13,6 +14,7 @@ import { VlanMode } from 'src/app/models/protocols/ethernet.model';
 import { ICMPMessage, ICMPType } from 'src/app/models/protocols/icmp.model';
 import { LinkLayerSpy } from 'src/app/models/protocols/protocols.model';
 import { DhcpPool } from 'src/app/models/services/dhcp.model';
+import { SpanningTreePortRole, SpanningTreeState } from 'src/app/models/services/spanningtree.model';
 import { NetworkService } from 'src/app/services/network.service';
 import { SchedulerService, SchedulerState } from 'src/app/services/scheduler.service';
 
@@ -34,6 +36,7 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
 
   constructor(private network: NetworkService, private scheduler: SchedulerService) {
     this.currentNetwork = new Network();
+    this.scheduler.Speed = SchedulerState.FASTER;
 
     setTimeout(() => {
       this.debug();
@@ -42,11 +45,13 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
   }
 
   private debug(): void {
+    const vlan = false;
     let net = new Network();
     let nodes: (RouterHost|SwitchHost|L4Host)[] = [];
     nodes.push(new RouterHost("Router-1A", 2));
     nodes.push(new SwitchHost("Switch-1A", 8));
     nodes.push(new SwitchHost("Switch-1B", 8));
+    nodes.push(new SwitchHost("Switch-1C", 8));
     nodes.push(new RouterHost("Router-1B", 2));
     nodes.push(new RouterHost("Router-2", 1));
     nodes.push(new ServerHost("Server-1", "server", 1));
@@ -63,27 +68,51 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
     net.nodes[nodes[i].guid] = nodes[i++];
 
     // Switch-1A:
-    ((nodes[i] as SwitchHost).getInterface(0) as Dot1QInterface).VlanMode = VlanMode.Access;
-    ((nodes[i] as SwitchHost).getInterface(0) as Dot1QInterface).addVlan(10);
-    ((nodes[i] as SwitchHost).getInterface(1) as Dot1QInterface).VlanMode = VlanMode.Trunk;
-    ((nodes[i] as SwitchHost).getInterface(1) as Dot1QInterface).addVlan(10);
-    ((nodes[i] as SwitchHost).getInterface(1) as Dot1QInterface).addVlan(20);
-    ((nodes[i] as SwitchHost).getInterface(2) as Dot1QInterface).VlanMode = VlanMode.Access;
-    ((nodes[i] as SwitchHost).getInterface(2) as Dot1QInterface).addVlan(20);
+    if( vlan ) {
+      ((nodes[i] as SwitchHost).getInterface(0) as Dot1QInterface).VlanMode = VlanMode.Access;
+      ((nodes[i] as SwitchHost).getInterface(0) as Dot1QInterface).addVlan(10);
+      ((nodes[i] as SwitchHost).getInterface(1) as Dot1QInterface).VlanMode = VlanMode.Trunk;
+      ((nodes[i] as SwitchHost).getInterface(1) as Dot1QInterface).addVlan(10);
+      ((nodes[i] as SwitchHost).getInterface(1) as Dot1QInterface).addVlan(20);
+      ((nodes[i] as SwitchHost).getInterface(2) as Dot1QInterface).VlanMode = VlanMode.Trunk;
+      ((nodes[i] as SwitchHost).getInterface(2) as Dot1QInterface).addVlan(10);
+      ((nodes[i] as SwitchHost).getInterface(2) as Dot1QInterface).addVlan(20);
+      ((nodes[i] as SwitchHost).getInterface(3) as Dot1QInterface).VlanMode = VlanMode.Access;
+      ((nodes[i] as SwitchHost).getInterface(3) as Dot1QInterface).addVlan(20);
+    }
     nodes[i].x = 400;
     nodes[i].y = 200;
     net.nodes[nodes[i].guid] = nodes[i++];
 
     // Switch-1B:
-    ((nodes[i] as SwitchHost).getInterface(0) as Dot1QInterface).VlanMode = VlanMode.Trunk;
-    ((nodes[i] as SwitchHost).getInterface(0) as Dot1QInterface).addVlan(10);
-    ((nodes[i] as SwitchHost).getInterface(0) as Dot1QInterface).addVlan(20);
-    ((nodes[i] as SwitchHost).getInterface(1) as Dot1QInterface).VlanMode = VlanMode.Access;
-    ((nodes[i] as SwitchHost).getInterface(1) as Dot1QInterface).addVlan(10);
-    ((nodes[i] as SwitchHost).getInterface(2) as Dot1QInterface).VlanMode = VlanMode.Access;
-    ((nodes[i] as SwitchHost).getInterface(2) as Dot1QInterface).addVlan(20);
+    if( vlan ) {
+      ((nodes[i] as SwitchHost).getInterface(0) as Dot1QInterface).VlanMode = VlanMode.Trunk;
+      ((nodes[i] as SwitchHost).getInterface(0) as Dot1QInterface).addVlan(10);
+      ((nodes[i] as SwitchHost).getInterface(0) as Dot1QInterface).addVlan(20);
+      ((nodes[i] as SwitchHost).getInterface(1) as Dot1QInterface).VlanMode = VlanMode.Access;
+      ((nodes[i] as SwitchHost).getInterface(1) as Dot1QInterface).addVlan(10);
+      ((nodes[i] as SwitchHost).getInterface(2) as Dot1QInterface).VlanMode = VlanMode.Trunk;
+      ((nodes[i] as SwitchHost).getInterface(2) as Dot1QInterface).addVlan(10);
+      ((nodes[i] as SwitchHost).getInterface(2) as Dot1QInterface).addVlan(20);
+      ((nodes[i] as SwitchHost).getInterface(3) as Dot1QInterface).VlanMode = VlanMode.Access;
+      ((nodes[i] as SwitchHost).getInterface(3) as Dot1QInterface).addVlan(20);
+    }
     nodes[i].x = 600;
     nodes[i].y = 200;
+    net.nodes[nodes[i].guid] = nodes[i++];
+
+    // Switch-1C:
+    (nodes[i] as SwitchHost).getInterface(0).setMacAddress(new MacAddress("00:00:00:00:00:01"));
+    if( vlan ) {
+      ((nodes[i] as SwitchHost).getInterface(0) as Dot1QInterface).VlanMode = VlanMode.Trunk;
+      ((nodes[i] as SwitchHost).getInterface(0) as Dot1QInterface).addVlan(10);
+      ((nodes[i] as SwitchHost).getInterface(0) as Dot1QInterface).addVlan(20);
+      ((nodes[i] as SwitchHost).getInterface(1) as Dot1QInterface).VlanMode = VlanMode.Trunk;
+      ((nodes[i] as SwitchHost).getInterface(1) as Dot1QInterface).addVlan(10);
+      ((nodes[i] as SwitchHost).getInterface(1) as Dot1QInterface).addVlan(20);
+    }
+    nodes[i].x = 500;
+    nodes[i].y = 400;
     net.nodes[nodes[i].guid] = nodes[i++];
 
 
@@ -100,8 +129,8 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
     (nodes[i] as RouterHost).getInterface(0).setNetAddress(new IPAddress("192.168.1.1"));
     (nodes[i] as RouterHost).addRoute("192.168.1.0", "255.255.255.0", "192.168.1.1");
     (nodes[i] as RouterHost).addRoute("0.0.0.0", "0.0.0.0", "192.168.1.2");
-    nodes[i].x = 1000;
-    nodes[i].y = 200;
+    nodes[i].x = 800;
+    nodes[i].y = 400;
     net.nodes[nodes[i].guid] = nodes[i++];
 
     // Server-1:
@@ -125,10 +154,16 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
     let links = [];
     links.push(new Link(nodes[0].getFirstAvailableInterface(), nodes[1].getFirstAvailableInterface(), 10));
     links.push(new Link(nodes[1].getFirstAvailableInterface(), nodes[2].getFirstAvailableInterface(), 10));
+    links.push(new Link(nodes[1].getFirstAvailableInterface(), nodes[3].getFirstAvailableInterface(), 10));
+    links.push(new Link(nodes[1].getFirstAvailableInterface(), nodes[6].getFirstAvailableInterface(), 10));
+    links.push(new Link(nodes[2].getFirstAvailableInterface(), nodes[4].getFirstAvailableInterface(), 10));
     links.push(new Link(nodes[2].getFirstAvailableInterface(), nodes[3].getFirstAvailableInterface(), 10));
-    links.push(new Link(nodes[3].getFirstAvailableInterface(), nodes[4].getFirstAvailableInterface(), 10));
-    links.push(new Link(nodes[1].getFirstAvailableInterface(), nodes[5].getFirstAvailableInterface(), 10));
-    links.push(new Link(nodes[2].getFirstAvailableInterface(), nodes[6].getFirstAvailableInterface(), 10));
+    links.push(new Link(nodes[2].getFirstAvailableInterface(), nodes[7].getFirstAvailableInterface(), 10));
+
+    links.push(new Link(nodes[4].getFirstAvailableInterface(), nodes[5].getFirstAvailableInterface(), 10));
+    //links.push(new Link(nodes[3].getFirstAvailableInterface(), nodes[4].getFirstAvailableInterface(), 10));
+    //links.push(new Link(nodes[1].getFirstAvailableInterface(), nodes[5].getFirstAvailableInterface(), 10));
+    //links.push(new Link(nodes[2].getFirstAvailableInterface(), nodes[6].getFirstAvailableInterface(), 10));
 
     links.map( i => {
       net.links.push(i);
@@ -147,7 +182,7 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
       icmp.map( i => (nodes[0] as RouterHost).send(i) );
     });
     this.scheduler.repeat(1).subscribe( () => {
-      nodes[3].send("B", (nodes[0].getInterface(0) as NetworkInterface).getNetAddress());
+      nodes[4].send("B", (nodes[0].getInterface(0) as NetworkInterface).getNetAddress());
     });
 
     this.scheduler.once(0.1).subscribe( () => {
@@ -293,21 +328,51 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
     });
   }
   private addLink(link: Link, src_guid?: string, dst_guid?: string): void {
-    const red = '#4caf50';
-    const green = '#f44336';
+    const black = "#505050";
+    const red = '#f44336';
+    const orange = '#f4af50';
+    const green = '#4caf50';
+    const blue = '#2196f3';
+    const white = '#ffffff';
+
+    function getIfaceColor(iface: Interface|null): string {
+      if( iface === null )
+        return black;
+
+      if( iface.isActive() === false )
+        return red;
+
+      if( iface instanceof HardwareInterface && iface.Host instanceof SwitchHost ) {
+        /*
+          if( iface.Host.spanningTree.Role(iface) === SpanningTreePortRole.Root )
+            return white;
+          if( iface.Host.spanningTree.Role(iface) === SpanningTreePortRole.Designated )
+            return blue;
+          if( iface.Host.spanningTree.Role(iface) === SpanningTreePortRole.Blocked )
+            return orange;
+          if( iface.Host.spanningTree.Role(iface) === SpanningTreePortRole.Disabled )
+            return black;
+        */
+
+        if( iface.Host.spanningTree.State(iface) === SpanningTreeState.Blocking )
+          return orange;
+      }
+
+      return green;
+    }
 
     const connector = this.diagram.addConnector({
       sourceID: src_guid ?? link.getInterface(0)?.Host.guid,
       targetID: dst_guid ?? link.getInterface(1)?.Host.guid,
-      sourceDecorator: { shape: "Square", style: { fill: link.getInterface(0)?.isActive() ? red : green } },
-      targetDecorator: { shape: "Square", style: { fill: link.getInterface(1)?.isActive() ? red : green } },
+      sourceDecorator: { shape: "Square", style: { fill: getIfaceColor(link.getInterface(0)) } },
+      targetDecorator: { shape: "Square", style: { fill: getIfaceColor(link.getInterface(0)) } },
       constraints: ConnectorConstraints.Default & ~ConnectorConstraints.Select,
       annotations: [{ constraints: AnnotationConstraints.ReadOnly  }],
     });
 
     function OnInterfaceEvent(iface: Interface, decorator: DecoratorModel, message: string): void {
       if( decorator.style )
-        decorator.style.fill = iface.isActive() ? red : green;
+        decorator.style.fill = getIfaceColor(iface);
     }
 
     link.getInterface(0)?.addListener((msg, iface) => OnInterfaceEvent(iface as Interface, connector.sourceDecorator, msg));

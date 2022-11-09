@@ -7,6 +7,7 @@ import { DatalinkMessage, Message, NetworkMessage } from "./message.model";
 import { Dot1QMessage, EthernetMessage, VlanMode } from "./protocols/ethernet.model";
 import { ActionHandle, DatalinkListener, GenericEventListener, handleChain, NetworkListener, NetworkSender } from "./protocols/protocols.model";
 import { DhcpServer } from "./services/dhcp.model";
+import { PVSTPService, SpanningTreeMessage, SpanningTreeState } from "./services/spanningtree.model";
 
 export abstract class GenericNode {
   public guid: string = Math.random().toString(36).substring(2, 9);
@@ -86,6 +87,7 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
   public override type = "switch";
   public receiveTrame$: Subject<DatalinkMessage> = new Subject<DatalinkMessage>();
   public knownVlan: Record<number, string> = {};
+  public spanningTree: PVSTPService;
 
   private ARPTable: Map<string, {iface: HardwareInterface, lastSeen: number}[]> = new Map<string, {iface: HardwareInterface, lastSeen: number}[]>();
 
@@ -94,8 +96,12 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
     if( name != "" )
       this.name = name;
 
+
     for(let i=0; i<iface; i++)
       this.addInterface();
+
+    this.spanningTree = new PVSTPService(this);
+    this.spanningTree.Enable = true;
 
     SchedulerService.Instance.repeat(10).subscribe(() => {
       this.cleanARPTable();
@@ -111,7 +117,7 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
     const iface = new Dot1QInterface(this, mac, name, 10, 1000, true);
     iface.addListener(this);
     this.interfaces[name] = iface;
-    handleChain("on", this.getListener, "onInterfaceAdded", iface);
+    handleChain("on", this.getListener, "OnInterfaceAdded", iface);
 
     return iface;
   }
@@ -146,6 +152,14 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
   }
 
   public receiveTrame(message: DatalinkMessage, from: HardwareInterface): ActionHandle {
+    if( message instanceof SpanningTreeMessage ) // TODO: fix this hack.
+      return ActionHandle.Continue;
+
+    if( this.spanningTree.State(from) === SpanningTreeState.Blocking )
+      return ActionHandle.Stop;
+    if( this.spanningTree.State(from) === SpanningTreeState.Listening )
+      return ActionHandle.Handled;
+
     const src = message.mac_src as HardwareAddress;
     const dst = message.mac_dst as HardwareAddress;
 
@@ -162,6 +176,9 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
         this.ARPTable.set(src.toString(), []);
       this.ARPTable.get(src.toString())?.push({iface: from, lastSeen: SchedulerService.Instance.getDeltaTime()});
     }
+
+    if( this.spanningTree.State(from) === SpanningTreeState.Learning )
+      return ActionHandle.Handled;
 
     let vlan_id = (from as Dot1QInterface).NativeVlan;
     if( message instanceof Dot1QMessage )
@@ -259,7 +276,7 @@ export abstract class NetworkHost extends Node<NetworkInterface> {
     const iface = new IPInterface(this, name, eth);
     iface.addNetAddress(ip);
     iface.addListener(this);
-    handleChain("on", this.getListener, "onInterfaceAdded", iface);
+    handleChain("on", this.getListener, "OnInterfaceAdded", iface);
 
     this.interfaces[name] = iface;
 

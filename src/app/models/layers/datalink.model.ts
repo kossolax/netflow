@@ -35,6 +35,10 @@ export abstract class Interface {
     this.status = false;
     handleChain("on", this.getListener, "OnInterfaceDown", this);
   }
+  public trigger(event: "OnInterfaceChange"): void {
+    handleChain("on", this.getListener, event, this);
+  }
+
   public isActive() : boolean {
     return this.status;
   }

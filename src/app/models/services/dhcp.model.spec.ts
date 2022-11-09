@@ -6,7 +6,7 @@ import { RouterHost, ServerHost, SwitchHost } from "../node.model";
 import { SimpleListener } from "../protocols/protocols.model";
 import { DhcpClient, DhcpPool, DhcpServer } from "./dhcp.model";
 
-describe('IPv4 protocol', () => {
+describe('DHCP protocol', () => {
   let A: ServerHost, B: ServerHost, C: ServerHost;
   let R: RouterHost;
   let S: SwitchHost;

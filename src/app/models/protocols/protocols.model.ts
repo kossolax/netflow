@@ -11,11 +11,12 @@ export enum ActionHandle {
   Stop,      // Immediately stop the hook chain and handle the original
 }
 
+type EventString = "OnInterfaceAdded"|"OnInterfaceUp"|"OnInterfaceDown"|"OnInterfaceChange";
 
 export function handleChain(
   handler: "receiveBits"|"sendBits"|"receiveTrame"|"sendTrame"|"receivePacket"|"sendPacket"|"on",
   listeners: GenericListener[],
-  message: Message|string,
+  message: Message|EventString,
   sender: Interface|GenericNode,
   receiver?: Interface,
   delay: number=0
@@ -73,7 +74,7 @@ export function handleChain(
       }
     }
     if( typeof i === 'function' && handler == "on" ) {
-      (i as GenericEventListener)(message as string, sender);
+      (i as GenericEventListener)(message as EventString, sender);
 
     }
 
@@ -84,7 +85,7 @@ export function handleChain(
   return action;
 }
 
-export type GenericEventListener = (message: string, sender: Interface|GenericNode) => void;
+export type GenericEventListener = (message: EventString, sender: Interface|GenericNode) => void;
 export type GenericListener = GenericClassListener|GenericEventListener;
 
 abstract class GenericClassListener {
