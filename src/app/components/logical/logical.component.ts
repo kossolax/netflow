@@ -36,7 +36,7 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
 
   constructor(private network: NetworkService, private scheduler: SchedulerService) {
     this.currentNetwork = new Network();
-    this.scheduler.Speed = SchedulerState.FASTER;
+    //this.scheduler.Speed = SchedulerState.FASTER;
 
     setTimeout(() => {
       this.debug();
