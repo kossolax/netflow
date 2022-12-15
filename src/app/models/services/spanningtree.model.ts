@@ -129,14 +129,12 @@ export class SpanningTreeMessage extends EthernetMessage {
 }
 
 export class PVSTPService extends NetworkServices<SwitchHost> implements DatalinkListener {
-  private roles = new Map<HardwareInterface, SpanningTreePortRole>();
-  private state = new Map<HardwareInterface, SpanningTreeState>();
-  private cost = new Map<HardwareInterface, number>();
+  private roles = new Map<Interface, SpanningTreePortRole>();
+  private state = new Map<Interface, SpanningTreeState>();
+  private cost = new Map<Interface, number>();
   private maxAge = 20;
-  private helloTime = 2;
+  private helloTime = 15;
   private forwardDelay = 15;
-
-  private switchToDebug = "Switch-1A";
 
   private root_id = {
     mac: new MacAddress("FF:FF:FF:FF:FF:FF"),
@@ -159,26 +157,28 @@ export class PVSTPService extends NetworkServices<SwitchHost> implements Datalin
     SchedulerService.Instance.repeat(this.helloTime).subscribe( () => this.negociate() );
   }
 
-  public State(iface: HardwareInterface): SpanningTreeState {
+  public State(iface: Interface): SpanningTreeState {
     return this.state.get(iface) ?? SpanningTreeState.Disabled;
   }
-  public Role(iface: HardwareInterface): SpanningTreePortRole {
+  public Role(iface: Interface): SpanningTreePortRole {
     return this.roles.get(iface) ?? SpanningTreePortRole.Disabled;
   }
-  public Cost(iface: HardwareInterface): number {
+  public Cost(iface: Interface): number {
     return this.cost.get(iface) ?? Number.MAX_VALUE;
   }
 
 
   override set Enable(enable: boolean) {
     super.Enable = enable;
+    this.enabled = enable;
     this.setDefaultRoot();
   }
   override get Enable(): boolean {
-    return this.enabled;
+    return super.Enable;
   }
 
   private setDefaultRoot(): void {
+    this.root_id.mac = new MacAddress("FF:FF:FF:FF:FF:FF");
     this.bridge_id.mac = new MacAddress("FF:FF:FF:FF:FF:FF");
 
     this.host.getInterfaces().map( i => {
@@ -191,14 +191,16 @@ export class PVSTPService extends NetworkServices<SwitchHost> implements Datalin
       if( mac.compareTo(this.bridge_id.mac) < 0 )
         this.bridge_id.mac = mac;
 
-      if( this.Enable && iface.isActive()  && iface.isConnected ) {
-        if( this.roles.get(iface) === undefined ) { // boot, we are the root. So the COST is 0.
+      if( this.enabled ) {
+        // boot, we are the root. So the COST is set to default.
+
+        if( this.roles.get(iface) === undefined ) {
           this.changeRole(iface, SpanningTreePortRole.Designated);
           this.changeState(iface, SpanningTreeState.Blocking);
-          this.cost.set(iface, 0);
+          this.cost.set(iface, 42);
         }
       }
-      if( !this.Enable ) {
+      else {
         this.changeRole(iface, SpanningTreePortRole.Disabled);
         this.changeState(iface, SpanningTreeState.Disabled);
         this.roles.delete(iface);
@@ -211,13 +213,11 @@ export class PVSTPService extends NetworkServices<SwitchHost> implements Datalin
 
   private changingState: Map<HardwareInterface, Subscription> = new Map();
   private changeState(iface: HardwareInterface, state: SpanningTreeState): void {
-    let oldState = this.state.get(iface) as SpanningTreeState;
+    let oldState = this.state.get(iface);
     this.state.set(iface, state);
 
     if( state != oldState ) {
       const name = this.host.getInterfaces().find( i => this.host.getInterface(i) === iface );
-      if( this.host.name === this.switchToDebug )
-        console.warn(this.host.name, "change state", name, "from", SpanningTreeState[oldState], "to", SpanningTreeState[state]);
       iface.trigger("OnInterfaceChange");
 
       this.changingState.get(iface)?.unsubscribe();
@@ -248,8 +248,6 @@ export class PVSTPService extends NetworkServices<SwitchHost> implements Datalin
 
     if( this.roles.get(iface) !== oldRole ) {
       const name = this.host.getInterfaces().find( i => this.host.getInterface(i) === iface );
-      if( this.host.name === this.switchToDebug )
-        console.error(this.host.name, "change role", name, "from", SpanningTreePortRole[oldRole], "to", SpanningTreePortRole[role]);
       iface.trigger("OnInterfaceChange");
 
 
@@ -263,12 +261,10 @@ export class PVSTPService extends NetworkServices<SwitchHost> implements Datalin
   }
 
   public negociate(): void {
-    if( !this.Enable )
+    if( !this.enabled )
       return;
 
-    this.setDefaultRoot();
-
-    if( this.root_id.mac.equals(this.bridge_id.mac) || false ) {
+    if( this.root_id.mac.equals(this.bridge_id.mac)  ) {
 
       this.host.getInterfaces().map( i => {
         const iface = this.host.getInterface(i);
@@ -297,6 +293,7 @@ export class PVSTPService extends NetworkServices<SwitchHost> implements Datalin
       if( message.bridge_id.mac.equals(this.bridge_id.mac) )
         return ActionHandle.Stop;
 
+      // We have a new root:
       if( this.root_id.priority < message.root_id.priority ||
         (this.root_id.priority == message.root_id.priority && message.root_id.mac.compareTo(this.root_id.mac) < 0) ) {
         this.root_id.mac = message.root_id.mac;
@@ -309,15 +306,13 @@ export class PVSTPService extends NetworkServices<SwitchHost> implements Datalin
         this.cost.clear();
       }
 
-      if( this.Cost(from as HardwareInterface) > message.root_path_cost ) {
-        this.cost.set(from as HardwareInterface, message.root_path_cost);
-        const name = this.host.getInterfaces().find( i => this.host.getInterface(i) === from );
-        console.log(this.host.name, "change cost", name, "to", message.root_path_cost);
+      if( this.root_id.mac.equals(message.root_id.mac) && this.Cost(from) > message.root_path_cost ) {
+        this.cost.set(from, message.root_path_cost);
       }
 
       // I'm not the root
       if( this.bridge_id.mac.equals(this.root_id.mac) === false ) {
-        let bestInterface:HardwareInterface|null = null;
+        let bestInterface!:HardwareInterface;
         let bestCost = Number.MAX_VALUE;
 
         this.host.getInterfaces().map( i => {

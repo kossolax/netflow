@@ -343,7 +343,6 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
         return red;
 
       if( iface instanceof HardwareInterface && iface.Host instanceof SwitchHost ) {
-        /*
           if( iface.Host.spanningTree.Role(iface) === SpanningTreePortRole.Root )
             return white;
           if( iface.Host.spanningTree.Role(iface) === SpanningTreePortRole.Designated )
@@ -352,10 +351,6 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
             return orange;
           if( iface.Host.spanningTree.Role(iface) === SpanningTreePortRole.Disabled )
             return black;
-        */
-
-        if( iface.Host.spanningTree.State(iface) === SpanningTreeState.Blocking )
-          return orange;
       }
 
       return green;
