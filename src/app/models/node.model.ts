@@ -101,7 +101,6 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
       this.addInterface();
 
     this.spanningTree = new PVSTPService(this);
-    this.spanningTree.Enable = true;
 
     SchedulerService.Instance.repeat(10).subscribe(() => {
       this.cleanARPTable();
