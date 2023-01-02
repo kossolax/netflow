@@ -26,7 +26,6 @@ export class NetworkService {
     formData.append("file", file);
 
     const headers = new HttpHeaders( {
-      "Content-Type": "multipart/form-data",
       "X-Auth-Token": environment.apiToken,
     });
 
