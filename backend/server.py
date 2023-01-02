@@ -41,6 +41,16 @@ def root():
 @compress.compressed()
 def decode():
   try:
+
+    print("Headers:")
+    for i in request.headers:
+      print(i)
+
+    print("File list:")
+    for i in request.files:
+      print(i)
+
+
     if request.files.get('file') is None:
       return json.dumps({
         "message": "errored",
