@@ -41,13 +41,13 @@ def root():
 @compress.compressed()
 def decode():
   try:
-    if 'file' not in request.files:
+    if request.files.get('file') is None:
       return json.dumps({
         "message": "errored",
         "error": "no file provided"
       })
 
-    file = request.files['file']
+    file = request.files.get('file')
     ext = file.filename.split(".")[-1]
 
     if ext not in ["pkt", "pka"]:
