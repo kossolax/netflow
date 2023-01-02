@@ -37,29 +37,42 @@ def root():
     "message": "Hello World!"
   })
 
-@app.route("/decode", methods=['GET', 'POST'])
+@app.route("/decode", methods=['POST'])
 @compress.compressed()
 def decode():
-  if request.method == 'POST':
-    if 'file' in request.files:
-      file = request.files['file']
-      ext = file.filename.split(".")[-1]
+  try:
+    if 'file' not in request.files:
+      return json.dumps({
+        "message": "errored",
+        "error": "no file provided"
+      })
 
-      if ext in ["pkt", "pka"]:
-        file_input = "input." + ext
-        file.save(file_input)
+    file = request.files['file']
+    ext = file.filename.split(".")[-1]
 
-        process = subprocess.Popen(["pka2xml", "-d", file_input, "output.xml"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        _, _ = process.communicate()
+    if ext not in ["pkt", "pka"]:
+      return json.dumps({
+        "message": "errored",
+        "error": "invalid file extension"
+      })
 
-        with open("output.xml", mode="r") as file:
-          clean = illegal_xml_chars_re.sub('', file.read())
-          data_dict = xmltodict.parse(clean)
-          return json.dumps(data_dict)
+    file_input = "input." + ext
+    file.save(file_input)
 
-  return json.dumps({
-    "message": "errored"
-  })
+    process = subprocess.Popen(["pka2xml", "-d", file_input, "output.xml"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    _, _ = process.communicate()
+
+    with open("output.xml", mode="r") as file:
+      clean = illegal_xml_chars_re.sub('', file.read())
+      data_dict = xmltodict.parse(clean)
+      return json.dumps(data_dict)
+
+  except Exception as e:
+    return json.dumps({
+      "message": "errored",
+      "error": str(e)
+    })
+
 
 
 if __name__ == "__main__":
