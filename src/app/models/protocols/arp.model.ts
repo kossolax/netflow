@@ -71,19 +71,21 @@ export class ArpProtocol implements DatalinkListener {
   }
 
   public enqueueRequest(message: NetworkMessage, nextHop: NetworkAddress): void {
+
     //const addr = message.net_dst as NetworkAddress;
 
     if( nextHop.isBroadcast ) {
       this.sendTrame(message, MacAddress.generateBroadcast());
     }
     else if( this.table.has(nextHop.toString()) ) {
+      this.table.get(nextHop.toString())!.lastSeen = SchedulerService.Instance.getDeltaTime();
       this.sendTrame(message, this.table.get(nextHop.toString())?.address!);
     }
-    else if( this.queue.has(nextHop.toString()) ) {
-      this.queue.get(nextHop.toString())?.push(message);
-    }
     else {
-      this.queue.set(nextHop.toString(), [message]);
+      if( this.queue.has(nextHop.toString()) )
+        this.queue.get(nextHop.toString())?.push(message);
+      else
+        this.queue.set(nextHop.toString(), [message]);
       this.sendArpRequest(nextHop);
     }
   }
@@ -93,10 +95,10 @@ export class ArpProtocol implements DatalinkListener {
       .build();
 
     const message: DatalinkMessage = new DatalinkMessage(arp, this.interface.getMacAddress(), MacAddress.generateBroadcast());
-    this.interface.getInterface(0).sendTrame(message);
+    this.interface.sendTrame(message);
   }
 
-  public receiveTrame(message: DatalinkMessage): ActionHandle {
+  public receiveTrame(message: DatalinkMessage, from: HardwareInterface): ActionHandle {
     if( message.payload instanceof ArpMessage ) {
       const arp = message.payload as ArpMessage;
 
@@ -108,7 +110,7 @@ export class ArpProtocol implements DatalinkListener {
 
         const replyMessage: DatalinkMessage = new DatalinkMessage(reply, this.interface.getMacAddress(), message.mac_src);
 
-        this.interface.getInterface(0).sendTrame(replyMessage);
+        from.sendTrame(replyMessage);
       }
       else if( arp.type == "reply" && arp.response != null ) {
         this.table.set(arp.request.toString(), {address: arp.response, lastSeen: SchedulerService.Instance.getDeltaTime()});

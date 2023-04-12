@@ -101,6 +101,7 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
       this.addInterface();
 
     this.spanningTree = new PVSTPService(this);
+    this.spanningTree.Enable = true;
 
     SchedulerService.Instance.repeat(10).subscribe(() => {
       this.cleanARPTable();
@@ -130,7 +131,11 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
   public send(message: string|DatalinkMessage, dst?: HardwareAddress): void {
     if( message instanceof DatalinkMessage ) {
       for( const name in this.interfaces ) {
-        this.interfaces[name].sendTrame(message);
+        if( this.interfaces[name].hasMacAddress(message.mac_src as HardwareAddress) ) {
+          if( this.spanningTree.State(this.interfaces[name]) === SpanningTreeState.Blocking )
+            continue;
+          this.interfaces[name].sendTrame(message);
+        }
       }
     }
     else {
@@ -144,7 +149,11 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
       );
 
       for( const name in this.interfaces ) {
-        this.interfaces[name].sendTrame(msg);
+        if( this.interfaces[name].hasMacAddress(msg.mac_src as HardwareAddress) ) {
+          if( this.spanningTree.State(this.interfaces[name]) === SpanningTreeState.Blocking )
+            continue;
+          this.interfaces[name].sendTrame(msg);
+        }
       }
     }
 
@@ -204,6 +213,9 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
 
     interfaces.map( iface => {
       let msg = message;
+
+      if( this.spanningTree.State(iface) === SpanningTreeState.Blocking )
+        return;
 
       if( iface.VlanMode == VlanMode.Trunk ) {
         if( !(message instanceof Dot1QMessage) ) {
@@ -322,7 +334,8 @@ export class RouterHost extends NetworkHost implements NetworkListener {
 
     if( message instanceof NetworkMessage ) {
       for( const name in this.interfaces ) {
-        this.interfaces[name].sendPacket(message);
+        if( this.interfaces[name].hasNetAddress(message.net_src as NetworkAddress) )
+          this.interfaces[name].sendPacket(message);
       }
     }
     else {
@@ -338,7 +351,8 @@ export class RouterHost extends NetworkHost implements NetworkListener {
       );
 
       for( const name in this.interfaces ) {
-        this.interfaces[name].sendPacket(msg);
+        if( this.interfaces[name].hasNetAddress(msg.net_src as NetworkAddress) )
+          this.interfaces[name].sendPacket(msg);
       }
     }
   }

@@ -1,6 +1,7 @@
 import { concatMap, map, Observable, of, Subject, switchMap, tap, timer } from "rxjs";
 import { SchedulerService, SchedulerState } from "src/app/services/scheduler.service";
 import { PhysicalMessage } from "../message.model";
+import { ArpMessage } from "../protocols/arp.model";
 import { ActionHandle, GenericListener, handleChain, PhysicalListener, PhysicalSender } from "../protocols/protocols.model";
 import { HardwareInterface, Interface } from "./datalink.model";
 import { NetworkInterface } from "./network.model";

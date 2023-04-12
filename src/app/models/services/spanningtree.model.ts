@@ -5,7 +5,7 @@ import { HardwareInterface, Interface } from "../layers/datalink.model";
 import { DatalinkMessage, Payload } from "../message.model";
 import { GenericNode, SwitchHost } from "../node.model";
 import { EthernetMessage } from "../protocols/ethernet.model";
-import { ActionHandle, DatalinkListener } from "../protocols/protocols.model";
+import { ActionHandle, DatalinkListener, DatalinkSender } from "../protocols/protocols.model";
 import { NetworkServices } from "./dhcp.model";
 
 export enum SpanningTreeState {
@@ -19,7 +19,7 @@ enum MessageType {
   configuration,
   topologyChange,
 };
-export enum SpanningTreePortRole {
+enum SpanningTreePortRole {
   Disabled,
   Root,
   Designated,
@@ -149,7 +149,7 @@ export class PVSTPService extends NetworkServices<SwitchHost> implements Datalin
     super(host);
 
     host.addListener( (msg, iface) => {
-      if( msg === "OnInterfaceAdded" )
+      if( msg === "OnInterfaceAdded" || msg === "OnInterfaceChange" )
         this.setDefaultRoot();
     });
 
@@ -212,11 +212,11 @@ export class PVSTPService extends NetworkServices<SwitchHost> implements Datalin
   }
 
   private changingState: Map<HardwareInterface, Subscription> = new Map();
-  private changeState(iface: HardwareInterface, state: SpanningTreeState): void {
+  private changeState(iface: HardwareInterface, state: SpanningTreeState, force: boolean = false): void {
     let oldState = this.state.get(iface);
     this.state.set(iface, state);
 
-    if( state != oldState ) {
+    if( state != oldState || force ) {
       const name = this.host.getInterfaces().find( i => this.host.getInterface(i) === iface );
       iface.trigger("OnInterfaceChange");
 
@@ -254,7 +254,7 @@ export class PVSTPService extends NetworkServices<SwitchHost> implements Datalin
       switch(role) {
         case SpanningTreePortRole.Backup:
         case SpanningTreePortRole.Blocked:
-          this.changeState(iface, SpanningTreeState.Blocking);
+          this.changeState(iface, SpanningTreeState.Blocking, true);
           break;
       }
     }
@@ -269,6 +269,7 @@ export class PVSTPService extends NetworkServices<SwitchHost> implements Datalin
       this.host.getInterfaces().map( i => {
         const iface = this.host.getInterface(i);
         if( iface.isActive() === false || iface.isConnected === false ) return;
+        if( this.State(iface) === SpanningTreeState.Blocking ) return;
 
         const message = new SpanningTreeMessage.Builder()
           .setMacSource(iface.getMacAddress() as MacAddress)
@@ -307,7 +308,7 @@ export class PVSTPService extends NetworkServices<SwitchHost> implements Datalin
       }
 
       if( this.root_id.mac.equals(message.root_id.mac) && this.Cost(from) > message.root_path_cost ) {
-        this.cost.set(from, message.root_path_cost);
+        this.cost.set(from, message.root_path_cost + 10);
       }
 
       // I'm not the root
@@ -362,7 +363,7 @@ export class PVSTPService extends NetworkServices<SwitchHost> implements Datalin
               .setMacSource(iface.getMacAddress() as MacAddress)
               .setBridge(this.bridge_id.mac)
               .setRoot(message.root_id.mac)
-              .setCost(message.root_path_cost + 10)
+              .setCost(this.Cost(iface))
               .setPort(message.port_id.global_id)
               .setMessageAge(message.message_age)
               .build();
@@ -375,6 +376,10 @@ export class PVSTPService extends NetworkServices<SwitchHost> implements Datalin
       return ActionHandle.Handled;
     }
 
+    if( this.State(from as HardwareInterface) === SpanningTreeState.Blocking )
+      return ActionHandle.Stop;
+
     return ActionHandle.Continue;
   }
+
 }

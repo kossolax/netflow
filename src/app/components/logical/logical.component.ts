@@ -14,7 +14,7 @@ import { VlanMode } from 'src/app/models/protocols/ethernet.model';
 import { ICMPMessage, ICMPType } from 'src/app/models/protocols/icmp.model';
 import { LinkLayerSpy } from 'src/app/models/protocols/protocols.model';
 import { DhcpPool } from 'src/app/models/services/dhcp.model';
-import { SpanningTreePortRole, SpanningTreeState } from 'src/app/models/services/spanningtree.model';
+import { SpanningTreeState } from 'src/app/models/services/spanningtree.model';
 import { NetworkService } from 'src/app/services/network.service';
 import { SchedulerService, SchedulerState } from 'src/app/services/scheduler.service';
 
@@ -68,6 +68,7 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
     net.nodes[nodes[i].guid] = nodes[i++];
 
     // Switch-1A:
+    (nodes[i] as SwitchHost).getInterface(0).setMacAddress(new MacAddress("00:00:00:00:00:03"));
     if( vlan ) {
       ((nodes[i] as SwitchHost).getInterface(0) as Dot1QInterface).VlanMode = VlanMode.Access;
       ((nodes[i] as SwitchHost).getInterface(0) as Dot1QInterface).addVlan(10);
@@ -85,6 +86,7 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
     net.nodes[nodes[i].guid] = nodes[i++];
 
     // Switch-1B:
+    (nodes[i] as SwitchHost).getInterface(0).setMacAddress(new MacAddress("00:00:00:00:00:02"));
     if( vlan ) {
       ((nodes[i] as SwitchHost).getInterface(0) as Dot1QInterface).VlanMode = VlanMode.Trunk;
       ((nodes[i] as SwitchHost).getInterface(0) as Dot1QInterface).addVlan(10);
@@ -169,20 +171,20 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
       net.links.push(i);
     });
 
-    this.scheduler.once(10).pipe(
+    this.scheduler.repeat(20).pipe(
       takeUntil(this.onDestroy$)
     ).subscribe( () => {
 
       const icmp = new ICMPMessage.Builder()
         .setNetSource((nodes[0] as RouterHost).getInterface(0).getNetAddress() as IPAddress)
-        .setNetDestination((nodes[2] as RouterHost).getInterface(0).getNetAddress() as IPAddress)
+        .setNetDestination(new IPAddress("192.168.0.2"))
         .setType(ICMPType.EchoRequest)
         .build();
 
       icmp.map( i => (nodes[0] as RouterHost).send(i) );
     });
     this.scheduler.repeat(1).subscribe( () => {
-      nodes[4].send("B", (nodes[0].getInterface(0) as NetworkInterface).getNetAddress());
+      //nodes[4].send("B", (nodes[0].getInterface(0) as NetworkInterface).getNetAddress());
     });
 
     this.scheduler.once(0.1).subscribe( () => {
@@ -343,14 +345,14 @@ export class LogicalComponent implements AfterViewInit, OnDestroy  {
         return red;
 
       if( iface instanceof HardwareInterface && iface.Host instanceof SwitchHost ) {
-          if( iface.Host.spanningTree.Role(iface) === SpanningTreePortRole.Root )
-            return white;
-          if( iface.Host.spanningTree.Role(iface) === SpanningTreePortRole.Designated )
-            return blue;
-          if( iface.Host.spanningTree.Role(iface) === SpanningTreePortRole.Blocked )
-            return orange;
-          if( iface.Host.spanningTree.Role(iface) === SpanningTreePortRole.Disabled )
-            return black;
+        if( iface.Host.spanningTree.State(iface) == SpanningTreeState.Blocking )
+          return orange;
+        if( iface.Host.spanningTree.State(iface) == SpanningTreeState.Listening )
+          return blue;
+        if( iface.Host.spanningTree.State(iface) == SpanningTreeState.Learning )
+          return blue;
+        if( iface.Host.spanningTree.State(iface) == SpanningTreeState.Forwarding )
+          return green;
       }
 
       return green;

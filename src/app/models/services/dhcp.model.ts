@@ -22,6 +22,8 @@ export class NetworkServices<T extends NetworkHost|SwitchHost > {
         if( this.ifaces.indexOf(iface) < 0 ) {
           this.ifaces.push(iface);
           iface.addListener(this);
+          if( iface instanceof NetworkInterface)
+            iface.getInterface(0).addListener(this);
         }
       });
     }
