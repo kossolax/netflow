@@ -481,19 +481,28 @@ export class DhcpServer extends NetworkServices<NetworkHost> implements NetworkL
         }
 
         if( message.net_dst?.isBroadcast && this.forwarder ) {
-          const request = new DhcpMessage.Builder()
-            .setType(message.options.type)
-            .setNetSource(iface.getNetAddress() as IPAddress)
-            .setNetDestination(this.forwarder)
-            .setClientHardwareAddress(message.chaddr)
-            .setTransactionId(message.xid)
-            .setYourAddress(message.yiaddr)
-            .setServerAddress(message.siaddr)
-            .setClientAddress(message.ciaddr)
-            .setGatewayAddress(iface.getNetAddress() as IPAddress)
-            .build()[0] as DhcpMessage;
+          const src_iface = this.host.getInterfaces().find( i => {
+            const iface = this.host.getInterface(i);
+            return iface.getNetAddress().InSameNetwork(iface.getNetMask(), this.forwarder as NetworkAddress);
+          });
 
-          this.host.send(request);
+          if( src_iface ) {
+
+            const request = new DhcpMessage.Builder()
+              .setType(message.options.type)
+              .setNetSource(this.host.getInterface(src_iface).getNetAddress() as IPAddress)
+              .setNetDestination(this.forwarder)
+              .setClientHardwareAddress(message.chaddr)
+              .setTransactionId(message.xid)
+              .setYourAddress(message.yiaddr)
+              .setServerAddress(message.siaddr)
+              .setClientAddress(message.ciaddr)
+              .setGatewayAddress(iface.getNetAddress() as IPAddress)
+              .build()[0] as DhcpMessage;
+
+            this.host.send(request);
+
+          }
           return ActionHandle.Stop;
         }
 
