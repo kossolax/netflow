@@ -140,6 +140,13 @@ export class PVSTPService extends NetworkServices<SwitchHost> implements Datalin
     mac: new MacAddress("FF:FF:FF:FF:FF:FF"),
     priority: 32768,
   };
+  get Root(): MacAddress {
+    return this.root_id.mac;
+  }
+  get IsRoot(): boolean {
+    return this.root_id.mac.equals(this.bridge_id.mac);
+  }
+
   private bridge_id = {
     mac: new MacAddress("FF:FF:FF:FF:FF:FF"),
     priority: 32768,

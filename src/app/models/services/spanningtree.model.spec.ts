@@ -2,7 +2,9 @@ import { SchedulerService, SchedulerState } from "src/app/services/scheduler.ser
 import { Link } from "../layers/physical.model";
 import { SwitchHost } from "../node.model";
 import { DatalinkListener, SimpleListener } from "../protocols/protocols.model";
-import { PVSTPService } from "./spanningtree.model";
+import { PVSTPService, SpanningTreeMessage } from "./spanningtree.model";
+import { filter, first, interval, take, tap, timeout } from "rxjs";
+import { MacAddress } from "../address.model";
 
 describe('STP protocol', () => {
   let A: SwitchHost, B: SwitchHost, C: SwitchHost, D: SwitchHost;
@@ -41,12 +43,55 @@ describe('STP protocol', () => {
   });
 
   it('STP Broadcast', (done) => {
-    A.spanningTree.negociate();
-
     D.getInterface(0).addListener(listener);
-    listener.receiveTrame$.subscribe(trame => {
+
+    listener.receiveTrame$.pipe(
+      take(1)
+    ).subscribe(trame => {
+      expect(trame.mac_src.equals(C.getInterface(2).getMacAddress())).toBeTruthy();
+      expect(trame).toBeInstanceOf(SpanningTreeMessage);
       done();
     });
-
+    A.spanningTree.negociate();
   });
+
+  it('STP root', (done) => {
+    const mac = new MacAddress("00:00:00:00:00:01");
+
+    A.spanningTree.Enable = false;
+    A.getInterface(0).setMacAddress( mac );
+    A.spanningTree.Enable = true;
+
+    expect(A.spanningTree.IsRoot).toBeTruthy();
+    expect(B.spanningTree.IsRoot).toBeTruthy();
+    expect(C.spanningTree.IsRoot).toBeTruthy();
+    expect(D.spanningTree.IsRoot).toBeTruthy();
+
+    interval(100).pipe(
+      filter(() => A.spanningTree.Root.equals(mac) ),
+      filter(() => B.spanningTree.Root.equals(mac) ),
+      filter(() => C.spanningTree.Root.equals(mac) ),
+      filter(() => D.spanningTree.Root.equals(mac) ),
+      take(1),
+      timeout(5 * 1000),
+    ).subscribe( {
+      next: () => {
+        expect(A.spanningTree.IsRoot).toBeTruthy();
+        expect(B.spanningTree.IsRoot).toBeFalsy();
+        expect(C.spanningTree.IsRoot).toBeFalsy();
+        expect(D.spanningTree.IsRoot).toBeFalsy();
+        done();
+      },
+      error: (err) => {
+        done.fail("Root not found in time");
+      },
+    });
+
+
+    A.spanningTree.negociate();
+    B.spanningTree.negociate();
+    C.spanningTree.negociate();
+    D.spanningTree.negociate();
+  });
+
 });
