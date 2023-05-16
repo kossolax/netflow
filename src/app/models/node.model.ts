@@ -332,8 +332,6 @@ export class RouterHost extends NetworkHost implements NetworkListener {
 
   public send(message: string|NetworkMessage, net_dst?: NetworkAddress): void {
 
-    console.log("RouterHost.send", message, net_dst);
-
     if( message instanceof NetworkMessage ) {
       for( const name in this.interfaces ) {
         if( this.interfaces[name].hasNetAddress(message.net_src as NetworkAddress) )
