@@ -91,7 +91,7 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
 
   private ARPTable: Map<string, {iface: HardwareInterface, lastSeen: number}[]> = new Map<string, {iface: HardwareInterface, lastSeen: number}[]>();
 
-  constructor(name: string="", iface: number=0) {
+  constructor(name: string="", iface: number=0, spanningTreeSupport: boolean=false) {
     super();
     if( name != "" )
       this.name = name;
@@ -101,7 +101,7 @@ export class SwitchHost extends Node<HardwareInterface> implements DatalinkListe
       this.addInterface();
 
     this.spanningTree = new PVSTPService(this);
-    this.spanningTree.Enable = true;
+    this.spanningTree.Enable = spanningTreeSupport;
 
     SchedulerService.Instance.repeat(10).subscribe(() => {
       this.cleanARPTable();
@@ -331,6 +331,8 @@ export class RouterHost extends NetworkHost implements NetworkListener {
 
 
   public send(message: string|NetworkMessage, net_dst?: NetworkAddress): void {
+
+    console.log("RouterHost.send", message, net_dst);
 
     if( message instanceof NetworkMessage ) {
       for( const name in this.interfaces ) {

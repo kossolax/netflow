@@ -25,10 +25,10 @@ export class FooterComponent {
     {
       text: 'Switch',
       child: [
-        new SwitchHost("Switch 6", 6),
-        new SwitchHost("Switch 12", 12),
-        new SwitchHost("Switch 24", 24),
-        new SwitchHost("Switch 48", 48),
+        new SwitchHost("Switch 6", 6, true),
+        new SwitchHost("Switch 12", 12, true),
+        new SwitchHost("Switch 24", 24, true),
+        new SwitchHost("Switch 48", 48, true),
       ],
     },
     {
