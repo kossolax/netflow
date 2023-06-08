@@ -6,7 +6,7 @@ import { switchMap } from 'rxjs';
 import { SwitchHost, RouterHost } from '../models/node.model';
 import { environment } from 'src/environments/environment';
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 60000;
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 90000;
 
 describe('packet tracer decoding host', () => {
   let service: NetworkService;

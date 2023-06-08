@@ -1,8 +1,5 @@
-import { TestBed } from '@angular/core/testing';
 import { SchedulerService, SchedulerState } from './scheduler.service';
 import { bufferCount, map, mapTo, take, timeout, zip } from 'rxjs';
-
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 5000;
 
 describe('scheduler', () => {
   let service: SchedulerService;
