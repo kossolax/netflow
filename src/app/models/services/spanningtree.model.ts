@@ -220,12 +220,10 @@ export class PVSTPService extends NetworkServices<SwitchHost> implements Datalin
 
   private changingState: Map<HardwareInterface, Subscription> = new Map();
   private changeState(iface: HardwareInterface, state: SpanningTreeState, force: boolean = false): void {
-    let oldState = this.state.get(iface);
+    let oldState = this.state.get(iface) ?? SpanningTreeState.Disabled;
     this.state.set(iface, state);
 
     if( state != oldState || force ) {
-      const name = this.host.getInterfaces().find( i => this.host.getInterface(i) === iface );
-      iface.trigger("OnInterfaceChange");
 
       this.changingState.get(iface)?.unsubscribe();
       switch(state) {
@@ -250,13 +248,10 @@ export class PVSTPService extends NetworkServices<SwitchHost> implements Datalin
     }
   }
   private changeRole(iface: HardwareInterface, role: SpanningTreePortRole): void {
-    let oldRole = this.roles.get(iface) as SpanningTreePortRole;
+    let oldRole = this.roles.get(iface);
     this.roles.set(iface, role);
 
     if( this.roles.get(iface) !== oldRole ) {
-      const name = this.host.getInterfaces().find( i => this.host.getInterface(i) === iface );
-      iface.trigger("OnInterfaceChange");
-
 
       switch(role) {
         case SpanningTreePortRole.Backup:

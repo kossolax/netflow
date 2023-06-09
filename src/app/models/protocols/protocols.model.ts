@@ -1,9 +1,10 @@
 import { Subject, zip } from "rxjs";
-import { HardwareInterface, Interface } from "../layers/datalink.model";
+import { EthernetInterface, HardwareInterface, Interface } from "../layers/datalink.model";
 import { NetworkInterface } from "../layers/network.model";
 import { AbstractLink, Link } from "../layers/physical.model";
 import { DatalinkMessage, NetworkMessage, PhysicalMessage, Message } from "../message.model";
-import { GenericNode } from "../node.model";
+import { GenericNode, RouterHost, SwitchHost } from "../node.model";
+import { HardwareAddress, IPAddress, MacAddress } from "../address.model";
 
 export enum ActionHandle {
   Continue, // Continue with the original action
@@ -11,7 +12,7 @@ export enum ActionHandle {
   Stop,      // Immediately stop the hook chain and handle the original
 }
 
-type EventString = "OnInterfaceAdded"|"OnInterfaceUp"|"OnInterfaceDown"|"OnInterfaceChange";
+export type EventString = "OnInterfaceAdded"|"OnInterfaceUp"|"OnInterfaceDown"|"OnInterfaceChange";
 
 export function handleChain(
   handler: "receiveBits"|"sendBits"|"receiveTrame"|"sendTrame"|"receivePacket"|"sendPacket"|"on",
@@ -74,8 +75,8 @@ export function handleChain(
       }
     }
     if( typeof i === 'function' && handler == "on" ) {
-      (i as GenericEventListener)(message as EventString, sender);
-
+      ret = (i as GenericEventListener)(message as EventString, sender) ?? ActionHandle.Continue;
+      if( ret > action ) action = ret;
     }
 
     if( action === ActionHandle.Stop )
@@ -85,7 +86,7 @@ export function handleChain(
   return action;
 }
 
-export type GenericEventListener = (message: EventString, sender: Interface|GenericNode) => void;
+export type GenericEventListener = (message: EventString, sender: Interface|GenericNode) => ActionHandle|void;
 export type GenericListener = GenericClassListener|GenericEventListener;
 
 abstract class GenericClassListener {
@@ -153,3 +154,4 @@ export class LinkLayerSpy implements PhysicalSender, PhysicalListener {
     this.sendBits$.next({message: message, source: from, destination: to, delay: delay});
   }
 }
+

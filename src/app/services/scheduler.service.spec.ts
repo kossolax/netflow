@@ -1,5 +1,5 @@
 import { SchedulerService, SchedulerState } from './scheduler.service';
-import { bufferCount, map, mapTo, take, timeout, zip } from 'rxjs';
+import { bufferCount, map, take, timeout } from 'rxjs';
 
 describe('scheduler', () => {
   let service: SchedulerService;

@@ -29,13 +29,14 @@ export abstract class Interface {
   // ---
   public up(): void {
     this.status = true;
-    handleChain("on", this.getListener, "OnInterfaceUp", this);
+    this.trigger("OnInterfaceUp");
   }
   public down(): void {
     this.status = false;
-    handleChain("on", this.getListener, "OnInterfaceDown", this);
+    this.trigger("OnInterfaceDown");
   }
-  public trigger(event: "OnInterfaceChange"): void {
+  public trigger(event: "OnInterfaceChange"|"OnInterfaceUp"|"OnInterfaceDown"): void {
+    handleChain("on", this.host.getListener, event, this);
     handleChain("on", this.getListener, event, this);
   }
 
@@ -111,8 +112,7 @@ export abstract class HardwareInterface extends Interface implements PhysicalLis
     //this.down();
     this.address = addr;
     //this.up();
-    handleChain("on", this.Host.getListener, "OnInterfaceChange", this);
-    handleChain("on", this.getListener, "OnInterfaceChange", this);
+    this.trigger("OnInterfaceChange");
   }
 
 
