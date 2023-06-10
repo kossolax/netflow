@@ -1,4 +1,4 @@
-import { RouterHost } from "../node.model";
+import { RouterHost } from "../nodes/router.model";
 import { Terminal } from "./terminal.model";
 
 describe('Terminal basic test', () => {

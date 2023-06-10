@@ -1,9 +1,10 @@
 import { Link } from './physical.model';
-import { RouterHost, SwitchHost } from '../node.model';
 import { delay, take, timeout, catchError } from 'rxjs';
 import { SimpleListener } from '../protocols/protocols.model';
 import { IPAddress, MacAddress } from '../address.model';
 import { SchedulerService, SchedulerState } from 'src/app/services/scheduler.service';
+import { RouterHost } from '../nodes/router.model';
+import { SwitchHost } from '../nodes/switch.model';
 
 describe('Network layer test', () => {
   let A: RouterHost;

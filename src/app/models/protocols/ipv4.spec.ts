@@ -3,9 +3,9 @@ import { SchedulerService, SchedulerState } from "src/app/services/scheduler.ser
 import { IPAddress } from "../address.model";
 import { Link } from "../layers/physical.model";
 import { DatalinkMessage } from "../message.model";
-import { RouterHost } from "../node.model";
 import { IPv4Message } from "./ipv4.model";
 import { SimpleListener } from "./protocols.model";
+import { RouterHost } from "../nodes/router.model";
 
 describe('IPv4 protocol', () => {
   let A: RouterHost;

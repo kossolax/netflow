@@ -3,8 +3,9 @@ import { NetworkService } from './network.service';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { BrowserModule } from '@angular/platform-browser';
 import { switchMap } from 'rxjs';
-import { SwitchHost, RouterHost } from '../models/node.model';
 import { environment } from 'src/environments/environment';
+import { SwitchHost } from '../models/nodes/switch.model';
+import { RouterHost } from '../models/nodes/router.model';
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 90000;
 

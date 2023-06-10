@@ -1,10 +1,10 @@
 import { SchedulerService, SchedulerState } from "src/app/services/scheduler.service";
 import { Link } from "../layers/physical.model";
-import { SwitchHost } from "../node.model";
 import { DatalinkListener, SimpleListener } from "../protocols/protocols.model";
 import { PVSTPService, SpanningTreeMessage } from "./spanningtree.model";
 import { filter, first, interval, take, tap, timeout } from "rxjs";
 import { MacAddress } from "../address.model";
+import { SwitchHost } from "../nodes/switch.model";
 
 describe('STP protocol', () => {
   let A: SwitchHost, B: SwitchHost, C: SwitchHost, D: SwitchHost;

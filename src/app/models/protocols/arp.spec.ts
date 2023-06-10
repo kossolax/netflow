@@ -1,9 +1,10 @@
 import { take, map, Observable, of, combineLatest, filter } from "rxjs";
 import { MacAddress } from "../address.model";
 import { Link } from "../layers/physical.model";
-import { SwitchHost, RouterHost } from "../node.model";
 import { ArpMessage } from "./arp.model";
 import { SimpleListener } from "./protocols.model";
+import { RouterHost } from "../nodes/router.model";
+import { SwitchHost } from "../nodes/switch.model";
 
 describe('ARP Protocol test', () => {
   let A: RouterHost;

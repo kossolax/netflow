@@ -3,10 +3,10 @@ import { SchedulerService } from "src/app/services/scheduler.service";
 import { HardwareAddress, MacAddress } from "../address.model";
 import { HardwareInterface, Interface } from "../layers/datalink.model";
 import { DatalinkMessage, Payload } from "../message.model";
-import { GenericNode, SwitchHost } from "../node.model";
 import { EthernetMessage } from "../protocols/ethernet.model";
 import { ActionHandle, DatalinkListener, DatalinkSender } from "../protocols/protocols.model";
 import { NetworkServices } from "./dhcp.model";
+import { SwitchHost } from "../nodes/switch.model";
 
 export enum SpanningTreeState {
   Disabled,

@@ -2,8 +2,8 @@ import { combineLatest, concatMap, map, tap } from "rxjs";
 import { SchedulerService, SchedulerState } from "src/app/services/scheduler.service";
 import { IPAddress } from "../address.model";
 import { Link } from "../layers/physical.model";
-import { RouterHost } from "../node.model";
 import { Terminal } from "./terminal.model";
+import { RouterHost } from "../nodes/router.model";
 
 describe('Terminal root test', () => {
   let A: RouterHost;

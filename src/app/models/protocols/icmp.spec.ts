@@ -3,10 +3,10 @@ import { SchedulerService, SchedulerState } from "src/app/services/scheduler.ser
 import { IPAddress } from "../address.model";
 import { IPInterface } from "../layers/network.model";
 import { Link } from "../layers/physical.model";
-import { RouterHost } from "../node.model";
 import { ICMPMessage, ICMPType } from "./icmp.model";
 import { IPv4Message } from "./ipv4.model";
 import { SimpleListener } from "./protocols.model";
+import { RouterHost } from "../nodes/router.model";
 
 describe('ICMP protocol', () => {
   let A: RouterHost;

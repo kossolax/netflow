@@ -1,6 +1,7 @@
 import { IPAddress } from "../address.model";
 import { Dot1QInterface } from "../layers/datalink.model";
-import { RouterHost, SwitchHost } from "../node.model";
+import { RouterHost } from "../nodes/router.model";
+import { SwitchHost } from "../nodes/switch.model";
 import { VlanMode } from "../protocols/ethernet.model";
 import { Terminal } from "./terminal.model";
 

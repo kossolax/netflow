@@ -1,7 +1,8 @@
 import { merge, Observable, startWith, Subject, switchMap, tap } from "rxjs";
-import { NetworkHost, SwitchHost } from "../node.model";
 import { RootCommand } from "./terminal.command.basic.model";
 import { TerminalCommand } from "./terminal.command.model";
+import { NetworkHost } from "../nodes/generic.model";
+import { SwitchHost } from "../nodes/switch.model";
 
 
 

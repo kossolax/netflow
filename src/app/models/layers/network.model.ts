@@ -1,13 +1,13 @@
 import { Observable } from "rxjs";
 import { HardwareAddress, IPAddress, NetworkAddress } from "../address.model";
 import { DatalinkMessage, NetworkMessage } from "../message.model";
-import { GenericNode, NetworkHost } from "../node.model";
 import { ArpProtocol } from "../protocols/arp.model";
 import { ICMPProtocol } from "../protocols/icmp.model";
 import { IPv4Message, IPv4Protocol } from "../protocols/ipv4.model";
 import { ActionHandle, DatalinkListener, handleChain, NetworkListener, NetworkSender } from "../protocols/protocols.model";
 import { DhcpClient } from "../services/dhcp.model";
 import { HardwareInterface, Interface } from "./datalink.model";
+import { GenericNode, NetworkHost } from "../nodes/generic.model";
 
 
 export abstract class NetworkInterface extends Interface implements DatalinkListener, NetworkListener, NetworkSender {

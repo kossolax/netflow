@@ -4,9 +4,10 @@ import { HardwareAddress, IPAddress, MacAddress, NetworkAddress } from "../addre
 import { HardwareInterface, Interface } from "../layers/datalink.model";
 import { NetworkInterface } from "../layers/network.model";
 import { NetworkMessage, Payload } from "../message.model";
-import { GenericNode, NetworkHost, SwitchHost } from "../node.model";
 import { IPv4Message } from "../protocols/ipv4.model";
 import { ActionHandle, NetworkListener } from "../protocols/protocols.model";
+import { NetworkHost } from "../nodes/generic.model";
+import { SwitchHost } from "../nodes/switch.model";
 
 // https://www.rfc-editor.org/rfc/rfc2131
 export class NetworkServices<T extends NetworkHost|SwitchHost > {

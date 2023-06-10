@@ -1,11 +1,11 @@
-import { catchError, take, timeout } from "rxjs";
+import { buffer, bufferCount, catchError, generate, mergeMap, of, switchMap, take, tap, timeout } from "rxjs";
 import { SchedulerService, SchedulerState } from "src/app/services/scheduler.service";
 import { MacAddress } from "../address.model";
 import { PhysicalMessage } from "../message.model";
-import { SwitchHost } from "../node.model";
 import { SimpleListener } from "../protocols/protocols.model";
 import { EthernetInterface, HardwareInterface } from "./datalink.model";
 import { Link } from "./physical.model";
+import { SwitchHost } from "../nodes/switch.model";
 
 describe('Physical layer test', () => {
   let A: HardwareInterface;
@@ -14,8 +14,8 @@ describe('Physical layer test', () => {
   let listener: SimpleListener;
 
   beforeEach(async () => {
-    A = new EthernetInterface(new SwitchHost(), MacAddress.generateAddress(), "Ethernet0/0", 0, 1000, false, false);
-    B = new EthernetInterface(new SwitchHost(), MacAddress.generateAddress(), "Ethernet0/0", 0, 1000, false, false);
+    A = new EthernetInterface(new SwitchHost(), MacAddress.generateAddress(), "Ethernet0/0", 0, 1000, true, false);
+    B = new EthernetInterface(new SwitchHost(), MacAddress.generateAddress(), "Ethernet0/0", 0, 1000, true, false);
 
     A.up();
     B.up();
@@ -63,6 +63,48 @@ describe('Physical layer test', () => {
         done();
     });
 
+  });
+
+  it("L1 full duplex should be faster than half duplex", (done) => {
+    SchedulerService.Instance.Speed = SchedulerState.REAL_TIME;
+
+    const l1 = new Link(A, B, 1000 * 1000 * 1000);
+    l1.addListener(listener);
+
+    const toSend = 100;
+    const payloadSize = 1024 * 1024;
+    const payload = new PhysicalMessage("A".repeat(payloadSize));
+
+    const send = (duplex:boolean): void => {
+      A.FullDuplex = duplex;
+      B.FullDuplex = duplex;
+
+      for(let i=0; i<toSend; i++)
+        l1.sendBits(payload, Math.random() > 0.5 ? A : B);
+    };
+
+    let start = Date.now(), mid=0, end=0;
+
+    send(false);
+    listener.receiveBits$.pipe(
+      bufferCount(toSend),
+      take(1),
+      switchMap( () => {
+        mid = Date.now()
+        send(true);
+        return listener.receiveBits$;
+      }),
+      bufferCount(toSend),
+      take(1),
+      tap( () => end = Date.now() ),
+    ).subscribe( _ => {
+      const half = mid - start;
+      const full = end - mid;
+      const ratio = half / full;
+      expect(half).toBeGreaterThan(full);
+      expect(ratio).toBeGreaterThan(1.5);
+      done();
+    });
   });
 
   it("L1 -> none", () => {

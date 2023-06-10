@@ -3,8 +3,8 @@ import { HttpClient, HttpHandler, HttpHeaders } from "@angular/common/http";
 import { Subject, map, Observable, catchError, of, tap } from "rxjs";
 import { environment } from "src/environments/environment";
 import { Network } from "../models/network.model";
-import { GenericNode } from "../models/node.model";
 import { AbstractLink } from "../models/layers/physical.model";
+import { GenericNode } from "../models/nodes/generic.model";
 
 @Injectable(
   { providedIn: "root" }

@@ -1,5 +1,8 @@
 import { Link } from "./layers/physical.model";
-import { GenericNode, ServerHost, RouterHost, SwitchHost, NetworkHost } from "./node.model";
+import { GenericNode, NetworkHost } from "./nodes/generic.model";
+import { RouterHost } from "./nodes/router.model";
+import { ServerHost } from "./nodes/server.model";
+import { SwitchHost } from "./nodes/switch.model";
 
 export class Network {
   public nodes: Record<string, GenericNode> = {};

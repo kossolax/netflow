@@ -1,4 +1,5 @@
-import { RouterHost, SwitchHost } from "../node.model";
+import { RouterHost } from "../nodes/router.model";
+import { SwitchHost } from "../nodes/switch.model";
 import { Terminal } from "./terminal.model";
 
 describe('Terminal config test', () => {

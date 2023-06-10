@@ -1,5 +1,6 @@
 import { IPAddress } from "../address.model";
-import { RouterHost, SwitchHost } from "../node.model";
+import { RouterHost } from "../nodes/router.model";
+import { SwitchHost } from "../nodes/switch.model";
 import { InterfaceCommand } from "./terminal.command.interface.model";
 import { TerminalCommand } from "./terminal.command.model";
 

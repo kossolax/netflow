@@ -3,9 +3,9 @@ import { SchedulerService, SchedulerState } from "src/app/services/scheduler.ser
 import { EthernetInterface } from "../layers/datalink.model";
 import { Link } from "../layers/physical.model";
 import { Message, PhysicalMessage } from "../message.model";
-import { SwitchHost } from "../node.model";
 import { AdvancedTechnologyField, AutonegotiationMessage, TechnologyField } from "./autonegotiation.model";
 import { SimpleListener } from "./protocols.model";
+import { SwitchHost } from "../nodes/switch.model";
 
 describe('AutoNegotiation Protocol test', () => {
   let A: SwitchHost;

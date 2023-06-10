@@ -3,8 +3,8 @@ import { EthernetInterface, HardwareInterface, Interface } from "../layers/datal
 import { NetworkInterface } from "../layers/network.model";
 import { AbstractLink, Link } from "../layers/physical.model";
 import { DatalinkMessage, NetworkMessage, PhysicalMessage, Message } from "../message.model";
-import { GenericNode, RouterHost, SwitchHost } from "../node.model";
 import { HardwareAddress, IPAddress, MacAddress } from "../address.model";
+import { GenericNode } from "../nodes/generic.model";
 
 export enum ActionHandle {
   Continue, // Continue with the original action

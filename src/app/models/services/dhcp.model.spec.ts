@@ -2,9 +2,11 @@ import { buffer, bufferCount, delay, switchMap, take, tap, zip } from "rxjs";
 import { SchedulerService, SchedulerState } from "src/app/services/scheduler.service";
 import { IPAddress } from "../address.model";
 import { Link } from "../layers/physical.model";
-import { RouterHost, ServerHost, SwitchHost } from "../node.model";
 import { SimpleListener } from "../protocols/protocols.model";
 import { DhcpClient, DhcpPool, DhcpServer } from "./dhcp.model";
+import { ServerHost } from "../nodes/server.model";
+import { RouterHost } from "../nodes/router.model";
+import { SwitchHost } from "../nodes/switch.model";
 
 describe('DHCP protocol', () => {
   let A: ServerHost, B: ServerHost, C: ServerHost;

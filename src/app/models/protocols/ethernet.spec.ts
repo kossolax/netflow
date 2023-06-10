@@ -3,9 +3,10 @@ import { SchedulerService, SchedulerState } from "src/app/services/scheduler.ser
 import { Dot1QInterface, EthernetInterface } from "../layers/datalink.model";
 import { Link } from "../layers/physical.model";
 import { DatalinkMessage } from "../message.model";
-import { RouterHost, SwitchHost } from "../node.model";
 import { Dot1QMessage, EthernetMessage, VlanMode } from "./ethernet.model";
 import { SimpleListener } from "./protocols.model";
+import { SwitchHost } from "../nodes/switch.model";
+import { RouterHost } from "../nodes/router.model";
 
 describe('Ethernet protocol', () => {
   let A: SwitchHost;

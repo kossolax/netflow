@@ -1,11 +1,11 @@
 import { Link } from './physical.model';
-import { SwitchHost } from '../node.model';
 import { catchError, take, timeout, delay } from 'rxjs';
 import { SimpleListener } from '../protocols/protocols.model';
 import { MacAddress } from '../address.model';
 import { SchedulerService, SchedulerState } from 'src/app/services/scheduler.service';
 import { AutonegotiationMessage } from '../protocols/autonegotiation.model';
 import { HardwareInterface } from './datalink.model';
+import { SwitchHost } from '../nodes/switch.model';
 
 describe('Datalink layer test', () => {
   let A: SwitchHost;

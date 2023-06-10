@@ -1,5 +1,3 @@
-import { cpuUsage } from "process";
-
 export abstract class Address {
   protected address: string;
   protected broadcast: boolean = false;

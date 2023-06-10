@@ -77,7 +77,7 @@ export abstract class AbstractLink implements PhysicalListener, PhysicalSender {
 
     const destination = this.iface1 === source ? this.iface2 : this.iface1;
 
-    if( this.iface1 === source || this.iface1.FullDuplex === false )
+    if( this.iface1 === source || source.FullDuplex === false )
       this.queue1.next(this.enqueue(message, source, destination));
     else
       this.queue2.next(this.enqueue(message, source, destination));
@@ -98,6 +98,7 @@ export abstract class AbstractLink implements PhysicalListener, PhysicalSender {
       switchMap( delay => SchedulerService.Instance.once(delay) ),
 
       tap( _ => { // post
+
         this.receiveBits(message, source, destination)
       })
 

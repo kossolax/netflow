@@ -1,10 +1,10 @@
 import { HardwareAddress, MacAddress } from "../address.model";
 import { Link } from "./physical.model";
-import { GenericNode } from "../node.model";
 import { PhysicalMessage, DatalinkMessage, NetworkMessage } from "../message.model";
 import { ActionHandle, DatalinkListener, DatalinkSender, GenericListener, handleChain, PhysicalListener } from "../protocols/protocols.model";
 import { AutoNegotiationProtocol } from "../protocols/autonegotiation.model";
 import { Dot1QMessage, Dot1QProtocol, EthernetMessage, EthernetProtocol, VlanMode } from "../protocols/ethernet.model";
+import { GenericNode } from "../nodes/generic.model";
 
 export abstract class Interface {
   protected host: GenericNode;

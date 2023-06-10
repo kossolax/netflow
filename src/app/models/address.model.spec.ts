@@ -1,4 +1,4 @@
-import { HardwareAddress, IPAddress, MacAddress, NetworkAddress } from "./address.model";
+import { IPAddress, MacAddress } from "./address.model";
 
 describe('address test', () => {
 
@@ -29,6 +29,24 @@ describe('address test', () => {
     expect(ipv4_3.equals(ipv4_3)).toBe(true);
     expect(ipv4_3.equals(ipv4_4)).toBe(true);
   });
+  it( 'compare', () => {
+    const mac_1 = new MacAddress("40:41:42:43:44:45");
+    const mac_2 = new MacAddress("40:41:43:43:44:45");
+    const mac_3 = new MacAddress("40:41:44:43:44:45");
+
+    const ipv4_1 = new IPAddress("10.1.2.3");
+    const ipv4_2 = new IPAddress("10.2.2.3");
+    const ipv4_3 = new IPAddress("10.3.2.3");
+
+    expect(mac_2.compareTo(mac_1)).toBe(1);
+    expect(mac_2.compareTo(mac_2)).toBe(0);
+    expect(mac_2.compareTo(mac_3)).toBe(-1);
+
+    expect(ipv4_2.compareTo(ipv4_1)).toBe(1);
+    expect(ipv4_2.compareTo(ipv4_2)).toBe(0);
+    expect(ipv4_2.compareTo(ipv4_3)).toBe(-1);
+  });
+
   it( 'invalid MAC', () => {
     expect(() => new MacAddress('FF:FF:FF:FF:FF:FF:')).toThrow();
     expect(() => new MacAddress(':FF:FF:FF:FF:FF:FF')).toThrow();
@@ -72,6 +90,9 @@ describe('address test', () => {
     expect(ipv4_1.generateMask().equals(new IPAddress("255.0.0.0", true))).toBe(true);
     expect(ipv4_2.generateMask().equals(new IPAddress("255.255.0.0", true))).toBe(true);
     expect(ipv4_3.generateMask().equals(new IPAddress("255.255.255.0", true)) ).toBe(true);
+    expect(ipv4_1.generateMask().CIDR).toBe(8);
+    expect(ipv4_2.generateMask().CIDR).toBe(16);
+    expect(ipv4_3.generateMask().CIDR).toBe(24);
   });
 
   it( 'IPv4 network', () => {

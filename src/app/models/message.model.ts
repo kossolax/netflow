@@ -11,9 +11,6 @@ export abstract class Message {
     this.payload = payload;
   }
 
-  public toString(): string {
-    return this.payload.toString();
-  }
   get length(): number {
     return this.payload.length;
   }

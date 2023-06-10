@@ -1,10 +1,12 @@
 import { Subject, bufferCount, debounceTime, take, timeout, zip } from "rxjs";
 import { handleChain, LinkLayerSpy, DatalinkSender, DatalinkListener, ActionHandle, NetworkSender, NetworkListener, GenericEventListener, EventString } from "./protocols.model";
-import { GenericNode, RouterHost, SwitchHost } from "../node.model";
 import { DatalinkMessage, NetworkMessage, PhysicalMessage } from "../message.model";
 import { EthernetInterface, HardwareInterface, Interface } from "../layers/datalink.model";
 import { MacAddress } from "../address.model";
 import { IPInterface, NetworkInterface } from "../layers/network.model";
+import { SwitchHost } from "../nodes/switch.model";
+import { RouterHost } from "../nodes/router.model";
+import { GenericNode } from "../nodes/generic.model";
 
 class HardwareLayerSpy extends HardwareInterface implements DatalinkSender, DatalinkListener {
   public receiveTrame$: Subject<DatalinkMessage> = new Subject<DatalinkMessage>();

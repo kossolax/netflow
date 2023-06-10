@@ -1,9 +1,11 @@
 import { IPAddress } from "../address.model";
 import { IPInterface } from "../layers/network.model";
-import { NetworkHost, RouterHost, SwitchHost } from "../node.model";
 import { AdminCommand } from "./terminal.command.admin.model";
 import { Terminal } from "./terminal.model";
 import { TerminalCommand } from "./terminal.command.model";
+import { RouterHost } from "../nodes/router.model";
+import { SwitchHost } from "../nodes/switch.model";
+import { NetworkHost } from "../nodes/generic.model";
 
 export class RootCommand extends TerminalCommand {
   constructor(terminal: Terminal) {
