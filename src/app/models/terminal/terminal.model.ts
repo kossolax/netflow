@@ -46,7 +46,7 @@ export class Terminal {
     this.changeDirectory(this.location);
   }
 
-  public exec(commandWithArguments: string): void {
+  public exec(commandWithArguments: string): boolean {
     let commands = commandWithArguments.trim().split(' ').filter(x => x);
     let command = commands[0];
     let args = commands.slice(1);
@@ -75,10 +75,14 @@ export class Terminal {
       }
 
       this.location.exec(command, args, negated);
+      return true;
+
     } catch( e ) {
       this.text$.next(e as string);
       this.complete$.next(0);
     }
+
+    return false;
   }
   public historyBack(): string {
     if( this.historyIndex > 0 )

@@ -11,13 +11,20 @@ describe('Terminal config test', () => {
     terminalSwitch = new Terminal(new SwitchHost("S", 4));
   });
 
+  it( 'configure' , () => {
+    terminalRouter.exec("enable");
+    expect(terminalRouter.exec("configure")).toBeFalse();
+    expect(terminalRouter.exec("configure terminal")).toBeTrue();
+  });
+
   it( 'hostname', () => {
 
     terminalRouter.exec("enable");
     terminalRouter.exec("configure terminal");
 
     const hostname = Math.random().toString(36).substring(7);
-    terminalRouter.exec("hostname " + hostname);
+    expect(terminalRouter.exec("hostname " + hostname)).toBeTrue();
+    expect(terminalRouter.exec("hostname")).toBeFalse();
 
     expect(terminalRouter.Node.name).toBe(hostname);
     expect(terminalRouter.Prompt).toBe(hostname + "(config)#");
@@ -33,7 +40,13 @@ describe('Terminal config test', () => {
     terminalRouter.exec("configure terminal");
 
     expect(host.RoutingTable.length).toBe(0);
-    terminalRouter.exec("ip route 192.168.0.0 255.255.255.0 192.168.20.1");
+
+    expect(terminalRouter.exec("ip")).toBeFalse();
+    expect(terminalRouter.exec("ip route")).toBeFalse();
+    expect(terminalRouter.exec("ip route 192.168.0.0")).toBeFalse();
+    expect(terminalRouter.exec("ip route 192.168.0.0 255.255.255.0")).toBeFalse();
+    expect(terminalRouter.exec("ip route 192.168.0.0 255.255.255.0 192.168.20.1")).toBeTrue();
+
     terminalRouter.exec("ip route 0.0.0.0 0.0.0.0 192.168.30.1");
     expect(host.RoutingTable.length).toBe(2);
     terminalRouter.exec("no ip route 0.0.0.0 0.0.0.0 192.168.30.1");

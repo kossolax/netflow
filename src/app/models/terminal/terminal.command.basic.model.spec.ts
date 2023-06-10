@@ -27,14 +27,8 @@ describe('Terminal root test', () => {
     SchedulerService.Instance.Speed = SchedulerState.FASTER;
   });
 
-  it( 'ping', (done) => {
-
-    terminalRouter.Text$.subscribe( (text) => {
-      expect(text).toContain("Error");
-      done();
-    });
-    terminalRouter.exec("ping");
-
+  it( 'ping', () => {
+    expect(terminalRouter.exec("ping")).toBeFalse();
   });
 
   it( 'ping alive', (done) => {
