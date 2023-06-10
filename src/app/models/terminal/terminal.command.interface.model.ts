@@ -82,8 +82,6 @@ class SwitchPortCommand extends TerminalCommand {
         const iface = (this.parent as InterfaceCommand).iface as Dot1QInterface;
         if( iface.VlanMode == VlanMode.Access )
           iface.addVlan(vlanid);
-
-        this.finalize();
       }
       else if( args[0] === 'trunk' && args[1] === 'allowed' && args[2] === "vlan" ) {
         const iface = (this.parent as InterfaceCommand).iface as Dot1QInterface;
@@ -122,8 +120,6 @@ class SwitchPortCommand extends TerminalCommand {
           vlans.map( i => iface.removeVlan(i) );
           iface.addVlan(vlanid);
         }
-
-        this.finalize();
       }
       else if( args[0] === 'trunk' && args[1] === 'native' && args[2] === "vlan" && args.length === 4 ) {
         const iface = (this.parent as InterfaceCommand).iface as Dot1QInterface;
@@ -144,6 +140,8 @@ class SwitchPortCommand extends TerminalCommand {
       }
       else
         throw new Error(`${this.name} requires a subcommand`);
+
+      this.finalize();
     }
     else {
       super.exec(command, args, negated);
@@ -153,23 +151,27 @@ class SwitchPortCommand extends TerminalCommand {
   public override autocomplete(command: string, args: string[], negated: boolean): string[] {
     if( command === this.name ) {
       if( args.length === 1 )
-        return ['access', 'trunk', 'mode'];
+        return ['access', 'trunk', 'mode'].filter( (c) => c.startsWith(args[0]));
+
       if( args[0] === 'access' && args.length === 2 )
-        return ['vlan'];
+        return ['vlan'].filter( (c) => c.startsWith(args[1]));
+
       if( args[0] === 'trunk' ) {
         if( args.length === 2 )
-          return ['allowed', 'native' ];
+          return ['allowed', 'native' ].filter( (c) => c.startsWith(args[1]));
 
         if( args[1] === 'allowed' && args.length === 3 )
-          return ['vlan'];
+          return ['vlan'].filter( (c) => c.startsWith(args[2]));
+
         if( args[1] === 'allowed' && args[2] === 'vlan' && args.length === 4 )
-          return ['add', 'remove', 'except', 'all'];
+          return ['add', 'remove', 'except', 'all'].filter( (c) => c.startsWith(args[3]));
 
         if( args[1] === 'native' && args.length === 3 )
-          return ['vlan'];
+          return ['vlan'].filter( (c) => c.startsWith(args[2]));
       }
+
       if( args[0] === 'mode' && args.length === 2 )
-        return ['access', 'dynamic', 'trunk'];
+        return ['access', 'dynamic', 'trunk'].filter( (c) => c.startsWith(args[1]));
 
       return [];
     }
@@ -207,7 +209,8 @@ class IPInterfaceCommand extends TerminalCommand {
   public override autocomplete(command: string, args: string[], negated: boolean): string[] {
     if( command === this.name ) {
       if( args.length === 1 )
-        return ['address'];
+        return ['address'].filter( (c) => c.startsWith(args[0]));
+
       return [];
     }
 

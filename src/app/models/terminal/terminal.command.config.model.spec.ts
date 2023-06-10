@@ -72,8 +72,10 @@ describe('Terminal config test', () => {
     expect(host.knownVlan[10]).toBeUndefined();
     expect(host.knownVlan[20]).toBeUndefined();
 
-    terminalSwitch.exec("vlan 10");
-    terminalSwitch.exec("name rouge");
+    expect(terminalSwitch.exec("vlan")).toBeFalse();
+    expect(terminalSwitch.exec("vlan 10")).toBeTrue();
+    expect(terminalSwitch.exec("name")).toBeFalse();
+    expect(terminalSwitch.exec("name rouge")).toBeTrue();
     terminalSwitch.exec("end");
 
     terminalSwitch.exec("vlan 20");

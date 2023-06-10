@@ -26,7 +26,7 @@ export class Terminal {
       switchMap( i => {
         return merge(this.complete$, i.Complete$)
       }),
-      tap( () => this.locked = false )
+      tap( () => this.locked = false)
     );
   }
 
@@ -44,9 +44,14 @@ export class Terminal {
     this.node = node;
     this.location = new RootCommand(this);
     this.changeDirectory(this.location);
+
+    this.Complete$.subscribe();
   }
 
   public exec(commandWithArguments: string): boolean {
+    if( this.locked )
+      return false;
+
     let commands = commandWithArguments.trim().split(' ').filter(x => x);
     let command = commands[0];
     let args = commands.slice(1);

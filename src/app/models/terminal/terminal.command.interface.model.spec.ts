@@ -24,9 +24,16 @@ describe('Terminal interface test', () => {
 
     terminalRouter.exec("enable");
     terminalRouter.exec("configure terminal");
-    terminalRouter.exec("interface gig 0/0");
 
-    terminalRouter.exec("ip address " + B.toString() + " " + B.generateMask().toString());
+    expect(terminalRouter.exec("interface")).toBeFalse();
+    expect(terminalRouter.exec("interface gig")).toBeFalse();
+    expect(terminalRouter.exec("interface gig 9/9")).toBeFalse();
+    expect(terminalRouter.exec("interface gig 0/0")).toBeTrue();
+
+    expect(terminalRouter.exec("ip")).toBeFalse();
+    expect(terminalRouter.exec("ip address")).toBeFalse();
+    expect(terminalRouter.exec("ip address " + B.toString())).toBeFalse();
+    expect(terminalRouter.exec("ip address " + B.toString() + " " + B.generateMask().toString())).toBeTrue();
 
     expect(host.getInterface(0).getNetAddress().toString()).toBe(B.toString());
     expect(host.getInterface(0).getNetMask().toString()).toBe(B.generateMask().toString());
@@ -52,11 +59,17 @@ describe('Terminal interface test', () => {
     expect(iface.Vlan).toEqual([iface.NativeVlan]);
     expect(iface.VlanMode).toBe(VlanMode.Access);
 
-    terminalSwitch.exec("switchport mode trunk");
+    expect(terminalSwitch.exec("switchport")).toBeFalse();
+    expect(terminalSwitch.exec("switchport mode")).toBeFalse();
+    expect(terminalSwitch.exec("switchport mode toto")).toBeFalse();
+    expect(terminalSwitch.exec("switchport mode trunk")).toBeTrue();
     expect(iface.VlanMode).toBe(VlanMode.Trunk);
 
-    terminalSwitch.exec("switchport mode access");
-    terminalSwitch.exec("switchport access vlan 10");
+    expect(terminalSwitch.exec("switchport mode access")).toBeTrue();
+
+    expect(terminalSwitch.exec("switchport access")).toBeFalse();
+    expect(terminalSwitch.exec("switchport access vlan")).toBeFalse();
+    expect(terminalSwitch.exec("switchport access vlan 10")).toBeTrue();
     expect(iface.Vlan).toEqual([10]);
     expect(iface.VlanMode).toBe(VlanMode.Access);
     terminalSwitch.exec("switchport access vlan 20");
@@ -79,6 +92,8 @@ describe('Terminal interface test', () => {
     expect(iface.Vlan).toEqual([10]);
     terminalSwitch.exec("switchport trunk allowed vlan except 10");
     expect(iface.Vlan).toEqual([20]);
+    terminalSwitch.exec("switchport trunk allowed vlan all");
+    expect(iface.Vlan).toEqual([10, 20]);
 
 
     terminalSwitch.exec("switchport trunk native vlan 42");

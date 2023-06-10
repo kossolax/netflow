@@ -33,7 +33,7 @@ export class ConfigCommand extends TerminalCommand {
   public override autocomplete(command: string, args: string[], negated: boolean): string[] {
     if( command === this.name ) {
       if( args.length === 1 )
-        return ['terminal'];
+        return ['terminal'].filter( (c) => c.startsWith(args[0]));
 
       return [];
     }
@@ -94,7 +94,7 @@ class IPConfigCommand extends TerminalCommand {
   public override autocomplete(command: string, args: string[], negated: boolean): string[] {
     if( command === this.name ) {
       if( args.length === 1 )
-        return ['route'];
+        return ['route'].filter( (c) => c.startsWith(args[0]));
 
       return [];
     }
