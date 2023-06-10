@@ -130,6 +130,8 @@ describe('Physical layer test', () => {
       });
     });
 
+    SchedulerService.Instance.Speed = SchedulerState.REAL_TIME;
+
     // propagation is constant
     expect(speeds[0].propagation).toBe(speeds[1].propagation);
     expect(speeds[1].propagation).toBe(speeds[2].propagation);
@@ -143,6 +145,11 @@ describe('Physical layer test', () => {
     A.Speed = 10;
     expect(link1.getTransmissionDelay(1000, 100)).toBeGreaterThan(link1.getTransmissionDelay(100, 100));
     expect(link1.getTransmissionDelay(10000, 100)).toBeGreaterThan(link1.getTransmissionDelay(10, 100));
+
+    const speed = link1.getTransmissionDelay(1000, 100);
+    SchedulerService.Instance.Speed = SchedulerState.SLOWER;
+    expect(link1.getTransmissionDelay(1000, 100)).toBeGreaterThan(speed);
+
   });
 
 });

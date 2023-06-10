@@ -4,6 +4,7 @@ import { IPAddress } from "../address.model";
 import { Link } from "../layers/physical.model";
 import { Terminal } from "./terminal.model";
 import { RouterHost } from "../nodes/router.model";
+import { PingCommand, RootCommand } from "./terminal.command.basic.model";
 
 describe('Terminal root test', () => {
   let A: RouterHost;
@@ -27,6 +28,17 @@ describe('Terminal root test', () => {
   });
 
   it( 'ping', (done) => {
+
+    terminalRouter.Text$.subscribe( (text) => {
+      expect(text).toContain("Error");
+      done();
+    });
+    terminalRouter.exec("ping");
+
+  });
+
+  it( 'ping alive', (done) => {
+
     terminalRouter.exec("ping 192.168.0.2");
 
     combineLatest([
@@ -34,6 +46,25 @@ describe('Terminal root test', () => {
         map( (text) => {
           expect(text).toContain("alive");
           expect(text).not.toContain("dead");
+          return true;
+        }),
+      ),
+      terminalRouter.Complete$.pipe(
+        map( _ => true )
+      ),
+    ]).subscribe( _ => done() );
+
+  });
+
+  it( 'ping dead', (done) => {
+
+    terminalRouter.exec("ping 192.168.0.3");
+
+    combineLatest([
+      terminalRouter.Text$.pipe(
+        map( (text) => {
+          expect(text).not.toContain("alive");
+          expect(text).toContain("dead");
           return true;
         }),
       ),

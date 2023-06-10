@@ -208,7 +208,7 @@ export class EthernetInterface extends HardwareInterface {
   override set FullDuplex(fullDuplex: boolean) {
     if( fullDuplex && !this.fullDuplexCapable )
       throw new Error("This interface does not support full duplex");
-    this.fullDuplex = fullDuplex;
+    super.FullDuplex = fullDuplex;
   }
 
   override get Speed(): number {
@@ -282,14 +282,12 @@ export class Dot1QInterface extends EthernetInterface {
     }
   }
   public removeVlan(vlan_id: number): void {
-    if( this.VlanMode === VlanMode.Access ) {
+    const index = this.vlan.indexOf(vlan_id);
+    if( index !== -1 )
+      this.vlan.splice(index, 1);
+
+    if( this.vlan.length === 0 && this.VlanMode == VlanMode.Access )
       this.vlan = [ this.natif ];
-    }
-    else {
-      const index = this.vlan.indexOf(vlan_id);
-      if( index !== -1 )
-        this.vlan.splice(index, 1);
-    }
   }
 
   get Vlan(): number[] {

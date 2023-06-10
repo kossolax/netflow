@@ -61,8 +61,14 @@ describe('DHCP protocol', () => {
   it('Request: PC-->Server', (done) => {
     let AB = new Link(A.getInterface(0), B.getInterface(0));
 
-    const dhcpClient = new DhcpClient(B.getInterface(0));
+    B.getInterface(0).AutoNegociateAddress = false;
+    expect(B.getInterface(0).AutoNegociateAddress).toBeFalsy();
+    B.getInterface(0).AutoNegociateAddress = true;
+    expect(B.getInterface(0).AutoNegociateAddress).toBeTruthy();
+    B.getInterface(0).AutoNegociateAddress = false;
 
+
+    const dhcpClient = new DhcpClient(B.getInterface(0));
     dhcpClient.negociate().subscribe((msg) => {
       expect(msg).toBeInstanceOf(IPAddress);
       expect(msg as IPAddress).not.toEqual(new IPAddress("0.0.0.0"));

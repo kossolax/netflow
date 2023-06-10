@@ -176,4 +176,11 @@ describe('Network layer test', () => {
     });
 
   });
+
+  it('L3 other functions', () => {
+    expect(A.getInterface(0).isConnected).toBe(false);
+
+    let link1 = new Link(A.getInterface(0), B.getInterface(0), 100);
+    expect(A.getInterface(0).isConnected).toBe(true);
+  });
 });

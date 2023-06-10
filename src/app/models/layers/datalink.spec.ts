@@ -4,8 +4,10 @@ import { SimpleListener } from '../protocols/protocols.model';
 import { MacAddress } from '../address.model';
 import { SchedulerService, SchedulerState } from 'src/app/services/scheduler.service';
 import { AutonegotiationMessage } from '../protocols/autonegotiation.model';
-import { HardwareInterface } from './datalink.model';
 import { SwitchHost } from '../nodes/switch.model';
+import { PhysicalMessage } from '../message.model';
+import { Dot1QInterface, EthernetInterface } from './datalink.model';
+import { VlanMode } from '../protocols/ethernet.model';
 
 describe('Datalink layer test', () => {
   let A: SwitchHost;
@@ -43,6 +45,7 @@ describe('Datalink layer test', () => {
 
     A.getInterface(0).down();
     expect( () => A.send(message, mac) ).toThrow();
+    expect( () => A.getInterface(0).sendBits(new PhysicalMessage("hi")) ).toThrow();
   });
 
   it( 'L2 -> (down) L2', (done) => {
@@ -185,12 +188,70 @@ describe('Datalink layer test', () => {
       A.getInterface(0).Speed = speed;
       expect( A.getInterface(0).Speed ).toBe(speed);
     });
+
+    const eth_no_auto = new EthernetInterface(A, MacAddress.generateAddress(), "eth0", 100, 100, false, false);
+    const eth_auto = new EthernetInterface(A, MacAddress.generateAddress(), "eth0", 100, 100, false, true);
+
+    eth_no_auto.up();
+    eth_auto.up();
+
+    expect( () => eth_no_auto.Speed = 0 ).toThrow();
+    expect( () => eth_auto.Speed = 0 ).not.toThrow();
+    expect( eth_auto.Speed ).toBe(100);
+
+  });
+
+  it( 'L2 duplex function ', () => {
+    const eth_half = new EthernetInterface(A, MacAddress.generateAddress(), "eth0", 100, 100, false);
+    const eth_full = new EthernetInterface(A, MacAddress.generateAddress(), "eth0", 100, 100, true);
+
+    expect(eth_half.FullDuplex).toBe(false);
+    expect( () => eth_half.FullDuplex = true ).toThrow();
+
+    expect(eth_full.FullDuplex).toBe(false);
+    eth_full.FullDuplex = true;
+    expect(eth_full.FullDuplex).toBe(true);
   });
 
   it( 'L2 other function ', () => {
     expect(A.getInterface(0).Host).toEqual(A);
     expect( () => A.getInterface(2) ).toThrow();
   });
+
+  it('L2 dot1Q', () => {
+    const native = 1;
+
+    const dot1q = A.getInterface(0) as Dot1QInterface;
+    expect(dot1q.Vlan[0]).toBe(0);
+    dot1q.addVlan(1);
+    expect(dot1q.Vlan[0]).toBe(1);
+
+    dot1q.removeVlan(1);
+    expect(dot1q.Vlan[0]).toBe(0);
+
+    dot1q.NativeVlan = native;
+    expect(dot1q.Vlan[0]).toBe(0);
+    expect(dot1q.NativeVlan).toBe(1);
+    dot1q.removeVlan(0);
+    expect(dot1q.Vlan[0]).toBe(1);
+
+    dot1q.VlanMode = VlanMode.Trunk;
+    dot1q.addVlan(2);
+    expect(dot1q.Vlan[0]).toBe(1);
+    expect(dot1q.Vlan[1]).toBe(2);
+    dot1q.removeVlan(1);
+    expect(dot1q.Vlan[0]).toBe(2);
+    dot1q.removeVlan(2);
+    expect(dot1q.Vlan[0]).toBeUndefined();
+
+    dot1q.addVlan(3);
+    dot1q.addVlan(4);
+    dot1q.addVlan(5);
+    dot1q.VlanMode = VlanMode.Access;
+    expect(dot1q.Vlan[0]).toBe(3);
+
+  });
+
 
 
 
