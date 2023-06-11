@@ -6,6 +6,8 @@ export abstract class TerminalCommand {
   protected terminal: Terminal;
   protected parent: TerminalCommand;
   protected canBeNegative: boolean;
+  protected isRecursive: boolean;
+
   private prompt: string;
   private complete$: Subject<0> = new Subject();
 
@@ -18,6 +20,15 @@ export abstract class TerminalCommand {
   get Complete$(): Observable<0> {
     return this.complete$;
   }
+  get Recursive(): boolean {
+    return this.isRecursive;
+  }
+  get Name(): string {
+    return this.name;
+  }
+  get Parent(): TerminalCommand {
+    return this.parent;
+  }
 
   private subCommands: Record<string, TerminalCommand> = {};
 
@@ -27,6 +38,7 @@ export abstract class TerminalCommand {
     this.prompt = prompt;
     this.parent = this;
     this.canBeNegative = false;
+    this.isRecursive = false;
   }
 
   public registerCommand(command: TerminalCommand): void {

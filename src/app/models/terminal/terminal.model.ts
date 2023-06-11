@@ -68,18 +68,28 @@ export class Terminal {
     }
 
     try {
-      let real_command = this.location.autocomplete(command, [], negated);
+
+      let node = this.location;
+
+      if( node.Recursive ) {
+        let real_command = node.Parent.autocomplete(command, [], negated);
+        if( real_command.length === 1 && real_command[0] === node.Name ) {
+          node = node.Parent;
+        }
+      }
+
+      let real_command = node.autocomplete(command, [], negated);
       if( real_command.length === 1 ) {
         command = real_command.join('');
 
         for(let i=0; i<args.length; i++) {
-          let real_args = this.location.autocomplete_child(command, args.slice(0, i+1), negated);
+          let real_args = node.autocomplete_child(command, args.slice(0, i+1), negated);
           if( real_args.length === 1 )
             args[i] = real_args.join('');
         }
       }
 
-      this.location.exec(command, args, negated);
+      node.exec(command, args, negated);
       return true;
 
     } catch( e ) {

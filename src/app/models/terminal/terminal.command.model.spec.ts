@@ -35,16 +35,21 @@ describe('Terminal basic test', () => {
     expect(terminalRouter.autocomplete("configure term").length).toBeGreaterThan(0);
   });
 
-  it('history', () => {
+  it('history and recursive', () => {
     expect(terminalRouter.historyBack()).toBeUndefined();
     expect(terminalRouter.historyForward()).toBeUndefined();
     expect(terminalRouter.exec("enable")).toBeTrue();
+    expect(terminalRouter.historyBack()).toBe("enable");
+
     expect(terminalRouter.exec("conf t")).toBeTrue();
     expect(terminalRouter.exec("int gig 0/0")).toBeTrue();
-    expect(terminalRouter.historyBack()).toBe("conf t");
-    expect(terminalRouter.historyBack()).toBe("enable");
-    expect(terminalRouter.historyForward()).toBe("conf t");
-    expect(terminalRouter.historyForward()).toBe("int gig 0/0");
+    expect(terminalRouter.exec("int gig 0/1")).toBeTrue();
+    expect(terminalRouter.exec("int gig 0/2")).toBeTrue();
+    expect(terminalRouter.historyBack()).toBe("int gig 0/1");
+    expect(terminalRouter.historyBack()).toBe("int gig 0/0");
+    expect(terminalRouter.historyForward()).toBe("int gig 0/1");
+    expect(terminalRouter.historyForward()).toBe("int gig 0/2");
+    expect(terminalRouter.historyForward()).toBe("int gig 0/2");
   });
 
   it( 'basic command', () => {

@@ -13,6 +13,7 @@ export class InterfaceCommand extends TerminalCommand {
     super(parent.Terminal, 'interface', '(config-if)#');
     this.parent = parent;
     this.iface = null;
+    this.isRecursive = true;
 
     if( this.terminal.Node instanceof RouterHost )
       this.registerCommand(new IPInterfaceCommand(this));
