@@ -1,9 +1,8 @@
-import { Component, Input, OnChanges, OnInit, ViewChild } from '@angular/core';
+import { Component, Input, ViewChild } from '@angular/core';
 import { ChangeEventArgs, DropDownListComponent } from '@syncfusion/ej2-angular-dropdowns';
 import { InputEventArgs } from '@syncfusion/ej2-angular-inputs';
-import { Observable, Subject } from 'rxjs';
 import { IPAddress } from 'src/app/models/address.model';
-import { ServerHost } from 'src/app/models/node.model';
+import { ServerHost } from 'src/app/models/nodes/server.model';
 import { DhcpPool } from 'src/app/models/services/dhcp.model';
 
 @Component({

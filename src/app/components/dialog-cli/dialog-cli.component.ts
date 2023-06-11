@@ -1,7 +1,9 @@
 import { AfterViewInit, Component, Input, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
 import { FunctionsUsingCSI, NgTerminal } from 'ng-terminal';
 import { Subject, takeUntil } from 'rxjs';
-import { NetworkHost, RouterHost, SwitchHost } from 'src/app/models/node.model';
+import { NetworkHost } from 'src/app/models/nodes/generic.model';
+import { RouterHost } from 'src/app/models/nodes/router.model';
+import { SwitchHost } from 'src/app/models/nodes/switch.model';
 import { Terminal } from 'src/app/models/terminal/terminal.model';
 
 @Component({

@@ -1,9 +1,10 @@
 import { Component, Input } from '@angular/core';
 
 import { IPAddress, MacAddress } from 'src/app/models/address.model';
-import { Dot1QInterface, HardwareInterface } from 'src/app/models/layers/datalink.model';
+import { HardwareInterface } from 'src/app/models/layers/datalink.model';
 import { NetworkInterface } from 'src/app/models/layers/network.model';
-import { L4Host, NetworkHost, SwitchHost } from 'src/app/models/node.model';
+import { L4Host, NetworkHost } from 'src/app/models/nodes/generic.model';
+import { SwitchHost } from 'src/app/models/nodes/switch.model';
 
 @Component({
   selector: 'app-dialog-config',

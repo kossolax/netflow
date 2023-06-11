@@ -1,5 +1,6 @@
 import { Component, Input } from '@angular/core';
-import { NetworkHost, ServerHost } from 'src/app/models/node.model';
+import { NetworkHost } from 'src/app/models/nodes/generic.model';
+import { ServerHost } from 'src/app/models/nodes/server.model';
 
 @Component({
   selector: 'app-dialog-service',

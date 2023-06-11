@@ -1,7 +1,9 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { TabComponent } from '@syncfusion/ej2-angular-navigations';
 import { DialogComponent as SyncfusionDialogComponent } from '@syncfusion/ej2-angular-popups';
-import { NetworkHost, ServerHost, SwitchHost } from 'src/app/models/node.model';
+import { NetworkHost } from 'src/app/models/nodes/generic.model';
+import { ServerHost } from 'src/app/models/nodes/server.model';
+import { SwitchHost } from 'src/app/models/nodes/switch.model';
 
 @Component({
   selector: 'app-dialog',

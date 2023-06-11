@@ -1,6 +1,9 @@
 import { Component, ElementRef } from '@angular/core';
 import { AbstractLink, Link } from 'src/app/models/layers/physical.model';
-import { GenericNode, RouterHost, ServerHost, SwitchHost } from 'src/app/models/node.model';
+import { GenericNode } from 'src/app/models/nodes/generic.model';
+import { RouterHost } from 'src/app/models/nodes/router.model';
+import { ServerHost } from 'src/app/models/nodes/server.model';
+import { SwitchHost } from 'src/app/models/nodes/switch.model';
 import { NetworkService } from 'src/app/services/network.service';
 
 
