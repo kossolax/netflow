@@ -58,6 +58,10 @@ export class SpanningTreeMessage extends EthernetMessage {
   public hello_time = 2;
   public forward_delay = 15;
 
+  public override toString(): string {
+      return "STP";
+  }
+
 
   protected constructor(payload: Payload|string,
     mac_src: HardwareAddress, mac_dst: HardwareAddress|null) {
@@ -113,7 +117,7 @@ export class SpanningTreeMessage extends EthernetMessage {
       return this;
     }
 
-    public override build(): EthernetMessage {
+    public override build(): SpanningTreeMessage {
       const message = new SpanningTreeMessage(this.payload, this.bridge, SpanningTreeMultiCastAddress);
       message.mac_src = this.mac_src as MacAddress;
       message.bridge_id.mac = this.bridge;

@@ -96,8 +96,35 @@ describe('ICMP protocol', () => {
       msg.setCode(16);
     }).toThrow();
 
+    expect( () => {
+      msg.setType(42 as ICMPType);
+      msg.setCode(42);
+    }).toThrow();
+
     expect(msg.build().length).toBe(1);
 
+    expect( () => new ICMPMessage.Builder().setNetSource(IPAddress.generateAddress()).build()).toThrow();
+    expect( () => new ICMPMessage.Builder().setNetDestination(IPAddress.generateAddress()).build()).toThrow();
+
+    const request = new ICMPMessage.Builder()
+      .setNetSource(A.getInterface(0).getNetAddress() as IPAddress)
+      .setNetDestination(B.getInterface(0).getNetAddress() as IPAddress)
+      .setType(ICMPType.EchoRequest)
+      .setCode(0)
+      .build()[0];
+    const reply = new ICMPMessage.Builder()
+      .setNetSource(B.getInterface(0).getNetAddress() as IPAddress)
+      .setNetDestination(A.getInterface(0).getNetAddress() as IPAddress)
+      .setType(ICMPType.EchoReply)
+      .setCode(0)
+      .build()[0];
+
+
+    expect(request.toString()).toContain("ICMP");
+    expect(request.toString()).toContain("Request");
+    expect(reply.toString()).toContain("ICMP");
+    expect(reply.toString()).toContain("Reply");
+    expect(msg.build()[0].toString()).toContain("ICMP");
   });
 
 });

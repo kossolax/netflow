@@ -142,6 +142,7 @@ describe('IPv4 protocol', () => {
     const data = `Hello World! ${Math.random()}`;
 
     let msg = new IPv4Message.Builder()
+      .setservice(1)
       .setPayload(data);
 
     expect( () => msg.setMaximumSize(65536)).toThrow();
@@ -158,8 +159,13 @@ describe('IPv4 protocol', () => {
     msg.setNetDestination(B.getInterface(0).getNetAddress() as IPAddress);
 
     expect(msg.build().length).toBe(1);
+    expect(msg.build()[0].IsReadyAtEndPoint(A.getInterface(0))).toBeFalse();
+    expect(msg.build()[0].IsReadyAtEndPoint(B.getInterface(0))).toBeTrue();
+
     msg.setMaximumSize(1);
     expect(msg.build().length).toBe(data.length);
+    expect(msg.build()[0].toString()).toContain("IPv4");
+
   });
 
 });

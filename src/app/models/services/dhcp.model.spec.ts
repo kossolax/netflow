@@ -1,9 +1,9 @@
 import { buffer, bufferCount, delay, switchMap, take, tap, zip } from "rxjs";
 import { SchedulerService, SchedulerState } from "src/app/services/scheduler.service";
-import { IPAddress } from "../address.model";
+import { IPAddress, MacAddress } from "../address.model";
 import { Link } from "../layers/physical.model";
 import { SimpleListener } from "../protocols/protocols.model";
-import { DhcpClient, DhcpPool, DhcpServer } from "./dhcp.model";
+import { DhcpClient, DhcpMessage, DhcpPool, DhcpServer, DhcpType } from "./dhcp.model";
 import { ServerHost } from "../nodes/server.model";
 import { RouterHost } from "../nodes/router.model";
 import { SwitchHost } from "../nodes/switch.model";
@@ -161,6 +161,48 @@ describe('DHCP protocol', () => {
         done();
       })
     ).subscribe();
+
+  });
+
+  it("builder", () => {
+    const msg = new DhcpMessage.Builder();
+    expect( () => msg.build() ).toThrowError();
+
+    msg.setNetSource(IPAddress.generateAddress());
+    expect( () => msg.build() ).toThrowError();
+
+    msg.setNetDestination(IPAddress.generateAddress());
+    expect( () => msg.build() ).toThrowError();
+
+    msg.setClientHardwareAddress(MacAddress.generateAddress());
+
+    expect( () => msg.setType(DhcpType.Ack).build() ).toThrowError();
+    expect( () => msg.setType(DhcpType.Nak).build() ).toThrowError();
+    expect( () => msg.setType(DhcpType.Offer).build() ).toThrowError();
+
+    msg.setServerAddress(IPAddress.generateAddress());
+    expect( () => msg.setType(DhcpType.Offer).build() ).toThrowError();
+    expect( () => msg.setType(DhcpType.Request).build() ).toThrowError();
+    expect( () => msg.setType(DhcpType.Request).build() ).toThrowError();
+    expect( () => msg.setType(DhcpType.Release).build() ).toThrowError();
+
+    msg.setServerAddress(new IPAddress("0.0.0.0"))
+    msg.setYourAddress(IPAddress.generateAddress());
+    expect( () => msg.setType(DhcpType.Ack).build() ).toThrowError();
+    expect( () => msg.setType(DhcpType.Nak).build() ).toThrowError();
+    expect( () => msg.setType(DhcpType.Offer).build() ).toThrowError();
+
+    msg.setClientAddress(IPAddress.generateAddress());
+    expect( () => msg.setType(DhcpType.Request).build() ).toThrowError();
+
+    const request = new DhcpMessage.Builder()
+      .setType(DhcpType.Discover)
+      .setNetSource(new IPAddress("0.0.0.0"))
+      .setNetDestination(IPAddress.generateBroadcast())
+      .setClientHardwareAddress(MacAddress.generateAddress())
+      .build()[0] as DhcpMessage;
+
+    expect(request.toString()).toContain("DHCP");
 
   });
 });

@@ -15,7 +15,7 @@ export enum TechnologyField {
   A10BaseT_FullDuplex =   (1 << 1),
   A100BaseTX =            (1 << 2),
   A100BaseTX_FullDuplex = (1 << 3),
-  A100BaseT4 =            (1 << 4),
+  //A100BaseT4 =            (1 << 4),
 
   APause =                (1 << 5),
   APause_FullDuplex =     (1 << 6),
@@ -25,7 +25,7 @@ export enum TechnologyField {
 export enum AdvancedTechnologyField {
   A1000BaseT =             (1 << 0),
   //A1000BaseT_MasterSlave = (1 << 1), // not implemented
-  A1000BaseT_MultiPort =   (1 << 2),
+  //A1000BaseT_MultiPort =   (1 << 2),
   A1000BaseT_HalfDuplex =  (1 << 3),
 }
 
@@ -36,10 +36,10 @@ interface BaseLinkCodeWord extends Payload {
 }
 interface LinkCodeWord_Page0 extends BaseLinkCodeWord {
   selectorField: SelectorField,
-  technologyField: TechnologyField,
+  technologyField: TechnologyField|0,
 }
 interface LinkCodeWord_Page1 extends BaseLinkCodeWord {
-  technologyField: AdvancedTechnologyField,
+  technologyField: AdvancedTechnologyField|0,
 }
 type LinkCodeWords = (LinkCodeWord_Page0|LinkCodeWord_Page1);
 
@@ -149,7 +149,7 @@ export class AutonegotiationMessage extends PhysicalMessage {
 
       if( speed > 1000 ) {
         this.gigaEthernet.technologyField &= ~AdvancedTechnologyField.A1000BaseT;
-        this.gigaEthernet.technologyField &= ~AdvancedTechnologyField.A1000BaseT_MultiPort;
+        //this.gigaEthernet.technologyField &= ~AdvancedTechnologyField.A1000BaseT_MultiPort;
         this.gigaEthernet.technologyField &= ~AdvancedTechnologyField.A1000BaseT_HalfDuplex;
       }
 
@@ -167,12 +167,11 @@ export class AutonegotiationMessage extends PhysicalMessage {
     public build(): AutonegotiationMessage[] {
       let messages:AutonegotiationMessage[]  = []
 
-      if( this.gigaEthernet.technologyField !== 0 )
-        this.fastEthernet.nextPage = true;
-
       messages.push(new AutonegotiationMessage(this.fastEthernet));
-      if( this.gigaEthernet.technologyField !== 0 )
+      if( this.maxSpeed >= 1000 ) {
+        this.fastEthernet.nextPage = true;
         messages.push(new AutonegotiationMessage(this.gigaEthernet));
+      }
 
       return messages;
     }
@@ -283,10 +282,10 @@ export class AutoNegotiationProtocol implements PhysicalListener {
               speed = testSpeed;
               duplex = false;
             }
-            if( code.technologyField & TechnologyField.A100BaseT4 ) {
-              speed = testSpeed;
-              duplex = false;
-            }
+            //if( code.technologyField & TechnologyField.A100BaseT4 ) {
+            //  speed = testSpeed;
+            //  duplex = false;
+            //}
             if( code.technologyField & TechnologyField.A100BaseTX_FullDuplex && this.fullDuplex ) {
               speed = testSpeed;
               duplex = true;
@@ -308,10 +307,10 @@ export class AutoNegotiationProtocol implements PhysicalListener {
               speed = testSpeed;
               duplex = true;
             }
-            if( code.technologyField & AdvancedTechnologyField.A1000BaseT_MultiPort && this.fullDuplex  ) {
-              speed = testSpeed;
-              duplex = true;
-            }
+            //if( code.technologyField & AdvancedTechnologyField.A1000BaseT_MultiPort && this.fullDuplex  ) {
+            //  speed = testSpeed;
+            //  duplex = true;
+            //}
           }
 
           break;
@@ -322,11 +321,10 @@ export class AutoNegotiationProtocol implements PhysicalListener {
       }
     }
 
-    if( speed === 0 )
-      throw new Error("Autonegotiation failed");
-
-    this.iface.Speed = speed;
-    this.iface.FullDuplex = duplex;
+    if( speed !== 0 ) {
+      this.iface.Speed = speed;
+      this.iface.FullDuplex = duplex;
+    }
 
     if( ack )
       this.neighbourAcknoledge = [];

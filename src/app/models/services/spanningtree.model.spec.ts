@@ -94,4 +94,9 @@ describe('STP protocol', () => {
     D.spanningTree.negociate();
   });
 
+  it("builder", () => {
+    const msg = new SpanningTreeMessage.Builder().build();
+    expect(msg.toString()).toContain("STP");
+  });
+
 });

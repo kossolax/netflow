@@ -1,4 +1,4 @@
-import { take, bufferCount, switchMap, tap, pipe, map, delay, Observable, UnaryFunction } from "rxjs";
+import { take, bufferCount, switchMap, tap, pipe, map, delay, Observable, UnaryFunction, catchError, TimeoutError, timeout } from "rxjs";
 import { SchedulerService, SchedulerState } from "src/app/services/scheduler.service";
 import { EthernetInterface } from "../layers/datalink.model";
 import { Link } from "../layers/physical.model";
@@ -6,6 +6,7 @@ import { Message, PhysicalMessage } from "../message.model";
 import { AdvancedTechnologyField, AutonegotiationMessage, TechnologyField } from "./autonegotiation.model";
 import { SimpleListener } from "./protocols.model";
 import { SwitchHost } from "../nodes/switch.model";
+import { time } from "console";
 
 describe('AutoNegotiation Protocol test', () => {
   let A: SwitchHost;
@@ -96,6 +97,9 @@ describe('AutoNegotiation Protocol test', () => {
             expect((msg[i] as AutonegotiationMessage).payload.nextPage).toBe(false);
           }
         }
+
+        expect(A.getInterface(0).Speed).toBe(speed);
+        expect(B.getInterface(0).Speed).toBe(speed);
       })
     );
   }
@@ -117,6 +121,17 @@ describe('AutoNegotiation Protocol test', () => {
 
       TOAST(1000, false, AdvancedTechnologyField.A1000BaseT | AdvancedTechnologyField.A1000BaseT_HalfDuplex ),
       TOAST(1000, true, AdvancedTechnologyField.A1000BaseT ),
+
+      TOAST(2500, false, 0 ),
+      catchError( err => {
+        expect(err).toBeInstanceOf(TimeoutError);
+        return [];
+      }),
+      TOAST(2500, true, 0 ),
+      catchError( err => {
+        expect(err).toBeInstanceOf(TimeoutError);
+        return [];
+      }),
     ).subscribe( () => {
       done();
     })
@@ -128,6 +143,17 @@ describe('AutoNegotiation Protocol test', () => {
     expect( () => {
       const l1 = new Link(A.getInterface(1), null, 1000);
     }).toThrow();
+  });
+
+  it('builder', () => {
+    const one = new AutonegotiationMessage.Builder().setMaxSpeed(100).build();
+    const two = new AutonegotiationMessage.Builder().setMaxSpeed(1000).build();
+
+    expect(one.length).toBe(1);
+    expect(two.length).toBe(2);
+    expect(one[0].payload.nextPage).toBe(false);
+    expect(two[0].payload.nextPage).toBe(true);
+    expect(one[0].toString()).toContain('AutoNegotiation');
   });
 
 });

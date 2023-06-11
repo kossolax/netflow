@@ -27,7 +27,7 @@ export function handleChain(
   let action = ActionHandle.Continue;
 
   for(let i of listeners) {
-    if( i === sender)
+    if( i === sender )
       continue;
 
     if( handler in i && handler != "on" ) {
@@ -90,9 +90,6 @@ export type GenericEventListener = (message: EventString, sender: Interface|Gene
 export type GenericListener = GenericClassListener|GenericEventListener;
 
 abstract class GenericClassListener {
-  public toString(): string {
-    return this.constructor.name.toString();
-  }
 }
 interface Listener<T extends Interface|Message|Link> extends GenericClassListener {
 }

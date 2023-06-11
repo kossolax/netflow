@@ -1,10 +1,11 @@
 import { take, map, Observable, of, combineLatest, filter } from "rxjs";
-import { MacAddress } from "../address.model";
+import { IPAddress, MacAddress } from "../address.model";
 import { Link } from "../layers/physical.model";
 import { ArpMessage } from "./arp.model";
 import { SimpleListener } from "./protocols.model";
 import { RouterHost } from "../nodes/router.model";
 import { SwitchHost } from "../nodes/switch.model";
+import { IPInterface } from "../layers/network.model";
 
 describe('ARP Protocol test', () => {
   let A: RouterHost;
@@ -79,6 +80,25 @@ describe('ARP Protocol test', () => {
     ).subscribe();
 
     A.send(message, dst);
+  });
+
+  it('builder', () => {
+    expect(() => new ArpMessage.Builder().SetHardwareAddress(MacAddress.generateAddress()).build()).toThrowError();
+
+    const request = new ArpMessage.Builder()
+      .SetNetworkAddress(IPAddress.generateAddress())
+      .build();
+    const reply = new ArpMessage.Builder()
+      .SetNetworkAddress(IPAddress.generateAddress())
+      .SetHardwareAddress(MacAddress.generateAddress())
+      .build();
+
+    expect(request.type).toEqual("request");
+    expect(reply.type).toEqual("reply");
+    expect(request.toString()).toContain("ARP");
+    expect(request.toString()).toContain("request");
+    expect(reply.toString()).toContain("ARP");
+    expect(reply.toString()).toContain("reply");
   });
 
 });

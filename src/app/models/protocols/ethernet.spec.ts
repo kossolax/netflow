@@ -7,6 +7,7 @@ import { Dot1QMessage, EthernetMessage, VlanMode } from "./ethernet.model";
 import { SimpleListener } from "./protocols.model";
 import { SwitchHost } from "../nodes/switch.model";
 import { RouterHost } from "../nodes/router.model";
+import { MacAddress } from "../address.model";
 
 describe('Ethernet protocol', () => {
   let A: SwitchHost;
@@ -181,6 +182,45 @@ describe('Ethernet protocol', () => {
       expect(packet).toBeInstanceOf(EthernetMessage);
       done();
     });
+  });
+
+  it('builder', () => {
+    const message_eth = new EthernetMessage.Builder()
+      .setMacSource(new MacAddress('00:00:00:00:00:01'))
+      .setMacDestination(new MacAddress('00:00:00:00:00:02'))
+      .setPayload('Hello World!').build();
+
+    const message_dot1q = new Dot1QMessage.Builder()
+      .setMacSource(new MacAddress('00:00:00:00:00:01'))
+      .setMacDestination(new MacAddress('00:00:00:00:00:02'))
+      .setVlan(42)
+      .setPayload('Hello World!').build();
+
+    expect(message_eth.mac_src.equals(new MacAddress('00:00:00:00:00:01'))).toBeTrue();
+    expect(message_eth.mac_dst?.equals(new MacAddress('00:00:00:00:00:02'))).toBeTrue();
+    expect(message_eth.payload).toBe('Hello World!');
+    expect(message_eth.toString()).toContain('Ethernet');
+
+    expect(message_dot1q.mac_src.equals(new MacAddress('00:00:00:00:00:01'))).toBeTrue();
+    expect(message_dot1q.mac_dst?.equals(new MacAddress('00:00:00:00:00:02'))).toBeTrue();
+    expect(message_dot1q.payload).toBe('Hello World!');
+    expect(message_dot1q.vlan_id).toBe(42);
+    expect(message_dot1q.toString()).toContain('Dot1Q');
+
+    A.getInterface(0).setMacAddress(new MacAddress('00:00:00:00:00:01'));
+    B.getInterface(0).setMacAddress(new MacAddress('00:00:00:00:00:02'));
+
+    expect(message_eth.IsReadyAtEndPoint(A.getInterface(0))).toBeFalse();
+    expect(message_eth.IsReadyAtEndPoint(B.getInterface(0))).toBeTrue();
+    expect(message_dot1q.IsReadyAtEndPoint(A.getInterface(0))).toBeFalse();
+    expect(message_dot1q.IsReadyAtEndPoint(B.getInterface(0))).toBeTrue();
+
+    expect( () => new EthernetMessage.Builder().setPayload('Hello World!').setMacSource(new MacAddress('00:00:00:00:00:01')).build()).toThrowError();
+    expect( () => new EthernetMessage.Builder().setPayload('Hello World!').setMacDestination(new MacAddress('00:00:00:00:00:01')).build()).toThrowError();
+
+    expect( () => new Dot1QMessage.Builder().setPayload('Hello World!').setMacSource(new MacAddress('00:00:00:00:00:01')).build()).toThrowError();
+    expect( () => new Dot1QMessage.Builder().setPayload('Hello World!').setMacDestination(new MacAddress('00:00:00:00:00:01')).build()).toThrowError();
+
   });
 
 });

@@ -231,8 +231,6 @@ export class IPv4Protocol implements NetworkListener {
           return ActionHandle.Stop;
         }
 
-
-        return ActionHandle.Handled;
       }
 
       return ActionHandle.Handled;

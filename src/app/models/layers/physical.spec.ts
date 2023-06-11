@@ -72,7 +72,7 @@ describe('Physical layer test', () => {
     l1.addListener(listener);
 
     const toSend = 100;
-    const payloadSize = 1024 * 1024;
+    const payloadSize = 10 * 1024 * 1024;
     const payload = new PhysicalMessage("A".repeat(payloadSize));
 
     const send = (duplex:boolean): void => {
@@ -146,9 +146,20 @@ describe('Physical layer test', () => {
     expect(link1.getTransmissionDelay(1000, 100)).toBeGreaterThan(link1.getTransmissionDelay(100, 100));
     expect(link1.getTransmissionDelay(10000, 100)).toBeGreaterThan(link1.getTransmissionDelay(10, 100));
 
-    const speed = link1.getTransmissionDelay(1000, 100);
+    SchedulerService.Instance.Speed = SchedulerState.FASTER;
+    const fast = link1.getDelay(1000, 100);
+    SchedulerService.Instance.Speed = SchedulerState.REAL_TIME;
+    const real = link1.getDelay(1000, 100);
     SchedulerService.Instance.Speed = SchedulerState.SLOWER;
-    expect(link1.getTransmissionDelay(1000, 100)).toBeGreaterThan(speed);
+    const slow = link1.getDelay(1000, 100);
+    SchedulerService.Instance.Speed = SchedulerState.PAUSED;
+    const paused = link1.getDelay(1000, 100);
+    SchedulerService.Instance.Speed = SchedulerState.FASTER;
+
+    expect(fast).toBeLessThan(real);
+    expect(real).toBeLessThan(slow);
+    expect(slow).toBeLessThan(paused);
+
 
   });
 

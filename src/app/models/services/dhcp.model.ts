@@ -145,7 +145,7 @@ export class DhcpPool {
   }
 
 }
-enum DhcpType {
+export enum DhcpType {
   Unknown = 0,
   Discover = 1,
   Offer = 2,
@@ -160,7 +160,7 @@ enum DhcpOpCode {
   Request = 1,
   Reply = 2,
 }
-class DhcpMessage extends IPv4Message {
+export class DhcpMessage extends IPv4Message {
   public op: DhcpOpCode = DhcpOpCode.Request;
   public readonly htype: 1 = 1; // type of hardware address. 1 = MAC Address
   public readonly hlen: number = 6;  // mac address length in bytes
@@ -262,11 +262,11 @@ class DhcpMessage extends IPv4Message {
       this.chaddr = value;
       return this;
     }
-    private sname: string = "";
-    public setServerName(value: string): this {
-      this.sname = value;
-      return this;
-    }
+    //private sname: string = "";
+    //public setServerName(value: string): this {
+    //  this.sname = value;
+    //  return this;
+    //}
 
     public override build(): IPv4Message[] {
       if( this.net_src === null )
