@@ -125,6 +125,7 @@ export abstract class AbstractLink implements PhysicalListener, PhysicalSender {
 
   // ---
   public addListener(listener: GenericListener): void {
+    this.removeListener(listener);
     this.listener.push(listener);
   }
   public removeListener(listener: GenericListener): void {

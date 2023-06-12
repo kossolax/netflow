@@ -108,7 +108,14 @@ export class RouterHost extends NetworkHost implements NetworkListener {
     }
     this.routingTable.push({network: network, mask: mask, gateway: gateway});
   }
-  public deleteRoute(network: NetworkAddress, mask: NetworkAddress, gateway: NetworkAddress): void {
+  public deleteRoute(network: NetworkAddress|string, mask: NetworkAddress|string, gateway: NetworkAddress|string): void {
+    if( typeof network === "string" )
+      network = new IPAddress(network);
+    if( typeof mask === "string" )
+      mask = new IPAddress(mask, true);
+    if( typeof gateway === "string" )
+      gateway = new IPAddress(gateway);
+
     for( let i = 0; i < this.routingTable.length; i++ ) {
       if( this.routingTable[i].network.equals(network) && this.routingTable[i].mask.equals(mask) && this.routingTable[i].gateway.equals(gateway) ) {
         this.routingTable.splice(i, 1);
@@ -117,10 +124,7 @@ export class RouterHost extends NetworkHost implements NetworkListener {
     }
     throw new Error("Route not found");
   }
-  public getNextHop(address: NetworkAddress|null): NetworkAddress|null {
-    if( address === null )
-      throw new Error("No address specified");
-
+  public getNextHop(address: NetworkAddress): NetworkAddress|null {
     let bestRoute = null;
     let bestCidr = 0;
 
@@ -135,6 +139,20 @@ export class RouterHost extends NetworkHost implements NetworkListener {
         if( route.mask.CIDR > bestCidr ) {
           bestRoute = route.gateway;
           bestCidr = route.mask.CIDR;
+        }
+      }
+    }
+
+    for(let name in this.interfaces) {
+      if( this.interfaces[name].getNetAddress().InSameNetwork(this.interfaces[name].getNetMask(), address) ) {
+        if( bestRoute === null ) {
+          bestRoute = address;
+          bestCidr = this.interfaces[name].getNetMask().CIDR;
+        }
+
+        if( this.interfaces[name].getNetMask().CIDR > bestCidr ) {
+          bestRoute = address;
+          bestCidr = this.interfaces[name].getNetMask().CIDR;
         }
       }
     }

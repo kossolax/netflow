@@ -28,6 +28,7 @@ export abstract class GenericNode {
   // ---
   private listener: GenericEventListener[] = [];
   public addListener(listener: GenericEventListener): void {
+    this.removeListener(listener);
     this.listener.push(listener);
   }
   public removeListener(listener: GenericEventListener): void {
@@ -48,8 +49,6 @@ export abstract class Node<T extends Interface> extends GenericNode {
       response = this.interfaces[Object.keys(this.interfaces)[index]]
     else if( typeof index === "string" )
       response =  this.interfaces[index];
-    else
-      throw new Error(`Invalid index type: ${typeof index}`);
 
     if( !response )
       throw new Error(`Interface ${index} not found, available interfaces: ${Object.keys(this.interfaces)}`);
@@ -98,14 +97,14 @@ export abstract class NetworkHost extends Node<NetworkInterface> {
   }
 
   public abstract override send(message: string|NetworkMessage, net_dst?: NetworkAddress): void;
-  public abstract getNextHop(address: NetworkAddress|null): NetworkAddress|null;
+  public abstract getNextHop(address: NetworkAddress): NetworkAddress|null;
 }
 
 export abstract class L4Host extends NetworkHost {
   public override name = "Server";
   public override type = "server";
 
-  public gateway: NetworkAddress = new IPAddress("0.0.0.0");
+  public gateway: NetworkAddress|null = null;
 
   constructor(name: string = "", type: string="server", iface: number=0) {
     super();
@@ -144,9 +143,7 @@ export abstract class L4Host extends NetworkHost {
     }
   }
 
-  public getNextHop(address: NetworkAddress|null): NetworkAddress|null {
-    if( address === null )
-      throw new Error("No address specified");
+  public getNextHop(address: NetworkAddress): NetworkAddress|null {
 
 
     for(let name in this.interfaces) {
