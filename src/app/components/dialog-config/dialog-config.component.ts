@@ -53,7 +53,7 @@ export class DialogConfigComponent {
   }
   public getGateway(): string {
     if( this.node instanceof L4Host )
-      return (this.node as L4Host).gateway.toString();
+      return (this.node as L4Host).gateway?.toString() ?? "";
     return "";
   }
 
